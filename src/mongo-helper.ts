@@ -144,14 +144,26 @@ export class MongoHelper {
     }
 
     async findDataItem<C extends Document, T extends Document = Partial<C>>(collectionName: string, query: T): Promise<C[]>;
-    async findDataItem<C extends Document, T extends Document = Partial<C>>(collectionName: string, query: T, config: { findOne: false; }): Promise<C[]>;
+    async findDataItem<C extends Document, T extends Document = Partial<C>>(collectionName: string, query: T, config: { findOne: false, skip?: number, limit?: number; }): Promise<C[]>;
     async findDataItem<C extends Document, T extends Document = Partial<C>>(collectionName: string, query: T, config: { findOne: true; }): Promise<C | undefined>;
-    async findDataItem<C extends Document, T extends Document = Partial<C>>(collectionName: string, query: T, config?: { findOne: boolean; }): Promise<C | C[] | undefined> {
+    async findDataItem<C extends Document, T extends Document = Partial<C>>(collectionName: string, query: T, config?: { findOne: boolean, skip?: number, limit?: number; }): Promise<C | C[] | undefined> {
         return await this.makeCallWithCollection<C[] | C | undefined, T>(collectionName, async (db, col) => {
             if (config?.findOne === true) {
                 return nullToUndefined(await col.findOne<C>(query));
             } else {
-                return await col.find<C>(query).toArray();
+                // Add the skip and limit clauses, if required.
+                let findQuery: { skip?: number, limit?: number; } | undefined = undefined;
+                if (config?.skip || config?.limit) {
+                    findQuery = {};
+                    if (config.skip) {
+                        findQuery.skip = config.skip;
+                    }
+                    if (config.limit) {
+                        findQuery.limit = config.limit;
+                    }
+                }
+
+                return await col.find<C>(query, findQuery).toArray();
             }
         });
     }

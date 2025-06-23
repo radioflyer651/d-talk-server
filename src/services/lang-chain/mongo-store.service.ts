@@ -1,71 +1,6 @@
-import { Annotation, BaseStore, InMemoryStore, Operation, OperationResults } from "@langchain/langgraph";
-import { MongoDBSaver } from "@langchain/langgraph-checkpoint-mongodb";
-import { Collection, MongoClient, ObjectId } from "mongodb";
-import { MongoDBChatMessageHistory, MongoDBAtlasVectorSearch } from '@langchain/mongodb';
-import { BufferMemory } from 'langchain/memory';
-import { createReactAgent, ToolNode } from '@langchain/langgraph/prebuilt';
-import { ChatOpenAI } from "@langchain/openai";
-import { Embeddings } from "openai/resources/embeddings";
-import { AIMessage, BaseMessage, ChatMessage, HumanMessage, SystemMessage, ToolMessage } from "@langchain/core/messages";
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-
-// Import the specific operation types to make TypeScript recognize them
-import {
-    GetOperation,
-    SearchOperation,
-    PutOperation,
-    ListNamespacesOperation,
-    Item,
-    SearchItem
-} from "@langchain/langgraph-checkpoint/dist/store/base";
-import { MongoHelper } from "../mongo-helper";
-
-
-export async function runMe() {
-    const client = await MongoClient.connect('');
-    const database = await client.db('');
-    const collection = await database.collection('');
-    const store = new MongoDBStore({ collection: collection, namespace: 'asdf' });
-    const inMem = new InMemoryStore();
-    const chatH = new MongoDBChatMessageHistory({ collection, sessionId: '' });
-    const bm = new BufferMemory();
-
-    const x = new MongoDBSaver({ client: client, dbName: '', checkpointCollectionName: '' });
-
-    const updateTabletMemory = async (state: typeof ChatMessageAnnotation.State) => {
-        const llm = new ChatOpenAI({
-            temperature: 0,
-            model: '',
-        }) as BaseChatModel;
-
-        const instruction = new SystemMessage(`
-                    Before responding to the user's next message, update your AI tablet.
-                    Use the xxx functions to do so.
-            `);
-
-        const theseMessages = [
-            ...state.messages,
-            instruction,
-        ];
-
-        const result = await llm.invoke(theseMessages, {});
-
-        if (result.tool_calls?.length) {
-
-        }
-    };
-
-    const toolNode = new ToolNode([], {});
-    toolNode.invoke();
-
-}
-
-export const ChatMessageAnnotation = Annotation.Root({
-    ...Xt.MessagesAnnotation.spec,
-    systemMessages: Annotation<BaseMessage[]>,
-    memoryMessages: Annotation<string[]>,
-    toolCalls: Annotation<ToolMessage[] | undefined>
-});
+import { BaseStore, Operation, OperationResults, Item, PutOperation, SearchOperation, GetOperation, ListNamespacesOperation } from "@langchain/langgraph";
+import { SearchItem } from "@langchain/langgraph-checkpoint";
+import { MongoHelper } from "../../mongo-helper";
 
 export class MongoDbStore extends BaseStore {
     constructor(
@@ -87,34 +22,86 @@ export class MongoDbStore extends BaseStore {
         return results;
     };
 
-    private async handleOp<Op extends Operation>(op: Operation): Promise<Item | undefined> {
+    private async handleOp(op: Operation): Promise<Item | Item[] | string[] | undefined> {
         if (isGetOperation(op)) {
             const result = await this.dbHelper.findDataItem<Item>(this.collectionName, { namespace: op.namespace, key: op.key }, { findOne: true });
             return result || undefined;
 
         } else if (isSearchOperation(op)) {
-            const query: Record<string, any> = { namespace: { $regex: `^${op.namespacePrefix.join('/')}` } };
-
-            // Add filters if they exist
-            if (op.filter) {
-                Object.entries(op.filter).forEach(([key, value]) => {
-                    query[`value.${key}`] = value;
-                });
-            }
-
             const limit = op.limit || 10;
             const skip = op.offset || 0;
 
-            // If there's a query string for semantic search, we'd need to implement 
-            // vector search here, but for now return filtered items
-            const results = await this.dbHelper.findDataItem<Item>(
-                this.collectionName,
-                query,
-                { findOne: false, skip, limit }
-            );
+            // Assemble the query.
+            const namespaceConditions = [] as any[];
+            op.namespacePrefix.forEach((p, i) => {
+                // There's nothing to match for wildcards.
+                if (p !== '*') {
+                    namespaceConditions.push({
+                        $expr: {
+                            $eq: [
+                                {
+                                    $arrayElemAt: ['$namespace', i]
+                                },
+                                p
+                            ]
+                        }
+                    });
+                }
+            });
 
-            // Return undefined as this isn't a single-item response
-            return undefined;
+            const namespaceQuery = namespaceConditions ? [{ $match: { $and: namespaceConditions } }] : [];
+
+            const filterConditions = [] as any[];
+            if (op.filter) {
+                /** Function to get the first, and only, property from an object. */
+                function getOnlyProperty(target: object): { name: string, val: any; } {
+                    const e = Object.entries(target);
+                    if (e.length !== 1) {
+                        throw new Error(`Expected 1 value, but got many in the query.`);
+                    }
+                    return {
+                        name: e[0][0],
+                        val: e[0][1]
+                    };
+                }
+
+                const filterAndConditions = [];
+                for (let n in op.filter) {
+                    const val = op.filter[n];
+                    if (typeof val === 'object') {
+                        // Comparison operators.  There should only be one property in the target object.
+                        const translation = getOnlyProperty(val);
+                        // Add the comparison.
+                        filterAndConditions.push({ [translation.name]: [`$value.${n}`, translation.val] });
+
+                    } else {
+                        // Direct equality.
+                        filterAndConditions.push({ $eq: [`$value.${n}`, val] });
+                    }
+                }
+                if (filterAndConditions.length > 0) {
+                    filterConditions.push({ $match: { $expr: { $and: filterAndConditions } } });
+                }
+            }
+
+            // Get distinct namespaces
+            const namespaces = await this.dbHelper.makeCallWithCollection(this.collectionName, async (db, collection) => {
+                const pipeline = [
+                    ...namespaceQuery,
+                    ...filterConditions,
+                    {
+                        $skip: skip
+                    },
+                    {
+                        $limit: limit
+                    }
+                ];
+
+                const results = await collection.aggregate(pipeline).toArray();
+                return results as Item[];
+            });
+
+            return namespaces;
 
         } else if (isPutOperation(op)) {
             const action = op.value === null ? "Delete" : "Store/Update";
@@ -161,18 +148,36 @@ export class MongoDbStore extends BaseStore {
             // Handle match conditions if present
             if (op.matchConditions && op.matchConditions.length > 0) {
                 const conditions = op.matchConditions.map(condition => {
-                    if (condition.matchType === "prefix") {
-                        const prefix = condition.path
-                            .filter(segment => segment !== "*")
-                            .join("/");
-                        return { namespace: { $regex: `^${prefix}` } };
-                    } else if (condition.matchType === "suffix") {
-                        const suffix = condition.path
-                            .filter(segment => segment !== "*")
-                            .join("/");
-                        return { namespace: { $regex: `${suffix}$` } };
+                    // Get a copy of the array of path parts.
+                    const path = condition.path.slice();
+                    // Determine a multiplier to apply to the
+                    //  indices of the search.
+                    let indexMultiplier = 1; // For prefix
+
+                    if (condition.matchType === "suffix") {
+                        // Reverse the direction of the array
+                        //  and set the multiplier to -1, so we're offsetting from the end.
+                        indexMultiplier = -1;
+                        path.reverse();
                     }
-                    return {};
+
+                    // Assemble the query.
+                    const andConditions = [] as any[];
+                    path.forEach((p, i) => {
+                        // There's nothing to match for wildcards.
+                        if (p !== '*') {
+                            andConditions.push({
+                                $eq: [
+                                    {
+                                        $arrayElementAt: ['$namespace', i * indexMultiplier]
+                                    },
+                                    p
+                                ]
+                            });
+                        }
+                    });
+
+                    return { $and: andConditions };
                 });
 
                 if (conditions.length > 0) {
@@ -185,8 +190,8 @@ export class MongoDbStore extends BaseStore {
             if (op.maxDepth !== undefined) {
                 depthFilter.push({
                     $match: {
-                        $not: {
-                            $regex: new RegExp(`^[^/]+(\/[^/]+){${op.maxDepth + 1},}$`)
+                        $expr: {
+                            $lte: [{ $size: "$_id" }, op.maxDepth]
                         }
                     }
                 });
@@ -198,6 +203,14 @@ export class MongoDbStore extends BaseStore {
                     {
                         $group: {
                             _id: "$namespace"
+                        }
+                    },
+                    // Depth filter for array
+                    {
+                        $match: {
+                            $expr: {
+                                $lte: [{ $size: "$_id" }, op.maxDepth]
+                            }
                         }
                     },
                     ...depthFilter,
@@ -217,8 +230,7 @@ export class MongoDbStore extends BaseStore {
                 return results.map(r => r._id);
             });
 
-            // Return undefined as this operation returns namespace arrays in batch
-            return undefined;
+            return namespaces;
 
         } else {
             throw new Error(`Unknown operation type: ${JSON.stringify(op)}`);

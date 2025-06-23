@@ -7,7 +7,23 @@
             "request": "launch",
             "runtimeExecutable": "ts-node-dev",
             "cwd": "${workspaceFolder}",
-            "args": ["./src/index.ts", "--respawn"],
+            "args": [
+                "./src/index.ts",
+                "--respawn"
+            ],
+            "env": {
+                "NODE_ENV": "development"
+            }
+        },
+        {
+            "name": "Run ts-node for test",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "ts-node-dev",
+            "cwd": "${workspaceFolder}",
+            "args": [
+                "./src/test-index.ts"
+            ],
             "env": {
                 "NODE_ENV": "development"
             }

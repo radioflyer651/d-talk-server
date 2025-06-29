@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { IPluginResolver } from "./agent-plugin/i-plugin-resolver.service";
+import { IPluginResolver } from "./agent-plugin/plugin-resolver.interface";
 import { Agent } from "./agent/agent.service";
 import { ModelServiceResolver } from "./agent/model-services/model-service-resolver";
 import { ChatAgentIdentityConfiguration } from "./agent/model/agent-configuration.model";

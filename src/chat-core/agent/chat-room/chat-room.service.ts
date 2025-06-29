@@ -7,9 +7,10 @@ import { IChatRoomEvent } from "../../../model/shared-models/chat-core/chat-room
 import { ChatRoomMessageEvent } from "../../../model/shared-models/chat-core/chat-room-events.model";
 import { ChatDbService } from "../../../database/chat-db.service";
 import { ChatRoomBusyStateEvent } from "../../../model/shared-models/chat-core/chat-room-busy-state.model";
-import { IPluginResolver } from "../../agent-plugin/i-plugin-resolver.service";
+import { IPluginResolver } from "../../agent-plugin/plugin-resolver.interface";
 import { ChatJob } from "./chat-job.service";
 import { AgentServiceFactory } from "../../agent-factory.service";
+import { IJobHydratorService } from "./chat-job-hydrator.interface";
 
 export class ChatRoom {
     constructor(
@@ -17,6 +18,7 @@ export class ChatRoom {
         readonly agentFactory: AgentServiceFactory,
         readonly chatDbService: ChatDbService,
         readonly pluginResolver: IPluginResolver,
+        readonly jobHydratorService: IJobHydratorService,
     ) {
 
     }
@@ -72,11 +74,7 @@ export class ChatRoom {
 
     /** Creates chat jobs from the data, and resolves their plugins. */
     private async hydrateChatJobs() {
-        const jobs = this.data.jobs.map(j => new ChatJob(j));
-
-        const plugins = jobs.map(async j => {
-
-        });
+        this.chatJobs = await this.jobHydratorService.hydrateJobs(this.data.jobs);
     }
 
     private _chatJobs: ChatJob[] = [];
@@ -87,6 +85,7 @@ export class ChatRoom {
         this._chatJobs = value;
     }
 
+    /** Called when a message is received from a user in this chat room. */
     async receiveUserMessage(message: string, user: User): Promise<void> {
         try {
             // Update our busy state.
@@ -115,9 +114,8 @@ export class ChatRoom {
         }
     }
 
+    /** After a user message is received, this is the process for executing each chat job. */
     protected async executeTurnsForChatMessage(): Promise<void> {
 
     }
-
-
 }

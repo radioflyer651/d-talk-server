@@ -22,4 +22,7 @@ export interface PositionableMessage {
     
     /** The messages to be added to the chat history. */
     messages: BaseMessage[];
+
+    /** Optional offset for OffsetFromFront and OffsetFromEnd positioning. */
+    offset?: number;
 }

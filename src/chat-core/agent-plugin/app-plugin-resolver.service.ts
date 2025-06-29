@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { AgentPluginBase } from "./agent-plugin-base.service";
-import { IPluginResolver } from "./i-plugin-resolver.service";
+import { IPluginResolver } from "./plugin-resolver.interface";
 import { PluginInstanceReference } from "./plugin-context.model";
 import { PluginSpecification } from "./plugin-specification.model";
 

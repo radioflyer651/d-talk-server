@@ -25,5 +25,5 @@ export interface ChatJobData {
     plugins: PluginSpecification[];
 
     /** The contexts for the plugins on this ChatJob. */
-    pluginContexts: PluginInstanceReference[];
+    pluginReferences: PluginInstanceReference[];
 }

@@ -2,9 +2,6 @@ import { getAppConfig } from "./config";
 import { MongoHelper } from "./mongo-helper";
 import { MongoDbStore } from "./services/lang-chain/mongo-store.service";
 
-
-
-
 async function showMe() {
     const config = await getAppConfig();
     const helper = new MongoHelper(config.mongo.connectionString, config.mongo.databaseName);

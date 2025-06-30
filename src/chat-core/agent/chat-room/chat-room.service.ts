@@ -1,4 +1,4 @@
-import { HumanMessage } from "@langchain/core/messages";
+import { BaseMessage, HumanMessage } from "@langchain/core/messages";
 import { Agent } from "../agent.service";
 import { ChatRoomData } from "./chat-room-data.model";
 import { User } from "../../../model/shared-models/user.model";
@@ -11,8 +11,12 @@ import { IPluginResolver } from "../../agent-plugin/plugin-resolver.interface";
 import { ChatJob } from "./chat-job.service";
 import { AgentServiceFactory } from "../../agent-factory.service";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
+import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
+import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
+import { ChatCallState } from "./chat-room-graph/chat-room.state";
+import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 
-export class ChatRoom {
+export class ChatRoom implements IChatLifetimeContributor {
     constructor(
         readonly data: ChatRoomData,
         readonly agentFactory: AgentServiceFactory,
@@ -43,7 +47,7 @@ export class ChatRoom {
         });
     }
 
-    async initialize() {
+    async startupInitialization() {
         await this.hydrateAgents();
         await this.hydrateChatJobs();
     }
@@ -54,6 +58,14 @@ export class ChatRoom {
     }
     set agents(value: Agent[]) {
         this._agents = value;
+    }
+
+    private _plugins: AgentPluginBase[] = [];
+    get plugins(): AgentPluginBase[] {
+        return this._plugins;
+    }
+    set plugins(value: AgentPluginBase[]) {
+        this._plugins = value;
     }
 
     /** Loads the agent data, and creates new Agent objects for each. */
@@ -93,12 +105,12 @@ export class ChatRoom {
 
             // Trigger the event so observers pick it up.
             this._events.next(<ChatRoomMessageEvent>{
+                eventType: 'new-chat-message',
                 chatRoomId: this.data._id!,
                 agentId: user._id,
                 agentType: 'user',
                 dateTime: new Date(),
-                eventType: 'chat-message',
-                message: message
+                message: message,
             });
 
             // Add this message to the conversation.
@@ -107,15 +119,108 @@ export class ChatRoom {
             // Update the messages in the database.
             this.chatDbService.updateChatRoomConversation(this.data._id, this.data.conversation);
 
-            // Update our busy state.
-            this.setBusyState(false);
+            // Execute the chat messages.
         } catch (err) {
 
+        } finally {
+            // Update our busy state.
+            this.setBusyState(false);
         }
     }
 
     /** After a user message is received, this is the process for executing each chat job. */
     protected async executeTurnsForChatMessage(): Promise<void> {
+        // Execute the jobs for this chat room.
+        for (let j of this.chatJobs) {
+            await this.executeTurnForJob(j);
+        }
 
+        // Save the chat history.
+        await this.saveConversation();
+    }
+
+    protected async executeTurnForJob(job: ChatJob) {
+        // Store the job data for the current chat that's executing.
+        this._currentlyExecutingJob = job;
+        try {
+            // Get the agent for this job.
+            const agent = this.agents.find(a => a.config._id.equals(job.data.agentId));
+
+            // If there's no agent, then there's nothing we can do here.
+            if (!agent) {
+                return;
+            }
+
+            // Get the chat history.  We want a copy, so nothing's permanent until we want it to be.
+            const history = this.data.conversation.slice();
+
+            // Collect the plugins.
+            const plugins = [
+                ...agent.plugins,
+                ...this.plugins,
+                ...job.plugins,
+            ];
+
+            // Create the lifetime contributors for this chat interaction.
+            const contributors: IChatLifetimeContributor[] = [
+                agent,
+                job,
+                this,
+                ...plugins,
+            ];
+
+            // Create the graph state to call the chat.
+            const graphState: typeof ChatCallState.State = {
+                chatModel: agent.chatModel,
+                lifetimeContributors: contributors,
+                messageHistory: history,
+            };
+
+            // Create the graph instance.
+            const graph = createChatRoomGraph();
+
+            // Execute the chat call.
+            const result = await graph.invoke(graphState);
+
+            // Update the chat history.
+            this.data.conversation = result.messageHistory;
+        } catch (err) {
+            this.logError({
+                message: `Error occurred while executing chat job: ${job.myName}`,
+                error: err
+            });
+        }
+        finally {
+            // Reset the currently executing job.
+            this._currentlyExecutingJob = undefined;
+        }
+    }
+
+    /** Saves the state of the chat room. */
+    protected async saveConversation(): Promise<void> {
+        await this.chatDbService.updateChatRoomConversation(this.data._id, this.data.conversation);
+    }
+
+    /** Logs an error to the database, for this chat room. */
+    protected async logError(error: object) {
+        await this.chatDbService.addChatRoomLog(this.data._id, error);
+    }
+
+    /** The current chat job that's being processed, if any. */
+    private _currentlyExecutingJob: ChatJob | undefined;
+
+    async chatComplete(finalMessages: BaseMessage[]): Promise<void> {
+        // Get the final message.
+        const finalMessage = finalMessages[finalMessages.length - 1];
+
+        // Get the last message.
+        this._events.next(<ChatRoomMessageEvent>{
+            agentId: this._currentlyExecutingJob!.data.agentId,
+            agentType: 'agent',
+            chatRoomId: this.data._id,
+            dateTime: new Date(),
+            eventType: 'new-chat-message',
+            message: finalMessage.text,
+        });
     }
 }

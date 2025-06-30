@@ -1,7 +1,8 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Annotation } from "@langchain/langgraph";
-import { IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
+import { IChatLifetimeContributor } from "../../../chat-lifetime-contributor.interface";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { DynamicTool } from "@langchain/core/tools";
 
 
 export const ChatState = Annotation.Root({
@@ -18,15 +19,16 @@ export const ChatState = Annotation.Root({
     replyCount: Annotation<number>,
     /** The chat model that LLM calls will be made with. */
     chatModel: Annotation<BaseChatModel>,
+    /** All tools that are available to be called for an agent. */
+    tools: Annotation<DynamicTool[]>,
 });
 
 export const ChatCallState = Annotation.Root({
+    /** The message history that the next chat call will be made with.  This should include
+     *   the most recent user-message, which would presumably kick off the chat interaction. */
     messageHistory: Annotation<BaseMessage[]>,
-    userName: Annotation<string>,
     /** Entities that controbute to the lifetime of a chat call. */
     lifetimeContributors: Annotation<IChatLifetimeContributor[]>,
-    /** The user's chat message. */
-    message: Annotation<string>,
     /** The chat model that LLM calls will be made with. */
     chatModel: Annotation<BaseChatModel>,
 });

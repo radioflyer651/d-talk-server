@@ -7,6 +7,9 @@ import { PluginInstanceReference } from "../../agent-plugin/plugin-context.model
 export interface AgentInstanceConfiguration {
     _id: ObjectId;
 
+    /** An optional name to give to this instance of an agent. */
+    name?: string;
+
     /** The core configuration for this agent.  This is the permanent identity of the agent. */
     identity: ChatAgentIdentityConfiguration;
 

@@ -1,4 +1,4 @@
-import { AIMessageChunk, HumanMessage } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { ChatCallState, ChatState } from "./chat-room.state";
 import { insertPositionableMessages } from "../../../utilities/insert-positionable-messages.util";
 
@@ -7,21 +7,13 @@ import { insertPositionableMessages } from "../../../utilities/insert-positionab
  * Adds the user's message to the message history and prepares the initial chat state.
  */
 export async function startChatCall(state: typeof ChatCallState.State): Promise<typeof ChatState.State> {
-    // Create a new HumanMessage from the user's input
-    const newHumanMessage = new HumanMessage({
-        content: state.message,
-        name: state.userName,
-    });
-
-    // Add the new message to the message history
-    state.messageHistory.push(newHumanMessage);
-
     // Return the updated state for the next node
     return {
         callMessages: state.messageHistory.slice(),
         chatModel: state.chatModel,
         messageHistory: state.messageHistory,
         lifetimeContributors: state.lifetimeContributors,
+        tools: [], // This will be filled in later.
         makeReplyCall: false,
         replyCount: 0,
     };
@@ -141,6 +133,48 @@ export async function chatComplete(state: typeof ChatState.State) {
     return state;
 }
 
+/** Adds the tools from the lifetimeContributors, to the state, so they can be defined and called. */
+export async function getTools(state: typeof ChatState.State) {
+    const toolPromises = state.lifetimeContributors.filter(c => !!c.getTools).map(c => c.getTools!());
+    const toolList = (await Promise.all(toolPromises)).filter(x => !!x).reduce((p, c) => [...p, ...c], []);
+    state.tools = toolList;
+    return state;
+}
+
+/** Calls the tools from a chat call response. */
+export async function callTools(state: typeof ChatState.State) {
+    // Get the tool call.
+    const toolMessage = state.messageHistory[state.messageHistory.length - 1] as AIMessage;
+
+    // Ensure we have tool calls.  Otherwise, we probably shouldn't be here.
+    if (!toolMessage.tool_calls) {
+        throw new Error(`No tool_calls were found on the last message of the messageHistory.`);
+    }
+
+    // Call the tools.
+    const tollCallPromises = toolMessage.tool_calls.map(async toolCall => {
+        // Find the tool for this call.
+        const tool = state.tools.find(t => t.name === toolCall.name);
+
+        // If not found, then we have a problem.
+        if (!tool) {
+            throw new Error(`Tool ${toolCall.name} was not found in the tool list.`);
+        }
+
+        // Execute the tool.
+        const toolResult = await tool.invoke(toolCall.args);
+
+        // Return the tool message as a result.
+        const toolMessage = new ToolMessage(toolResult?.toString() ?? '', toolCall.id!);
+        return toolMessage;
+    });
+
+    const results = await Promise.all(tollCallPromises);
+    // Add the responses to the message list.
+    state.callMessages.push(...results);
+    state.messageHistory.push(...results);
+}
+
 /**
  * The main chat call node. This is where the actual chat logic (e.g., LLM call) would be implemented.
  */
@@ -148,16 +182,14 @@ export async function chatCall(state: typeof ChatState.State) {
     // Reset makeReplyCall since this is a new chat call
     state.makeReplyCall = false;
 
-    // Collect the tools from the lifetimeContributors.
-    const toolPromises = state.lifetimeContributors.map(p => p.getTools).filter(x => !!x).map(f => f());
-    const tools = (await Promise.all(toolPromises)).reduce((p, c) => [...p, ...c], []);
+    const tools = state.tools;
 
     // Get the LLM.  Handle the addition to the tools, if we can.
     let llm = state.chatModel;
 
     // Make the LLM call.
     let result: AIMessageChunk;
-    if (llm.bindTools) {
+    if (llm.bindTools && tools.length > 0) {
         result = await llm.bindTools(tools).invoke(state.callMessages);
     } else {
         result = await llm.invoke(state.callMessages);

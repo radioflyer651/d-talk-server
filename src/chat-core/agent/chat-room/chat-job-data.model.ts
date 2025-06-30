@@ -9,6 +9,9 @@ export interface ChatJobData {
     /** Gets or sets the order that this job gets executed in the execution order. */
     order: number;
 
+    /** A name for this chat job, to uniquely identify it in the UI and debugging. */
+    name: string;
+
     /** Gets or sets a boolean value indicating whether or not this
      *   job is disabled, skipping its turn in the process. */
     disabled: boolean;

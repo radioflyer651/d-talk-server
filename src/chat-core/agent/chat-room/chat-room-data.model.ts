@@ -25,5 +25,8 @@ export interface ChatRoomData {
     /** Gets or sets a list of chat jobs, which are interactions that occur
      *   in a chat room by agents with every interaction by the user. */
     jobs: ChatJobData[];
+
+    /** A set of log messages that may help in debugging. */
+    logs: object[];
 }
 

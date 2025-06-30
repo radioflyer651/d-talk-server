@@ -77,6 +77,27 @@ export class ChatDbService extends DbService {
         );
     }
 
+    /**
+     * Add a new log message to the logs array of a chat room by its ObjectId.
+     * The log message can be any object (e.g., { message: string, timestamp: Date, ... }).
+     */
+    async addChatRoomLog(roomId: ObjectId, log: object): Promise<number> {
+        // Fallback: Read, update, and write back the logs array if no raw update is available
+        const chatRoom = await this.getChatRoomById(roomId);
+
+        if (!chatRoom) {
+            throw new Error(`No room exists with the ID: ${roomId}`);
+        }
+
+        const updatedLogs = [...(chatRoom.logs || []), log];
+        return await this.dbHelper.updateDataItems<ChatRoomData>(
+            DbCollectionNames.ChatRooms,
+            { _id: roomId },
+            { logs: updatedLogs },
+            { updateOne: true }
+        );
+    }
+    
 
     /** Create or update an agent instance. */
     async upsertAgent(agent: UpsertDbItem<AgentInstanceConfiguration>): Promise<AgentInstanceConfiguration> {
@@ -121,9 +142,10 @@ export class ChatDbService extends DbService {
 
     /** Get multiple agent instances by an array of ObjectIds. */
     async getAgentsByIds(agentIds: ObjectId[]): Promise<AgentInstanceConfiguration[]> {
-        return await this.dbHelper.findDataItem<AgentInstanceConfiguration, { _id: { $in: ObjectId[] } }>(
+        return await this.dbHelper.findDataItem<AgentInstanceConfiguration, { _id: { $in: ObjectId[]; }; }>(
             DbCollectionNames.Users,
             { _id: { $in: agentIds } }
         ) as AgentInstanceConfiguration[];
     }
+
 }

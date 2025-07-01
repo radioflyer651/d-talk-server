@@ -2,7 +2,7 @@ import { SystemMessage } from "@langchain/core/messages";
 import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 import { MessagePositionTypes, PositionableMessage } from "../model/positionable-message.model";
-import { ChatJobData } from "./chat-job-data.model";
+import { ChatJobData } from "../../../model/shared-models/chat-core/chat-job-data.model";
 import { getIdForMessage } from "../../utilities/set-message-id.util";
 
 export class ChatJob implements IChatLifetimeContributor {

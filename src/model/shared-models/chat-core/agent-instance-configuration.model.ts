@@ -1,11 +1,14 @@
 import { ObjectId } from "mongodb";
 import { ChatAgentIdentityConfiguration } from "./agent-configuration.model";
-import { PluginInstanceReference } from "../../agent-plugin/plugin-context.model";
+import { PluginInstanceReference } from "../../../chat-core/agent-plugin/plugin-context.model";
 
 
 /** Represents a specific instance of a chat agent, from a specific identity. */
 export interface AgentInstanceConfiguration {
     _id: ObjectId;
+    
+    /** The ID of the project this agent belongs to. */
+    projectId: ObjectId;
 
     /** An optional name to give to this instance of an agent. */
     name?: string;

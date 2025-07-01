@@ -53,26 +53,20 @@ export class ChatRoomSocketServer extends SocketServiceBase {
             this.pluginResolver,
             this.hydratorService);
 
-        // Hook up the services to the chat room.
-        chatRoom.externalLifetimeServices.push(new MessageWatcherPlugin(this, socket));
-
+        // Add a handler to send messages to the client when they're completed on the job.
+        chatRoom.externalLifetimeServices.push({
+            handleReply: async (message) => {
+                if (message.getType() === 'ai' && !message.tool_calls) {
+                    await this.sendChatMessage([message], socket);
+                }
+                
+                return undefined;
+            }
+        });
 
     }
 
     public async sendChatMessage(newMessage: BaseMessage[], socket: Socket): Promise<void> {
-        this.socketServer.emitEvent(socket,);
-    }
-}
-
-class MessageWatcherPlugin implements IChatLifetimeContributor {
-    constructor(
-        readonly chatRoomSocketServer: ChatRoomSocketServer,
-        readonly socket: Socket,
-    ) {
-
-    }
-
-    async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
-        this.chatRoomSocketServer.sendChatMessage(newMessages, this.socket);
+        this.socketServer.emitEvent(socket, 'receive-chat-message');
     }
 }

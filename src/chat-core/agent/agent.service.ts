@@ -1,4 +1,4 @@
-import { AgentInstanceConfiguration } from "./model/agent-instance-configuration.model";
+import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
 import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatRoom } from "./chat-room/chat-room.service";

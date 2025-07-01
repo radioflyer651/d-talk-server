@@ -1,10 +1,10 @@
 import { MongoHelper } from "../mongo-helper";
 import { DbService } from "./db-service";
-import { ChatRoomData } from "../chat-core/agent/chat-room/chat-room-data.model";
+import { ChatRoomData } from "../model/shared-models/chat-core/chat-room-data.model";
 import { ObjectId } from "mongodb";
 import { UpsertDbItem, isNewDbItem } from "../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../model/db-collection-names.constants";
-import { AgentInstanceConfiguration } from "../chat-core/agent/model/agent-instance-configuration.model";
+import { AgentInstanceConfiguration } from "../model/shared-models/chat-core/agent-instance-configuration.model";
 
 export class ChatDbService extends DbService {
     constructor(

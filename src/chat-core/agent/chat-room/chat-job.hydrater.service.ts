@@ -1,6 +1,6 @@
 import { ChatDbService } from "../../../database/chat-db.service";
 import { IPluginResolver } from "../../agent-plugin/plugin-resolver.interface";
-import { ChatJobData } from "./chat-job-data.model";
+import { ChatJobData } from "../../../model/shared-models/chat-core/chat-job-data.model";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { ChatJob } from "./chat-job.service";
 

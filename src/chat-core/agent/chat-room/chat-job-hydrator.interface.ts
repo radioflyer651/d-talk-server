@@ -1,4 +1,4 @@
-import { ChatJobData } from "./chat-job-data.model";
+import { ChatJobData } from "../../../model/shared-models/chat-core/chat-job-data.model";
 import { ChatJob } from "./chat-job.service";
 
 

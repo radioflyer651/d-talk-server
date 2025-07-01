@@ -1,6 +1,6 @@
 import { BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, mapStoredMessagesToChatMessages } from "@langchain/core/messages";
 import { Agent } from "../agent.service";
-import { ChatRoomData } from "./chat-room-data.model";
+import { ChatRoomData } from "../../../model/shared-models/chat-core/chat-room-data.model";
 import { User } from "../../../model/shared-models/user.model";
 import { Subject } from "rxjs";
 import { IChatRoomEvent } from "../../../model/shared-models/chat-core/chat-room-event.model";

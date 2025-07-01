@@ -1,11 +1,14 @@
-import { PluginSpecification } from "../../agent-plugin/plugin-specification.model";
+import { ObjectId } from "mongodb";
+import { PluginSpecification } from "../../../chat-core/agent-plugin/plugin-specification.model";
 import { ModelServiceParams } from "./model-service-params.model";
 
 /** The configurable items that make up a chat agent. */
 export interface ChatAgentIdentityConfiguration {
-
     /** The information needed to specify and crate a chat model to support his agent. */
     modelInfo: ModelServiceParams;
+
+    /** The ID of the project this agent configuration belongs to. */
+    projectId: ObjectId;
 
     /** A name to identify this configuration. */
     name: string;

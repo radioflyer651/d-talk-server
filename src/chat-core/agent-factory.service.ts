@@ -2,8 +2,8 @@ import { ObjectId } from "mongodb";
 import { IPluginResolver } from "./agent-plugin/plugin-resolver.interface";
 import { Agent } from "./agent/agent.service";
 import { ModelServiceResolver } from "./agent/model-services/model-service-resolver";
-import { ChatAgentIdentityConfiguration } from "./agent/model/agent-configuration.model";
-import { AgentInstanceConfiguration } from "./agent/model/agent-instance-configuration.model";
+import { ChatAgentIdentityConfiguration } from "../model/shared-models/chat-core/agent-configuration.model";
+import { AgentInstanceConfiguration } from "../model/shared-models/chat-core/agent-instance-configuration.model";
 import { PluginInstanceReference } from "./agent-plugin/plugin-context.model";
 
 

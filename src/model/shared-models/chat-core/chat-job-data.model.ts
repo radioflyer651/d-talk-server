@@ -1,7 +1,7 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
-import { PluginSpecification } from "../../agent-plugin/plugin-specification.model";
-import { PluginInstanceReference } from "../../agent-plugin/plugin-context.model";
+import { PluginSpecification } from "../../../chat-core/agent-plugin/plugin-specification.model";
+import { PluginInstanceReference } from "../../../chat-core/agent-plugin/plugin-context.model";
 
 
 /** This is a turn and a job that an agent must fulfill in a chat room during a round of chat interactions. */

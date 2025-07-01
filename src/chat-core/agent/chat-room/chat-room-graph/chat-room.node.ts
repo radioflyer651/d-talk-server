@@ -154,7 +154,7 @@ export async function callTools(state: typeof ChatState.State) {
     }
 
     // Call the tools.
-    const tollCallPromises = toolMessage.tool_calls.map(async toolCall => {
+    const toolCallPromises = toolMessage.tool_calls.map(async toolCall => {
         // Find the tool for this call.
         const tool = state.tools.find(t => t.name === toolCall.name);
 
@@ -173,12 +173,22 @@ export async function callTools(state: typeof ChatState.State) {
         return toolMessage;
     });
 
-    const results = await Promise.all(tollCallPromises);
+    const results = await Promise.all(toolCallPromises);
     // Add the responses to the message list.
     state.callMessages.push(...results);
     state.messageHistory.push(...results);
     state.newMessages.push(...results);
 
+}
+
+/** Calls the peekToolCallMessages on each lifetime contributor, allowing it to react to the new tool messages before they're passed back to the LLM.. */
+export async function peekToolCallMessages(state: typeof ChatState.State) {
+    for (const contributor of state.lifetimeContributors) {
+        if (typeof contributor.peekToolCallMessages === 'function') {
+            await contributor.peekToolCallMessages(state.messageHistory, state.callMessages, state.newMessages);
+        }
+    }
+    return state;
 }
 
 /**

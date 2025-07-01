@@ -19,6 +19,7 @@ export function createChatRoomGraph() {
         .addNode('handle-reply', nodes.handleReply)
         .addNode('get-tools', nodes.getTools)
         .addNode('call-tools', nodes.callTools)
+        .addNode('peek-tool-call-messages', nodes.peekToolCallMessages)
 
         // Set the entry node and define the flow
         .addEdge(START, 'chat-start')
@@ -28,7 +29,8 @@ export function createChatRoomGraph() {
         .addEdge('pre-chat', 'modify-call-messages')
         .addEdge('modify-call-messages', 'add-pre-chat-messages')
         .addEdge('add-pre-chat-messages', 'chat-call')
-        .addEdge('call-tools', 'chat-call')
+        .addEdge('call-tools', 'peek-tool-call-messages')
+        .addEdge('peek-tool-call-messages', 'chat-call')
         .addConditionalEdges('chat-call', shouldCallToolsDecider)
         .addConditionalEdges('handle-reply', postChatReplyDecider)
         .addEdge('chat-complete', END);

@@ -5,19 +5,19 @@ import { ChatRoom } from "./chat-room/chat-room.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { MessagePositionTypes, PositionableMessage } from "./model/positionable-message.model";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { DynamicTool } from "@langchain/core/tools";
 import { getIdForMessage } from "../utilities/set-message-id.util";
+import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 
 export class Agent implements IChatLifetimeContributor {
     // The configuration for this agent instance
-    readonly config: AgentInstanceConfiguration;
+    readonly data: AgentInstanceConfiguration;
     // The chat model used by this agent
     readonly chatModel: BaseChatModel;
     // Plugins (context plugins, tools, etc.)
     readonly plugins: AgentPluginBase[];
 
     constructor(config: AgentInstanceConfiguration, chatModel: BaseChatModel, plugins: AgentPluginBase[] = []) {
-        this.config = config;
+        this.data = config;
         this.chatModel = chatModel;
         this.plugins = plugins;
     }
@@ -25,7 +25,7 @@ export class Agent implements IChatLifetimeContributor {
     /** Returns the name of this agent, using either the name in the configuration, or
      *   the configuration's identity. */
     get myName(): string {
-        return this.config.name ?? this.config.identity.chatName ?? this.config.identity.name;
+        return this.data.name ?? this.data.identity.chatName ?? this.data.identity.name;
     }
 
     /** The chat room that this agent is currently in. */
@@ -36,7 +36,7 @@ export class Agent implements IChatLifetimeContributor {
         const result = [] as PositionableMessage[];
 
         // Add the identity of this agent to the results.
-        this.config.identity.identityStatements.forEach(m => {
+        this.data.identity.identityStatements.forEach(m => {
             result.push({
                 location: MessagePositionTypes.Instructions,
                 messages: [
@@ -46,7 +46,7 @@ export class Agent implements IChatLifetimeContributor {
         });
 
         // Now insert the instructions.
-        this.config.identity.baseInstructions.forEach(m => {
+        this.data.identity.baseInstructions.forEach(m => {
             result.push({
                 location: MessagePositionTypes.Instructions,
                 messages: [
@@ -68,5 +68,23 @@ export class Agent implements IChatLifetimeContributor {
         }
 
         lastMessage.name = this.myName;
+        setSpeakerOnMessage(lastMessage, { speakerType: 'agent', speakerId: this.data._id.toString() });
+    }
+
+    async peekToolCallMessages(messageHistory: BaseMessage[], messageCalls: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
+        // Get the last tool call messages in the message call list.
+        const messages = messageCalls.slice();
+        messages.reverse();
+
+        // Iterate through each tool message at the end of the message history, and
+        //  update the speaker on each message.  The first time we encounter a non-tool message
+        //  then we're done.  These are the new messages we care about.
+        for (const msg of messages) {
+            if (typeof msg.getType === "function" && msg.getType() === "tool") {
+                setSpeakerOnMessage(msg, { speakerType: 'agent', speakerId: this.data._id.toString() });
+            } else {
+                break;
+            }
+        }
     }
 }

@@ -11,6 +11,7 @@ import { AgentServiceFactory } from "../../chat-core/agent-factory.service";
 import { IPluginResolver } from "../../chat-core/agent-plugin/plugin-resolver.interface";
 import { JobHydrator } from "../../chat-core/agent/chat-room/chat-job.hydrater.service";
 import { Socket } from "socket.io";
+import { AgentDbService } from "../../database/chat-core/agent-db.service";
 
 
 export class ChatRoomSocketServer extends SocketServiceBase {
@@ -20,6 +21,7 @@ export class ChatRoomSocketServer extends SocketServiceBase {
         readonly agentServiceFactory: AgentServiceFactory,
         readonly pluginResolver: IPluginResolver,
         readonly hydratorService: JobHydrator,
+        readonly agentDbService: AgentDbService,
     ) {
         super(socketService);
     }
@@ -51,7 +53,9 @@ export class ChatRoomSocketServer extends SocketServiceBase {
             this.agentServiceFactory,
             this.chatDbService,
             this.pluginResolver,
-            this.hydratorService);
+            this.hydratorService,
+            this.agentDbService,
+        );
 
         // Add a handler to send messages to the client when they're completed on the job.
         chatRoom.externalLifetimeServices.push({
@@ -59,7 +63,7 @@ export class ChatRoomSocketServer extends SocketServiceBase {
                 if (message.getType() === 'ai' && !message.tool_calls) {
                     await this.sendChatMessage([message], socket);
                 }
-                
+
                 return undefined;
             }
         });

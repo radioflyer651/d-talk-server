@@ -17,6 +17,7 @@ import { ChatCallState } from "./chat-room-graph/chat-room.state";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { getIdForMessage } from "../../utilities/set-message-id.util";
 import { AgentDbService } from '../../../database/chat-core/agent-db.service';
+import { setSpeakerOnMessage } from "../../utilities/speaker.utils";
 
 export class ChatRoom implements IChatLifetimeContributor {
     constructor(
@@ -127,6 +128,7 @@ export class ChatRoom implements IChatLifetimeContributor {
 
             // Add this message to the conversation.
             const newMessage = new HumanMessage(message, { id: getIdForMessage(), name: user.displayName ?? user.userName });
+            setSpeakerOnMessage(newMessage, { speakerType: 'user', speakerId: user._id.toString() });
             this.messages.push(newMessage);
 
             // Trigger the event so observers pick it up.
@@ -168,7 +170,7 @@ export class ChatRoom implements IChatLifetimeContributor {
         this._currentlyExecutingJob = job;
         try {
             // Get the agent for this job.
-            const agent = this.agents.find(a => a.config._id.equals(job.data.agentId));
+            const agent = this.agents.find(a => a.data._id.equals(job.data.agentId));
 
             // If there's no agent, then there's nothing we can do here.
             if (!agent) {

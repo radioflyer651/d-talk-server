@@ -31,13 +31,16 @@ export interface IChatLifetimeContributor {
      */
     addPreChatMessages?(info: ChatCallInfo): Promise<PositionableMessage[]>;
 
-    // Chat occurs.
+    // Chat occurs here
 
     /**
      * Called after the chat model generates a reply, allowing the contributor to process the reply
      * and optionally return additional messages to insert.
      */
     handleReply?(reply: AIMessage): Promise<undefined | PositionableMessage[]>;
+
+    /** Called after any tools are executed, and passes the message histories. */
+    peekToolCallMessages?(messageHistory: BaseMessage[], messageCalls: BaseMessage[], newMessages: BaseMessage[]): Promise<void>;
 
     /**
      * Called at the end of the chat session, allowing the contributor to finalize or clean up resources.

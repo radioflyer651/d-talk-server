@@ -24,7 +24,8 @@ export class ChatRoom implements IChatLifetimeContributor {
         readonly pluginResolver: IPluginResolver,
         readonly jobHydratorService: IJobHydratorService,
     ) {
-
+        // Deserialize the message data.
+        this.messages = mapStoredMessagesToChatMessages(this.data.conversation);
     }
 
     private _events = new Subject<IChatRoomEvent>();
@@ -68,6 +69,22 @@ export class ChatRoom implements IChatLifetimeContributor {
         this._plugins = value;
     }
 
+    private _chatJobs: ChatJob[] = [];
+    get chatJobs(): ChatJob[] {
+        return this._chatJobs;
+    }
+    set chatJobs(value: ChatJob[]) {
+        this._chatJobs = value;
+    }
+
+    private _messages: BaseMessage[] = [];
+    get messages(): BaseMessage[] {
+        return this._messages;
+    }
+    set messages(value: BaseMessage[]) {
+        this._messages = value;
+    }
+
     /** Loads the agent data, and creates new Agent objects for each. */
     private async hydrateAgents(): Promise<void> {
         // Get the agents from the database.
@@ -89,14 +106,6 @@ export class ChatRoom implements IChatLifetimeContributor {
         this.chatJobs = await this.jobHydratorService.hydrateJobs(this.data.jobs);
     }
 
-    private _chatJobs: ChatJob[] = [];
-    get chatJobs(): ChatJob[] {
-        return this._chatJobs;
-    }
-    set chatJobs(value: ChatJob[]) {
-        this._chatJobs = value;
-    }
-
     /** Called when a message is received from a user in this chat room. */
     async receiveUserMessage(message: string, user: User): Promise<void> {
         try {
@@ -114,10 +123,10 @@ export class ChatRoom implements IChatLifetimeContributor {
             });
 
             // Add this message to the conversation.
-            this.data.conversation.push(new HumanMessage(message, { name: user.displayName ?? user.userName }));
+            this.messages.push(new HumanMessage(message, { name: user.displayName ?? user.userName }));
 
             // Update the messages in the database.
-            this.chatDbService.updateChatRoomConversation(this.data._id, this.data.conversation);
+            await this.saveConversation();
 
             // Execute the chat messages.
         } catch (err) {
@@ -152,7 +161,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             }
 
             // Get the chat history.  We want a copy, so nothing's permanent until we want it to be.
-            const history = this.data.conversation.slice();
+            const history = this.messages.slice();
 
             // Collect the plugins.
             const plugins = [
@@ -183,7 +192,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             const result = await graph.invoke(graphState);
 
             // Update the chat history.
-            this.data.conversation = result.messageHistory;
+            this.messages = result.messageHistory;
         } catch (err) {
             this.logError({
                 message: `Error occurred while executing chat job: ${job.myName}`,
@@ -196,8 +205,14 @@ export class ChatRoom implements IChatLifetimeContributor {
         }
     }
 
+    /** Updates the data property on this chat room, synchronizing it with the chat room data. */
+    public updateDataForStorage(): void {
+        this.data.conversation = mapChatMessagesToStoredMessages(this.messages);
+    }
+
     /** Saves the state of the chat room. */
     protected async saveConversation(): Promise<void> {
+        this.updateDataForStorage();
         await this.chatDbService.updateChatRoomConversation(this.data._id, this.data.conversation);
     }
 

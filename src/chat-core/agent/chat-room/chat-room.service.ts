@@ -5,7 +5,7 @@ import { User } from "../../../model/shared-models/user.model";
 import { Subject } from "rxjs";
 import { IChatRoomEvent } from "../../../model/shared-models/chat-core/chat-room-event.model";
 import { ChatRoomMessageEvent } from "../../../model/shared-models/chat-core/chat-room-events.model";
-import { ChatDbService } from "../../../database/chat-db.service";
+import { ChatRoomDbService } from "../../../database/chat-core/chat-room-db.service";
 import { ChatRoomBusyStateEvent } from "../../../model/shared-models/chat-core/chat-room-busy-state.model";
 import { IPluginResolver } from "../../agent-plugin/plugin-resolver.interface";
 import { ChatJob } from "./chat-job.service";
@@ -16,14 +16,16 @@ import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
 import { ChatCallState } from "./chat-room-graph/chat-room.state";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { getIdForMessage } from "../../utilities/set-message-id.util";
+import { AgentDbService } from '../../../database/chat-core/agent-db.service';
 
 export class ChatRoom implements IChatLifetimeContributor {
     constructor(
         readonly data: ChatRoomData,
         readonly agentFactory: AgentServiceFactory,
-        readonly chatDbService: ChatDbService,
+        readonly chatDbService: ChatRoomDbService,
         readonly pluginResolver: IPluginResolver,
         readonly jobHydratorService: IJobHydratorService,
+        readonly agentDbService: AgentDbService,
     ) {
         // Deserialize the message data.
         this.messages = mapStoredMessagesToChatMessages(this.data.conversation);
@@ -99,7 +101,7 @@ export class ChatRoom implements IChatLifetimeContributor {
     /** Loads the agent data, and creates new Agent objects for each. */
     private async hydrateAgents(): Promise<void> {
         // Get the agents from the database.
-        const agentConfigs = await this.chatDbService.getAgentsByIds(this.data.agents);
+        const agentConfigs = await this.agentDbService.getAgentsByIds(this.data.agents);
 
         // Create the agents from these.
         const agentPromises = agentConfigs.map(c => this.agentFactory.getAgent(c));

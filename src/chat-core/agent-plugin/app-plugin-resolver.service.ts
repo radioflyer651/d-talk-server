@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { AgentPluginBase } from "./agent-plugin-base.service";
 import { IPluginResolver } from "./plugin-resolver.interface";
-import { PluginInstanceReference } from "./plugin-context.model";
+import { PluginInstanceReference } from "./plugin-instance-reference.model";
 import { PluginSpecification } from "./plugin-specification.model";
 
 export class AppPluginResolver implements IPluginResolver {

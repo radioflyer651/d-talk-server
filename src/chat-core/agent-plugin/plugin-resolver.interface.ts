@@ -1,6 +1,6 @@
 import { AgentPluginBase } from "./agent-plugin-base.service";
 import { PluginSpecification } from "./plugin-specification.model";
-import { PluginInstanceReference } from "./plugin-context.model";
+import { PluginInstanceReference } from "./plugin-instance-reference.model";
 
 
 export interface IPluginResolver {

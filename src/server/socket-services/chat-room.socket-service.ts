@@ -1,5 +1,5 @@
 import { from, lastValueFrom, mergeMap, of } from "rxjs";
-import { ChatDbService } from "../../database/chat-db.service";
+import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
 import { SocketServer } from "../socket.server";
 import { SocketServiceBase } from "./socket-server-base.socket-service";
 import { ObjectId } from "mongodb";
@@ -16,7 +16,7 @@ import { Socket } from "socket.io";
 export class ChatRoomSocketServer extends SocketServiceBase {
     constructor(
         socketService: SocketServer,
-        readonly chatDbService: ChatDbService,
+        readonly chatDbService: ChatRoomDbService,
         readonly agentServiceFactory: AgentServiceFactory,
         readonly pluginResolver: IPluginResolver,
         readonly hydratorService: JobHydrator,

@@ -4,7 +4,7 @@ import { Agent } from "./agent/agent.service";
 import { ModelServiceResolver } from "./agent/model-services/model-service-resolver";
 import { ChatAgentIdentityConfiguration } from "../model/shared-models/chat-core/agent-configuration.model";
 import { AgentInstanceConfiguration } from "../model/shared-models/chat-core/agent-instance-configuration.model";
-import { PluginInstanceReference } from "./agent-plugin/plugin-context.model";
+import { PluginInstanceReference } from "./agent-plugin/plugin-instance-reference.model";
 
 
 /** Responsible for taking an agent configuration, and returning an agent from it. */

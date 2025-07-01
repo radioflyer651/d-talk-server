@@ -1,4 +1,4 @@
-import { ChatDbService } from "../../../database/chat-db.service";
+import { ChatRoomDbService } from "../../../database/chat-core/chat-room-db.service";
 import { IPluginResolver } from "../../agent-plugin/plugin-resolver.interface";
 import { ChatJobData } from "../../../model/shared-models/chat-core/chat-job-data.model";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
@@ -6,7 +6,7 @@ import { ChatJob } from "./chat-job.service";
 
 export class JobHydrator implements IJobHydratorService {
     constructor(
-        readonly chatDbService: ChatDbService,
+        readonly chatDbService: ChatRoomDbService,
         readonly pluginHydrator: IPluginResolver,
     ) {
 

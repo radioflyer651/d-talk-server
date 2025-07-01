@@ -1,4 +1,4 @@
-import { BaseMessage, StoredMessage } from "@langchain/core/messages";
+import { StoredMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
 import { ChatJobData } from "./chat-job-data.model";
 
@@ -7,6 +7,9 @@ export interface ChatRoomData {
 
     /** The name of this chat room. */
     name: string;
+
+    /** The ID of the project this agent belongs to. */
+    projectId: ObjectId;
 
     /** The ID of the user that owns this chat room. */
     userId: ObjectId;

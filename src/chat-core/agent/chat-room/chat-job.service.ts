@@ -3,6 +3,7 @@ import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 import { MessagePositionTypes, PositionableMessage } from "../model/positionable-message.model";
 import { ChatJobData } from "./chat-job-data.model";
+import { getIdForMessage } from "../../utilities/set-message-id.util";
 
 export class ChatJob implements IChatLifetimeContributor {
     constructor(
@@ -23,7 +24,7 @@ export class ChatJob implements IChatLifetimeContributor {
         if (info.replyNumber === 0) {
             return [{
                 location: MessagePositionTypes.Last,
-                messages: this.data.instructions.map(ins => new SystemMessage(ins))
+                messages: this.data.instructions.map(ins => new SystemMessage(ins, { id: getIdForMessage() }))
             }];
         }
 

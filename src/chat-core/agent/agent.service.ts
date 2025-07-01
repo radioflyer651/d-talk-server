@@ -6,6 +6,7 @@ import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contrib
 import { MessagePositionTypes, PositionableMessage } from "./model/positionable-message.model";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { DynamicTool } from "@langchain/core/tools";
+import { getIdForMessage } from "../utilities/set-message-id.util";
 
 export class Agent implements IChatLifetimeContributor {
     // The configuration for this agent instance
@@ -27,6 +28,7 @@ export class Agent implements IChatLifetimeContributor {
         return this.config.name ?? this.config.identity.chatName ?? this.config.identity.name;
     }
 
+    /** The chat room that this agent is currently in. */
     chatRoom?: ChatRoom;
 
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage[]> {
@@ -38,7 +40,7 @@ export class Agent implements IChatLifetimeContributor {
             result.push({
                 location: MessagePositionTypes.Instructions,
                 messages: [
-                    new SystemMessage(m)
+                    new SystemMessage(m, { id: getIdForMessage() })
                 ]
             });
         });
@@ -48,7 +50,7 @@ export class Agent implements IChatLifetimeContributor {
             result.push({
                 location: MessagePositionTypes.Instructions,
                 messages: [
-                    new SystemMessage(m)
+                    new SystemMessage(m, { id: getIdForMessage() })
                 ]
             });
         });
@@ -57,9 +59,9 @@ export class Agent implements IChatLifetimeContributor {
         return result;
     }
 
-    async chatComplete(finalMessages: BaseMessage[]): Promise<void> {
+    async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
         // Get the last message, and add our name to it.
-        const lastMessage = finalMessages[finalMessages.length - 1];
+        const lastMessage = newMessages[newMessages.length - 1];
 
         if (!lastMessage) {
             return;

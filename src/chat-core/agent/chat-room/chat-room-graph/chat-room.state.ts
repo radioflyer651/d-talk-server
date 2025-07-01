@@ -21,6 +21,8 @@ export const ChatState = Annotation.Root({
     chatModel: Annotation<BaseChatModel>,
     /** All tools that are available to be called for an agent. */
     tools: Annotation<DynamicTool[]>,
+    /** A set of messages that were added to the chat history during this graph execution. */
+    newMessages: Annotation<BaseMessage[]>
 });
 
 export const ChatCallState = Annotation.Root({

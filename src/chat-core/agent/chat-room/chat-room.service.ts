@@ -15,6 +15,7 @@ import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interf
 import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
 import { ChatCallState } from "./chat-room-graph/chat-room.state";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
+import { getIdForMessage } from "../../utilities/set-message-id.util";
 
 export class ChatRoom implements IChatLifetimeContributor {
     constructor(
@@ -85,6 +86,16 @@ export class ChatRoom implements IChatLifetimeContributor {
         this._messages = value;
     }
 
+    private _externalLifetimeServices: IChatLifetimeContributor[] = [];
+    /** External set of IChatLifetimeContributor services that will be connected to chat requests.
+     *   This is for things like setting up socket messaging on chat events, and things like that. */
+    get externalLifetimeServices(): IChatLifetimeContributor[] {
+        return this._externalLifetimeServices;
+    }
+    set externalLifetimeServices(value: IChatLifetimeContributor[]) {
+        this._externalLifetimeServices = value;
+    }
+
     /** Loads the agent data, and creates new Agent objects for each. */
     private async hydrateAgents(): Promise<void> {
         // Get the agents from the database.
@@ -123,7 +134,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             });
 
             // Add this message to the conversation.
-            this.messages.push(new HumanMessage(message, { name: user.displayName ?? user.userName }));
+            this.messages.push(new HumanMessage(message, { id: getIdForMessage(), name: user.displayName ?? user.userName }));
 
             // Update the messages in the database.
             await this.saveConversation();
@@ -164,7 +175,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             const history = this.messages.slice();
 
             // Collect the plugins.
-            const plugins = [
+            const plugins: AgentPluginBase[] = [
                 ...agent.plugins,
                 ...this.plugins,
                 ...job.plugins,
@@ -176,6 +187,7 @@ export class ChatRoom implements IChatLifetimeContributor {
                 job,
                 this,
                 ...plugins,
+                ...this.externalLifetimeServices
             ];
 
             // Create the graph state to call the chat.
@@ -216,6 +228,11 @@ export class ChatRoom implements IChatLifetimeContributor {
         await this.chatDbService.updateChatRoomConversation(this.data._id, this.data.conversation);
     }
 
+    async saveChatRoom(): Promise<void> {
+        this.updateDataForStorage();
+        await this.chatDbService.updateChatRoom(this.data._id, this.data);
+    }
+
     /** Logs an error to the database, for this chat room. */
     protected async logError(error: object) {
         await this.chatDbService.addChatRoomLog(this.data._id, error);
@@ -224,9 +241,9 @@ export class ChatRoom implements IChatLifetimeContributor {
     /** The current chat job that's being processed, if any. */
     private _currentlyExecutingJob: ChatJob | undefined;
 
-    async chatComplete(finalMessages: BaseMessage[]): Promise<void> {
+    async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
         // Get the final message.
-        const finalMessage = finalMessages[finalMessages.length - 1];
+        const finalMessage = newMessages[newMessages.length - 1];
 
         // Get the last message.
         this._events.next(<ChatRoomMessageEvent>{

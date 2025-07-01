@@ -42,7 +42,7 @@ export interface IChatLifetimeContributor {
     /**
      * Called at the end of the chat session, allowing the contributor to finalize or clean up resources.
      */
-    chatComplete?(finalMessages: BaseMessage[]): Promise<void>;
+    chatComplete?(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void>;
 }
 
 export interface ChatCallInfo {

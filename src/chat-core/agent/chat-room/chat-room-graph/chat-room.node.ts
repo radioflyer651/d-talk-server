@@ -2,6 +2,8 @@ import { AIMessage, AIMessageChunk, HumanMessage, ToolMessage } from "@langchain
 import { ChatCallState, ChatState } from "./chat-room.state";
 import { insertPositionableMessages } from "../../../utilities/insert-positionable-messages.util";
 import { PositionableMessage } from "../../model/positionable-message.model";
+import { ObjectId } from "mongodb";
+import { setMessageId } from "../../../utilities/set-message-id.util";
 
 
 /**
@@ -17,6 +19,7 @@ export async function startChatCall(state: typeof ChatCallState.State): Promise<
         tools: [], // This will be filled in later.
         makeReplyCall: false,
         replyCount: 0,
+        newMessages: []
     };
 }
 
@@ -123,7 +126,7 @@ export async function chatComplete(state: typeof ChatState.State) {
     // Let all contributors finalize or clean up after the chat is complete
     const promises = state.lifetimeContributors
         .filter(c => typeof c.chatComplete === 'function')
-        .map(c => c.chatComplete!(state.messageHistory.slice()));
+        .map(c => c.chatComplete!(state.messageHistory.slice(), state.newMessages.slice()));
 
     // Wait for all chatComplete hooks to finish
     await Promise.all(promises);
@@ -165,6 +168,8 @@ export async function callTools(state: typeof ChatState.State) {
 
         // Return the tool message as a result.
         const toolMessage = new ToolMessage(toolResult?.toString() ?? '', toolCall.id!);
+        setMessageId(toolMessage);
+
         return toolMessage;
     });
 
@@ -172,6 +177,8 @@ export async function callTools(state: typeof ChatState.State) {
     // Add the responses to the message list.
     state.callMessages.push(...results);
     state.messageHistory.push(...results);
+    state.newMessages.push(...results);
+
 }
 
 /**
@@ -194,9 +201,12 @@ export async function chatCall(state: typeof ChatState.State) {
         result = await llm.invoke(state.callMessages);
     }
 
+    setMessageId(result);
+
     // Add the result to the message stacks.
     state.callMessages.push(result);
     state.messageHistory.push(result);
+    state.newMessages.push(result);
 
     // For now, just return the state as-is
     return state;

@@ -36,7 +36,7 @@ export class Agent implements IChatLifetimeContributor {
         // Add the identity of this agent to the results.
         this.config.identity.identityStatements.forEach(m => {
             result.push({
-                location: MessagePositionTypes.AbsoluteFirst,
+                location: MessagePositionTypes.Instructions,
                 messages: [
                     new SystemMessage(m)
                 ]
@@ -46,7 +46,7 @@ export class Agent implements IChatLifetimeContributor {
         // Now insert the instructions.
         this.config.identity.baseInstructions.forEach(m => {
             result.push({
-                location: MessagePositionTypes.AbsoluteFirst,
+                location: MessagePositionTypes.Instructions,
                 messages: [
                     new SystemMessage(m)
                 ]

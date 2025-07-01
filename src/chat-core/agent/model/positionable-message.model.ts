@@ -2,10 +2,11 @@ import { BaseMessage } from "@langchain/core/messages";
 
 /** Enumerates the locations that plugin messages can be placed within a chat message history. */
 export enum MessagePositionTypes {
-    /** Indicates that the message should be as close to the beginning as possible. */
-    AbsoluteFirst = 'absolute-first',
+    Instructions = 'instructions',
     /** Indicates the message should be inserted after agent system messages. */
     AfterAgentIdentity = 'after-identity',
+    /** Indicates that the message should be as close to the beginning as possible. */
+    AfterInstructions = 'after-instructions',
     /** Indicates the instructions should be inserted at some offset from after the user instructions. */
     OffsetFromFront = 'offset-from-front',
     /** Indicates the instructions should be inserted at some offset before the last message. */

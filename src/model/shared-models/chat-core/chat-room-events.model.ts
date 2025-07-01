@@ -9,4 +9,5 @@ export interface ChatRoomMessageEvent extends IChatRoomEvent {
     agentId: ObjectId;
     dateTime: Date;
     message: string;
+    messageId: string;
 }

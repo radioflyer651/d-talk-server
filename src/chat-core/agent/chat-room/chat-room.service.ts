@@ -123,6 +123,10 @@ export class ChatRoom implements IChatLifetimeContributor {
             // Update our busy state.
             this.setBusyState(true);
 
+            // Add this message to the conversation.
+            const newMessage = new HumanMessage(message, { id: getIdForMessage(), name: user.displayName ?? user.userName });
+            this.messages.push(newMessage);
+
             // Trigger the event so observers pick it up.
             this._events.next(<ChatRoomMessageEvent>{
                 eventType: 'new-chat-message',
@@ -131,10 +135,8 @@ export class ChatRoom implements IChatLifetimeContributor {
                 agentType: 'user',
                 dateTime: new Date(),
                 message: message,
+                messageId: newMessage.id!,
             });
-
-            // Add this message to the conversation.
-            this.messages.push(new HumanMessage(message, { id: getIdForMessage(), name: user.displayName ?? user.userName }));
 
             // Update the messages in the database.
             await this.saveConversation();
@@ -253,6 +255,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             dateTime: new Date(),
             eventType: 'new-chat-message',
             message: finalMessage.text,
+            messageId: finalMessage.id!,
         });
     }
 }

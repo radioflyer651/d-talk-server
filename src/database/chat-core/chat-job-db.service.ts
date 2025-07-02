@@ -12,7 +12,7 @@ export class ChatJobDbService extends DbService {
 
     /** Create or update a chat job. */
     async upsertChatJob(job: UpsertDbItem<ChatJobData & { _id: ObjectId }>): Promise<ChatJobData & { _id: ObjectId }> {
-        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.Users, job) as ChatJobData & { _id: ObjectId };
+        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.ChatJobs, job) as ChatJobData & { _id: ObjectId };
     }
 
     /** Get a chat job by its ObjectId. */

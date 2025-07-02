@@ -1,4 +1,9 @@
 import { getAppConfig } from "./config";
+import { AuthDbService } from "./database/auth-db.service";
+import { ChatJobDbService } from "./database/chat-core/chat-job-db.service";
+import { ChatRoomDbService } from "./database/chat-core/chat-room-db.service";
+import { PluginDbService } from "./database/chat-core/plugin-db.service";
+import { ProjectDbService } from "./database/chat-core/project-db.service";
 import { LogDbService } from "./database/log-db.service";
 import { MongoHelper } from "./mongo-helper";
 import { AuthService } from "./services/auth-service";
@@ -6,7 +11,12 @@ import { AuthService } from "./services/auth-service";
 
 /** The mongo helper used in all DB Services. */
 export let dbHelper: MongoHelper;
+export let authDbService: AuthDbService;
 export let loggingService: LogDbService;
+export let chatDbService: ChatJobDbService;
+export let messageDbService: ChatRoomDbService;
+export let userDbService: PluginDbService;
+export let projectDbService: ProjectDbService;
 
 /* App Services. */
 export let authService: AuthService;
@@ -22,8 +32,13 @@ export async function initializeServices(): Promise<void> {
 
     /* All DB Services. */
     loggingService = new LogDbService(dbHelper);
+    chatDbService = new ChatJobDbService(dbHelper);
+    messageDbService = new ChatRoomDbService(dbHelper);
+    userDbService = new PluginDbService(dbHelper);
+    projectDbService = new ProjectDbService(dbHelper);
+    authDbService = new AuthDbService(dbHelper);
 
     /* App Services. */
-
+    authService = new AuthService(authDbService, loggingService);
 
 }

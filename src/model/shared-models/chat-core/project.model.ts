@@ -13,5 +13,6 @@ export interface Project {
     /** Gets or sets the name of this project to help identify it. */
     name: string;
 
-    
+    /** A description of this project's purpose, if any. */
+    description: string;
 }

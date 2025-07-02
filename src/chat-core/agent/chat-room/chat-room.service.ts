@@ -15,7 +15,7 @@ import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interf
 import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
 import { ChatCallState } from "./chat-room-graph/chat-room.state";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
-import { getIdForMessage } from "../../utilities/set-message-id.util";
+import { createIdForMessage } from "../../utilities/set-message-id.util";
 import { AgentDbService } from '../../../database/chat-core/agent-db.service';
 import { setSpeakerOnMessage } from "../../utilities/speaker.utils";
 
@@ -127,7 +127,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             this.setBusyState(true);
 
             // Add this message to the conversation.
-            const newMessage = new HumanMessage(message, { id: getIdForMessage(), name: user.displayName ?? user.userName });
+            const newMessage = new HumanMessage(message, { id: createIdForMessage(), name: user.displayName ?? user.userName });
             setSpeakerOnMessage(newMessage, { speakerType: 'user', speakerId: user._id.toString() });
             this.messages.push(newMessage);
 

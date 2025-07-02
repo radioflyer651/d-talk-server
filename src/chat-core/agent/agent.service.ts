@@ -5,7 +5,7 @@ import { ChatRoom } from "./chat-room/chat-room.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { MessagePositionTypes, PositionableMessage } from "./model/positionable-message.model";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { getIdForMessage } from "../utilities/set-message-id.util";
+import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 
 export class Agent implements IChatLifetimeContributor {
@@ -40,7 +40,7 @@ export class Agent implements IChatLifetimeContributor {
             result.push({
                 location: MessagePositionTypes.Instructions,
                 messages: [
-                    new SystemMessage(m, { id: getIdForMessage() })
+                    new SystemMessage(m, { id: createIdForMessage() })
                 ]
             });
         });
@@ -50,7 +50,7 @@ export class Agent implements IChatLifetimeContributor {
             result.push({
                 location: MessagePositionTypes.Instructions,
                 messages: [
-                    new SystemMessage(m, { id: getIdForMessage() })
+                    new SystemMessage(m, { id: createIdForMessage() })
                 ]
             });
         });

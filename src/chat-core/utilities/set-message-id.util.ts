@@ -2,14 +2,14 @@ import { BaseMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
 
 /** Returns a unique string ID used for BaseMessage objects. */
-export function getIdForMessage(): string {
+export function createIdForMessage(): string {
     return new ObjectId().toString();
 }
 
 /** If a specified BaseMessage does not have an id value, sets the value. */
 export function setMessageId(message: BaseMessage): void {
     if (!message.id) {
-        message.id = getIdForMessage();
+        message.id = createIdForMessage();
     }
 }
 

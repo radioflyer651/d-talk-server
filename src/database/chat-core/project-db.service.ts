@@ -35,6 +35,11 @@ export class ProjectDbService extends DbService {
 
     /** Update a project by its ObjectId. */
     async updateProject(projectId: ObjectId, update: Partial<Project>): Promise<number> {
+        // Ensure the project ID matches the ID on the update.
+        if (update._id && !projectId.equals(update._id)) {
+            throw new Error(`Project ID does not match the ID on the update value.`);
+        }
+        
         return await this.dbHelper.updateDataItems<Project & { _id: ObjectId; }>(
             DbCollectionNames.Projects,
             { _id: projectId },

@@ -72,9 +72,9 @@ export class AuthService {
 
     async login(userName: string, password: string): Promise<TokenPayload | undefined> {
         console.error(`userId isn't implemented properly yet.  This needs to be fixed before we can call this method.`);
-        
+
         return {
-            userId: new ObjectId(),
+            userId: new ObjectId('6865a04ab372accecb2b989a'),
             companyName: '',
             name: 'Richard',
             website: '',

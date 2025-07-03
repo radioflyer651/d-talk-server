@@ -11,7 +11,7 @@ async function loadSecretKey(): Promise<string> {
 // Generate a token
 export async function generateToken(payload: TokenPayload): Promise<string> {
     const secretKey = await loadSecretKey();
-    return jwt.sign(payload, secretKey, { expiresIn: '12h' });
+    return jwt.sign(payload, secretKey, { expiresIn: '7d' });
 }
 
 // Verify a token

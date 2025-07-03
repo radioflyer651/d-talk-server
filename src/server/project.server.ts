@@ -68,14 +68,14 @@ projectRouter.put('/project/:id', async (req, res) => {
         // Convert the project ID from string to ObjectId
         const projectId = new ObjectId(req.params.id);
 
-        const { name } = req.body;
-        if (!name) {
+        const project = req.body as Project;
+        if (!project) {
             res.status(400).json({ error: 'Project name is required' });
             return;
         }
 
         // Update the project in the database
-        const result = await projectDbService.updateProject(projectId, { name });
+        const result = await projectDbService.updateProject(projectId, project);
 
         if (result > 0) {
             res.json({ success: true });

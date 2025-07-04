@@ -3,8 +3,8 @@ import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
 import { UpsertDbItem } from "../../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
-import { PluginInstanceReference } from "../../chat-core/agent-plugin/plugin-instance-reference.model";
-import { PluginSpecification } from "../../chat-core/agent-plugin/plugin-specification.model";
+import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
+import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
 
 export class PluginDbService extends DbService {
     constructor(dbHelper: MongoHelper) {

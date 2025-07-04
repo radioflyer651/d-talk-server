@@ -1,8 +1,8 @@
 import { DynamicTool } from "@langchain/core/tools";
 import { PositionableMessage } from "../agent/model/positionable-message.model";
-import { PluginInstanceReference } from "./plugin-instance-reference.model";
+import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { ObjectId } from "mongodb";
-import { PluginSpecification } from "./plugin-specification.model";
+import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
 import { IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 
 

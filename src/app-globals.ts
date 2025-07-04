@@ -7,6 +7,7 @@ import { ProjectDbService } from "./database/chat-core/project-db.service";
 import { LogDbService } from "./database/log-db.service";
 import { MongoHelper } from "./mongo-helper";
 import { AuthService } from "./services/auth-service";
+import { AgentDbService } from "./database/chat-core/agent-db.service";
 /** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
 
 /** The mongo helper used in all DB Services. */
@@ -17,6 +18,7 @@ export let chatDbService: ChatJobDbService;
 export let messageDbService: ChatRoomDbService;
 export let userDbService: PluginDbService;
 export let projectDbService: ProjectDbService;
+export let agentDbService: AgentDbService;
 
 /* App Services. */
 export let authService: AuthService;
@@ -37,6 +39,7 @@ export async function initializeServices(): Promise<void> {
     userDbService = new PluginDbService(dbHelper);
     projectDbService = new ProjectDbService(dbHelper);
     authDbService = new AuthDbService(dbHelper);
+    agentDbService = new AgentDbService(dbHelper);
 
     /* App Services. */
     authService = new AuthService(authDbService, loggingService);

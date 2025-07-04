@@ -12,7 +12,7 @@ A chat room is an "environment" for users and/or chat agents.
 
 The chat room will have an expandable set of features/capabilities to allow collaboration among the chat agents and the user(s).  This includes a "document" section for producing output and other collaborative efforts with the chat agents.  The room will also facilitate the ability for communications among the agents.
 
-On the front end, this includes appropriate controls and panes needed for interaction.
+On the front end, this includes appropriate controls and panes needed for user interaction.
 
 On the back end, it will constitute a data set of the discussion, and references to the chat agents.  Further, it will implement an orchestration mechanism to provide "traffic control" of the chat agents having turns to speak.  This orchestration will be handled by a separate service mechanism though, and not only a dependency to the chat room - not part of the chat room itself.
 

@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { ChatAgentIdentityConfiguration } from "./agent-configuration.model";
-import { PluginInstanceReference } from "../../../chat-core/agent-plugin/plugin-instance-reference.model";
+import { PluginInstanceReference } from "./plugin-instance-reference.model";
 
 
 /** Represents a specific instance of a chat agent, from a specific identity. */

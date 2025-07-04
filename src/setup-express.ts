@@ -11,6 +11,7 @@ import { loggingService } from './app-globals';
 import { AuthenticatedSpecialRequest } from './model/authenticated-request.model';
 import { adminRouter } from './server/admin/admin.server';
 import { projectRouter } from './server/project.server';
+import { agentsServer } from './server/agents.server';
 
 /** Initializes all routes and middleware for an express app. */
 export async function initializeExpressApp() {
@@ -90,6 +91,7 @@ export async function initializeExpressApp() {
 
   app.use(adminRouter);
   app.use(projectRouter);
+  app.use(agentsServer);
 
   app.use((req, res) => {
     res.status(404).send('Not Found');

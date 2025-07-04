@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { PluginSpecification } from "../../../chat-core/agent-plugin/plugin-specification.model";
+import { PluginSpecification } from "./plugin-specification.model";
 import { ModelServiceParams } from "./model-service-params.model";
 
 /** The configurable items that make up a chat agent. */

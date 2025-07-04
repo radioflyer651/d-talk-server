@@ -1,8 +1,8 @@
 import { ObjectId } from "mongodb";
 import { AgentPluginBase } from "./agent-plugin-base.service";
 import { IPluginResolver } from "./plugin-resolver.interface";
-import { PluginInstanceReference } from "./plugin-instance-reference.model";
-import { PluginSpecification } from "./plugin-specification.model";
+import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
+import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
 
 export class AppPluginResolver implements IPluginResolver {
     getPluginInstance(pluginContext: PluginInstanceReference): Promise<AgentPluginBase | undefined> {

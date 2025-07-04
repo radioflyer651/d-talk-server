@@ -16,7 +16,6 @@ export let authDbService: AuthDbService;
 export let loggingService: LogDbService;
 export let chatDbService: ChatJobDbService;
 export let messageDbService: ChatRoomDbService;
-export let userDbService: PluginDbService;
 export let projectDbService: ProjectDbService;
 export let agentDbService: AgentDbService;
 
@@ -36,9 +35,8 @@ export async function initializeServices(): Promise<void> {
     loggingService = new LogDbService(dbHelper);
     chatDbService = new ChatJobDbService(dbHelper);
     messageDbService = new ChatRoomDbService(dbHelper);
-    userDbService = new PluginDbService(dbHelper);
-    projectDbService = new ProjectDbService(dbHelper);
     authDbService = new AuthDbService(dbHelper);
+    projectDbService = new ProjectDbService(dbHelper);
     agentDbService = new AgentDbService(dbHelper);
 
     /* App Services. */

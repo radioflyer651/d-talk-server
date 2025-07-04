@@ -1,9 +1,6 @@
 import { ObjectId } from "mongodb";
 
 export interface TokenPayload {
-    companyName: string;
-    website: string;
-
     /** The name of the user. */
     name: string;
 

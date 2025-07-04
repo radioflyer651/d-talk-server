@@ -1,5 +1,3 @@
-
-
 export enum DbCollectionNames {
     Users = 'users',
     Logs = 'logs',
@@ -9,5 +7,6 @@ export enum DbCollectionNames {
     Agents = 'chat-agents',
     Plugins = 'plugins',
     ChatJobs = 'chat-jobs',
+    UserSecrets = 'user-secrets',
     
 }

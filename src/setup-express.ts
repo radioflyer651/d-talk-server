@@ -89,7 +89,7 @@ export async function initializeExpressApp() {
     next();
   });
 
-  app.use(adminRouter);
+  app.use('/admin', adminRouter);
   app.use(projectRouter);
   app.use(agentsServer);
 

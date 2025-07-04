@@ -42,13 +42,13 @@ export class AgentServiceFactory {
         const plugins = await Promise.all(identity.plugins
             .map(async p => this.pluginResolver.createPluginInstance(p)));
 
-
         // Create the configuration for the agent.
         const configuration = {
             _id: new ObjectId(),
             identity: identity,
             permanentPlugins: plugins.map(p => p.getReference()),
             instancePlugins: [],
+            projectId: identity.projectId, // Ensure projectId is provided
         } as AgentInstanceConfiguration;
 
         // Create the agent, and return it.

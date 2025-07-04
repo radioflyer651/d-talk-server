@@ -4,6 +4,8 @@ import { ModelServiceParams } from "./model-service-params.model";
 
 /** The configurable items that make up a chat agent. */
 export interface ChatAgentIdentityConfiguration {
+    _id: ObjectId;
+
     /** The information needed to specify and crate a chat model to support his agent. */
     modelInfo: ModelServiceParams;
 

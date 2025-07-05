@@ -73,8 +73,8 @@ agentsServer.post('/agent-configuration', async (req, res) => {
     }
 });
 
-// Update an agent identity by ID
-agentsServer.put('/agent-configuration/:id', async (req, res) => {
+// Update an agent identity by ID (ID should come from body, not path)
+agentsServer.put('/agent-configuration', async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
         if (!userId) {
@@ -82,10 +82,13 @@ agentsServer.put('/agent-configuration/:id', async (req, res) => {
             return;
         }
 
-        // Parse the agent identity ID from the URL
-        const identityId = new ObjectId(req.params.id);
         // Get the update data from the request body
         const update = req.body as Partial<ChatAgentIdentityConfiguration>;
+        if (!update || !update._id) {
+            res.status(400).json({ error: 'Missing required _id in body' });
+            return;
+        }
+        const identityId = new ObjectId(update._id);
 
         // Update the agent identity in the database
         const result = await agentDbService.updateAgentIdentity(identityId, update);
@@ -98,7 +101,6 @@ agentsServer.put('/agent-configuration/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to update agent identity' });
     }
 });
-
 
 // Delete an agent identity by ID
 agentsServer.delete('/agent-configuration/:id', async (req, res) => {

@@ -1,6 +1,8 @@
 import { ObjectId } from "mongodb";
 import { PluginSpecification } from "./plugin-specification.model";
 import { ModelServiceParams } from "./model-service-params.model";
+import { PositionableMessage } from "./positionable-message.model";
+import { StoredMessage } from "@langchain/core/messages";
 
 /** The configurable items that make up a chat agent. */
 export interface ChatAgentIdentityConfiguration {
@@ -18,14 +20,17 @@ export interface ChatAgentIdentityConfiguration {
     /** A name to show in chat for this agent. */
     chatName: string;
 
+    /** Gets or sets a description for this agent. */
+    description: string;
+
     /** This is provided as a system message to the agent.  This should inform the agent of its identity
      *   in a way of "You are XX and you are an expert with YY."  It should not include instructions, but
      *   things about the agent that informs its personality. */
-    identityStatements: string[];
+    identityStatements: PositionableMessage<StoredMessage>[];
 
     /** The base instructions that make up this agent.  These instructions are things that the agent
      *   should do, or remember.  It should not overlap with the identityStatements though. */
-    baseInstructions: string[];
+    baseInstructions: PositionableMessage<StoredMessage>[];
 
     /** A list of plugin types for the plugins that the agent should have available. */
     plugins: PluginSpecification[];

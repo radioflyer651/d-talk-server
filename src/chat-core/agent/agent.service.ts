@@ -8,6 +8,7 @@ import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-core/agent-configuration.model";
+import { dehydratePositionableMessages, hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
 
 export class Agent implements IChatLifetimeContributor {
     // The configuration for this agent instance
@@ -45,23 +46,10 @@ export class Agent implements IChatLifetimeContributor {
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
         // Resulting message list.
         const result = [] as PositionableMessage<BaseMessage>[];
-
-        // Add the identity of this agent to the results.
-        this.identity.identityStatements.forEach(m => {
-            result.push({
-                location: MessagePositionTypes.Instructions,
-                message: new SystemMessage(m, { id: createIdForMessage() })
-
-            });
-        });
-
-        // Now insert the instructions.
-        this.identity.baseInstructions.forEach(m => {
-            result.push({
-                location: MessagePositionTypes.Instructions,
-                message: new SystemMessage(m, { id: createIdForMessage() })
-            });
-        });
+        if (info.replyNumber === 0) {
+            result.push(...hydratePositionableMessages(this.identity.identityStatements));
+            result.push(...hydratePositionableMessages(this.identity.baseInstructions));
+        }
 
         // Return the results.
         return result;

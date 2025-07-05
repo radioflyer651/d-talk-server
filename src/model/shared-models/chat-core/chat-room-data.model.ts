@@ -1,7 +1,7 @@
 import { StoredMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
-import { ChatJobData } from "./chat-job-data.model";
 import { AgentReference } from "./agent-reference.model";
+import { ChatJobInstance } from "./chat-job-instance.model";
 
 export interface ChatRoomData {
     _id: ObjectId;
@@ -32,9 +32,8 @@ export interface ChatRoomData {
     /** A set of documents that are being worked on in this chat room. */
     documents: ObjectId[];
 
-    /** Gets or sets a list of chat jobs, which are interactions that occur
-     *   in a chat room by agents with every interaction by the user. */
-    jobs: ChatJobData[];
+    /** Gets or sets the instances of chat jobs that are referenced by this chat room. */
+    jobs: ChatJobInstance[];
 
     /** A set of log messages that may help in debugging. */
     logs: object[];

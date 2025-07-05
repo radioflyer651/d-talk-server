@@ -1,5 +1,4 @@
 import { ObjectId } from "mongodb";
-import { ChatAgentIdentityConfiguration } from "./agent-configuration.model";
 import { PluginInstanceReference } from "./plugin-instance-reference.model";
 
 

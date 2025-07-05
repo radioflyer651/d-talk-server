@@ -3,7 +3,7 @@ import express from 'express';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
 import { chatDbService, projectDbService } from '../app-globals';
-import { ChatJobData } from '../model/shared-models/chat-core/chat-job-data.model';
+import { ChatJobConfiguration } from '../model/shared-models/chat-core/chat-job-data.model';
 
 export const jobsServer = express.Router();
 
@@ -26,11 +26,9 @@ jobsServer.get('/jobs/:projectId', async (req, res) => {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
-        // Find all jobs for this project by fetching all chat rooms for the project, then aggregating jobs
-        // (Assume jobs are stored in chat rooms, not a flat collection)
-        // You may need to implement this logic based on your actual data model
-        // For now, return 501 Not Implemented
-        res.status(501).json({ error: 'Not implemented: jobs are stored in chat rooms, not a flat collection.' });
+        // Fetch all jobs for this project
+        const jobs = await chatDbService.getChatJobsByProject(projectId);
+        res.json(jobs);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch jobs' });
     }
@@ -50,9 +48,7 @@ jobsServer.get('/job/:id', async (req, res) => {
             res.status(404).json({ error: 'Job not found' });
             return;
         }
-        // Defensive: ensure job.projectId is ObjectId
-        const projectId = (job as any).projectId as ObjectId | undefined;
-        if (!projectId || !(await userHasProjectAccess(userId, projectId))) {
+        if (!job.projectId || !(await userHasProjectAccess(userId, job.projectId))) {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
@@ -70,13 +66,12 @@ jobsServer.post('/job', async (req, res) => {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const job = req.body as ChatJobData & { projectId?: string; };
+        const job = req.body as ChatJobConfiguration;
         if (!job || !job.projectId || !job.agentId) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }
-        const projectId = new ObjectId(job.projectId);
-        if (!(await userHasProjectAccess(userId, projectId))) {
+        if (!(await userHasProjectAccess(userId, job.projectId))) {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
@@ -95,7 +90,7 @@ jobsServer.put('/job', async (req, res) => {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const update = req.body as Partial<ChatJobData> & { _id?: string; projectId?: string; };
+        const update = req.body as Partial<ChatJobConfiguration> & { _id?: string; };
         if (!update || !update._id) {
             res.status(400).json({ error: 'Missing required _id in body' });
             return;
@@ -106,8 +101,7 @@ jobsServer.put('/job', async (req, res) => {
             res.status(404).json({ error: 'Job not found' });
             return;
         }
-        const projectId = (job as any).projectId as ObjectId | undefined;
-        if (!projectId || !(await userHasProjectAccess(userId, projectId))) {
+        if (!job.projectId || !(await userHasProjectAccess(userId, job.projectId))) {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
@@ -136,8 +130,7 @@ jobsServer.delete('/job/:id', async (req, res) => {
             res.status(404).json({ error: 'Job not found' });
             return;
         }
-        const projectId = (job as any).projectId as ObjectId | undefined;
-        if (!projectId || !(await userHasProjectAccess(userId, projectId))) {
+        if (!job.projectId || !(await userHasProjectAccess(userId, job.projectId))) {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }

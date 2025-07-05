@@ -1,14 +1,16 @@
 import { StoredMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
 import { PluginSpecification } from "./plugin-specification.model";
-import { PluginInstanceReference } from "./plugin-instance-reference.model";
 import { PositionableMessage } from "./positionable-message.model";
 
 
 /** This is a turn and a job that an agent must fulfill in a chat room during a round of chat interactions. */
-export interface ChatJobData {
+export interface ChatJobConfiguration {
     /** Gets or sets the ID of the job, for the database. */
     _id: ObjectId;
+
+    /** The ID of the project this chat job configuration belongs to. */
+    projectId: ObjectId;
 
     /** Gets or sets the order that this job gets executed in the execution order. */
     order: number;
@@ -30,7 +32,4 @@ export interface ChatJobData {
      *   Only plugins that have no contexts can be used in
      *   chat jobs. */
     plugins: PluginSpecification[];
-
-    /** The contexts for the plugins on this ChatJob. */
-    pluginReferences: PluginInstanceReference[];
 }

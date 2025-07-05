@@ -3,7 +3,7 @@ import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
 import { UpsertDbItem } from "../../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
-import { ChatJobData } from "../../model/shared-models/chat-core/chat-job-data.model";
+import { ChatJobConfiguration } from "../../model/shared-models/chat-core/chat-job-data.model";
 
 export class ChatJobDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
@@ -11,30 +11,38 @@ export class ChatJobDbService extends DbService {
     }
 
     /** Create or update a chat job. */
-    async upsertChatJob(job: UpsertDbItem<ChatJobData>): Promise<ChatJobData> {
-        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.ChatJobs, job) as ChatJobData;
+    async upsertChatJob(job: UpsertDbItem<ChatJobConfiguration>): Promise<ChatJobConfiguration> {
+        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.ChatJobs, job) as ChatJobConfiguration;
     }
 
     /** Get a chat job by its ObjectId. */
-    async getChatJobById(jobId: ObjectId): Promise<ChatJobData | undefined> {
-        return await this.dbHelper.findDataItem<ChatJobData, { _id: ObjectId; }>(
+    async getChatJobById(jobId: ObjectId): Promise<ChatJobConfiguration | undefined> {
+        return await this.dbHelper.findDataItem<ChatJobConfiguration, { _id: ObjectId; }>(
             DbCollectionNames.ChatJobs,
             { _id: jobId },
             { findOne: true }
-        ) as ChatJobData | undefined;
+        ) as ChatJobConfiguration | undefined;
     }
 
     /** Get all chat jobs for a given agent. */
-    async getChatJobsByAgent(agentId: ObjectId): Promise<ChatJobData[]> {
-        return await this.dbHelper.findDataItem<ChatJobData, { agentId: ObjectId; }>(
+    async getChatJobsByAgent(agentId: ObjectId): Promise<ChatJobConfiguration[]> {
+        return await this.dbHelper.findDataItem<ChatJobConfiguration, { agentId: ObjectId; }>(
             DbCollectionNames.ChatJobs,
             { agentId }
-        ) as ChatJobData[];
+        ) as ChatJobConfiguration[];
+    }
+
+    /** Get all chat jobs for a given project. */
+    async getChatJobsByProject(projectId: ObjectId): Promise<ChatJobConfiguration[]> {
+        return await this.dbHelper.findDataItem<ChatJobConfiguration, { projectId: ObjectId }>(
+            DbCollectionNames.ChatJobs,
+            { projectId }
+        ) as ChatJobConfiguration[];
     }
 
     /** Update a chat job by its ObjectId. */
-    async updateChatJob(jobId: ObjectId, update: Partial<ChatJobData>): Promise<number> {
-        return await this.dbHelper.updateDataItems<ChatJobData>(
+    async updateChatJob(jobId: ObjectId, update: Partial<ChatJobConfiguration>): Promise<number> {
+        return await this.dbHelper.updateDataItems<ChatJobConfiguration>(
             DbCollectionNames.ChatJobs,
             { _id: jobId },
             update,
@@ -44,7 +52,7 @@ export class ChatJobDbService extends DbService {
 
     /** Delete a chat job by its ObjectId. */
     async deleteChatJob(jobId: ObjectId): Promise<number> {
-        return await this.dbHelper.deleteDataItems<ChatJobData, { _id: ObjectId; }>(
+        return await this.dbHelper.deleteDataItems<ChatJobConfiguration, { _id: ObjectId; }>(
             DbCollectionNames.ChatJobs,
             { _id: jobId },
             { deleteMany: false }

@@ -1,5 +1,5 @@
 import { BaseMessage, AIMessage } from "@langchain/core/messages";
-import { PositionableMessage } from "./agent/model/positionable-message.model";
+import { PositionableMessage } from "../model/shared-models/chat-core/positionable-message.model";
 import { DynamicTool } from "@langchain/core/tools";
 
 export interface IChatLifetimeContributor {
@@ -29,7 +29,7 @@ export interface IChatLifetimeContributor {
      * Allows the contributor to add messages before the chat call is made (e.g., system or context messages).
      * Returns an array of messages to prepend to the call.
      */
-    addPreChatMessages?(info: ChatCallInfo): Promise<PositionableMessage[]>;
+    addPreChatMessages?(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]>;
 
     // Chat occurs here
 
@@ -37,7 +37,7 @@ export interface IChatLifetimeContributor {
      * Called after the chat model generates a reply, allowing the contributor to process the reply
      * and optionally return additional messages to insert.
      */
-    handleReply?(reply: AIMessage): Promise<undefined | PositionableMessage[]>;
+    handleReply?(reply: AIMessage): Promise<undefined | PositionableMessage<BaseMessage>[]>;
 
     /** Called after any tools are executed, and passes the message histories. */
     peekToolCallMessages?(messageHistory: BaseMessage[], messageCalls: BaseMessage[], newMessages: BaseMessage[]): Promise<void>;

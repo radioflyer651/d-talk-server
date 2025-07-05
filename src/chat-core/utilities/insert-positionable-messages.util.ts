@@ -1,5 +1,5 @@
 import { BaseMessage } from "@langchain/core/messages";
-import { MessagePositionTypes, PositionableMessage } from "../agent/model/positionable-message.model";
+import { MessagePositionTypes, PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 
 /** Inserts as set of PositionableMessage s into a specified set of BaseMessage s. */
 export function insertPositionableMessages(positionableMessages: PositionableMessage[], messages: BaseMessage[]): BaseMessage[] {

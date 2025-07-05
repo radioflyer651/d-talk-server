@@ -1,7 +1,8 @@
-import { BaseMessage } from "@langchain/core/messages";
+import { StoredMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
 import { PluginSpecification } from "./plugin-specification.model";
 import { PluginInstanceReference } from "./plugin-instance-reference.model";
+import { PositionableMessage } from "./positionable-message.model";
 
 
 /** This is a turn and a job that an agent must fulfill in a chat room during a round of chat interactions. */
@@ -20,7 +21,7 @@ export interface ChatJobData {
     agentId: ObjectId | undefined;
 
     /** The instructions to be given to the agent for them to fulfil the job. */
-    instructions: BaseMessage[];
+    instructions: PositionableMessage<StoredMessage>[];
 
     /** A set of plugins that can be used for this job. 
      *   Only plugins that have no contexts can be used in

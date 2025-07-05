@@ -18,6 +18,8 @@ import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { createIdForMessage } from "../../utilities/set-message-id.util";
 import { AgentDbService } from '../../../database/chat-core/agent-db.service';
 import { setSpeakerOnMessage } from "../../utilities/speaker.utils";
+import { AgentInstanceConfiguration } from "../../../model/shared-models/chat-core/agent-instance-configuration.model";
+import { getDistinctObjectIds } from "../../../utils/get-distinct-object-ids.utils";
 
 export class ChatRoom implements IChatLifetimeContributor {
     constructor(
@@ -102,11 +104,57 @@ export class ChatRoom implements IChatLifetimeContributor {
     /** Loads the agent data, and creates new Agent objects for each. */
     private async hydrateAgents(): Promise<void> {
         // Get the agents from the database.
-        const agentConfigs = await this.agentDbService.getAgentsByIds(this.data.agents);
+        let existingAgents: AgentInstanceConfiguration[] = [];
+        const existingAgentIds = this.data.agents.map(a => a.instanceId).filter(a => !!a);
+        if (existingAgentIds.length > 0) {
+            existingAgents = await this.agentDbService.getAgentsByIds(existingAgentIds);
+        }
+
+        // Get any agents that haven't been initialized yet.
+        let newAgents: Agent[] = [];
+        const newAgentConfigReferences = this.data.agents.filter(a => !a.instanceId);
+        if (newAgentConfigReferences.length > 0) {
+            // Get just the unique object IDs for the new agent configurations.
+            const newAgentConfigIds = getDistinctObjectIds(newAgentConfigReferences.map(r => r.identityId));
+
+            // Get the agent configurations.
+            const newAgentConfigs = await this.agentDbService.getAgentIdentitiesByIds(newAgentConfigIds);
+
+            // Create the enw agents.  We're doing it this long way in case an agent is listed twice.
+            //  In that case, we'll have a single Agent Configuration for multiple references.
+            const newAgentPromises = newAgentConfigReferences.map(async ref => {
+                // Get the config for this.
+                const config = newAgentConfigs.find(c => c._id.equals(ref.identityId));
+
+                // This would be strange, but...
+                if (!config) {
+                    throw new Error(`No config found for ID: ${ref.identityId}`);
+                }
+
+                // Create a new agent for this configuration.
+                const newAgent = await this.agentFactory.createAgent(config);
+
+                // Now, update the reference, since it's still attached to the chat room data.  Thus, we update
+                //  the chat room data.
+                ref.instanceId = newAgent.data._id;
+
+                // Return the agent, creating an array of agents.
+                return newAgent;
+            });
+
+            // Wait for the new agents to be resolved.  This variable was previously
+            //  created and will be added to the rest of the agents that already exist.
+            newAgents = await Promise.all(newAgentPromises);
+
+            // Update the chat room data, so we now have the instance references included.
+            await this.chatDbService.updateChatRoom(this.data._id, { agents: this.data.agents });
+        }
 
         // Create the agents from these.
-        const agentPromises = agentConfigs.map(c => this.agentFactory.getAgent(c));
+        const agentPromises = existingAgents.map(c => this.agentFactory.getAgent(c));
         const agents = await Promise.all(agentPromises);
+        // Add the new agents.
+        agents.push(...newAgents);
 
         // Set the chat room on these to this chat.
         agents.forEach(c => c.chatRoom = this);
@@ -146,6 +194,8 @@ export class ChatRoom implements IChatLifetimeContributor {
             await this.saveConversation();
 
             // Execute the chat messages.
+            await this.executeTurnsForChatMessage();
+
         } catch (err) {
 
         } finally {
@@ -172,8 +222,10 @@ export class ChatRoom implements IChatLifetimeContributor {
             // Get the agent for this job.
             const agent = this.agents.find(a => a.data._id.equals(job.data.agentId));
 
-            // If there's no agent, then there's nothing we can do here.
+            // If there's no agent, then there's nothing we can do here.  We're also
+            //  exiting gracefully, to allow the process to keep going.
             if (!agent) {
+                console.warn(`No agent was found for the chat job: ${job.myName}`);
                 return;
             }
 

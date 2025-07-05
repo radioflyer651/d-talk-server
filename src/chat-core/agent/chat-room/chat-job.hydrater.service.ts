@@ -3,6 +3,7 @@ import { IPluginResolver } from "../../agent-plugin/plugin-resolver.interface";
 import { ChatJobData } from "../../../model/shared-models/chat-core/chat-job-data.model";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { ChatJob } from "./chat-job.service";
+import { hydratePositionableMessages } from "../../../utils/positionable-message-hydration.utils";
 
 export class JobHydrator implements IJobHydratorService {
     constructor(
@@ -18,6 +19,8 @@ export class JobHydrator implements IJobHydratorService {
 
         // Hydrate the plugins.
         newJob.plugins = await this.pluginHydrator.getPluginInstances(job.pluginReferences);
+
+        newJob.positionableMessages = hydratePositionableMessages(job.instructions);
 
         // Return the job.
         return newJob;

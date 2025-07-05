@@ -3,7 +3,7 @@ import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatRoom } from "./chat-room/chat-room.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
-import { MessagePositionTypes, PositionableMessage } from "./model/positionable-message.model";
+import { MessagePositionTypes, PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
@@ -42,17 +42,16 @@ export class Agent implements IChatLifetimeContributor {
     /** The configuration related to this agent instance. */
     identity!: ChatAgentIdentityConfiguration;
 
-    async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage[]> {
+    async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
         // Resulting message list.
-        const result = [] as PositionableMessage[];
+        const result = [] as PositionableMessage<BaseMessage>[];
 
         // Add the identity of this agent to the results.
         this.identity.identityStatements.forEach(m => {
             result.push({
                 location: MessagePositionTypes.Instructions,
-                messages: [
-                    new SystemMessage(m, { id: createIdForMessage() })
-                ]
+                message: new SystemMessage(m, { id: createIdForMessage() })
+
             });
         });
 
@@ -60,9 +59,7 @@ export class Agent implements IChatLifetimeContributor {
         this.identity.baseInstructions.forEach(m => {
             result.push({
                 location: MessagePositionTypes.Instructions,
-                messages: [
-                    new SystemMessage(m, { id: createIdForMessage() })
-                ]
+                message: new SystemMessage(m, { id: createIdForMessage() })
             });
         });
 

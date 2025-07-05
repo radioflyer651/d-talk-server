@@ -1,4 +1,3 @@
-import { BaseMessage } from "@langchain/core/messages";
 
 /** Enumerates the locations that plugin messages can be placed within a chat message history. */
 export enum MessagePositionTypes {
@@ -17,12 +16,12 @@ export enum MessagePositionTypes {
 
 /** Represents a message to be provided, during execution, in the chat history for an agent.
  *   This message would not be persisted in the history. */
-export interface PositionableMessage {
+export interface PositionableMessage<T> {
     /** The location to place the message. */
     location: MessagePositionTypes;
-    
+
     /** The messages to be added to the chat history. */
-    messages: BaseMessage[];
+    message: T;
 
     /** Optional offset for OffsetFromFront and OffsetFromEnd positioning. */
     offset?: number;

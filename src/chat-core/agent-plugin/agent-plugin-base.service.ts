@@ -1,5 +1,5 @@
 import { DynamicTool } from "@langchain/core/tools";
-import { PositionableMessage } from "../agent/model/positionable-message.model";
+import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { ObjectId } from "mongodb";
 import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";

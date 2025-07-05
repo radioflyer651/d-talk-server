@@ -75,9 +75,7 @@ export class AuthService {
 
         return {
             userId: new ObjectId('6865a04ab372accecb2b989a'),
-            companyName: '',
             name: 'Richard',
-            website: '',
             isAdmin: true
         };
     }

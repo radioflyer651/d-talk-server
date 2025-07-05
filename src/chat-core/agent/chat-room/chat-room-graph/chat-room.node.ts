@@ -1,7 +1,7 @@
-import { AIMessage, AIMessageChunk, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { AIMessage, AIMessageChunk, BaseMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { ChatCallState, ChatState } from "./chat-room.state";
 import { insertPositionableMessages } from "../../../utilities/insert-positionable-messages.util";
-import { PositionableMessage } from "../../model/positionable-message.model";
+import { PositionableMessage } from "../../../../model/shared-models/chat-core/positionable-message.model";
 import { ObjectId } from "mongodb";
 import { setMessageId } from "../../../utilities/set-message-id.util";
 
@@ -76,7 +76,7 @@ export async function modifyCallMessages(state: typeof ChatState.State) {
 export async function addPreChatMessages(state: typeof ChatState.State) {
     const chatCallInfo = { replyNumber: state.replyCount };
 
-    let preChatMessages: PositionableMessage[] = [];
+    let preChatMessages: PositionableMessage<BaseMessage>[] = [];
     // Collect pre-chat messages from all contributors
     for (const contributor of state.lifetimeContributors) {
         if (typeof contributor.addPreChatMessages === 'function') {

@@ -7,6 +7,9 @@ import { PositionableMessage } from "./positionable-message.model";
 
 /** This is a turn and a job that an agent must fulfill in a chat room during a round of chat interactions. */
 export interface ChatJobData {
+    /** Gets or sets the ID of the job, for the database. */
+    _id: ObjectId;
+
     /** Gets or sets the order that this job gets executed in the execution order. */
     order: number;
 

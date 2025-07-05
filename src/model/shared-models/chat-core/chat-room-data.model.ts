@@ -9,7 +9,7 @@ export interface ChatRoomData {
     /** The name of this chat room. */
     name: string;
 
-    /** The ID of the project this agent belongs to. */
+    /** The ID of the project this chat room belongs to. */
     projectId: ObjectId;
 
     /** The ID of the user that owns this chat room. */

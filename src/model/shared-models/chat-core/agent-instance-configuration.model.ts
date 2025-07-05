@@ -10,12 +10,11 @@ export interface AgentInstanceConfiguration {
     /** The ID of the project this agent belongs to. */
     projectId: ObjectId;
 
+    /** The core configuration for this agent.  This is the permanent identity of the agent. */
+    identity: ObjectId;
+
     /** An optional name to give to this instance of an agent. */
     name?: string;
-
-    /** The core configuration for this agent.  This is the permanent identity of the agent. */
-    identity: ChatAgentIdentityConfiguration;
-
     /** The instance IDs of the plugins that the agent has available to them. 
      *   These plugins are made available through the agent identity only.    */
     permanentPlugins: PluginInstanceReference[];

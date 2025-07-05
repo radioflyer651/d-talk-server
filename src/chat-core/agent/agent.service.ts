@@ -7,6 +7,7 @@ import { MessagePositionTypes, PositionableMessage } from "./model/positionable-
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
+import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-core/agent-configuration.model";
 
 export class Agent implements IChatLifetimeContributor {
     // The configuration for this agent instance
@@ -16,27 +17,37 @@ export class Agent implements IChatLifetimeContributor {
     // Plugins (context plugins, tools, etc.)
     readonly plugins: AgentPluginBase[];
 
-    constructor(config: AgentInstanceConfiguration, chatModel: BaseChatModel, plugins: AgentPluginBase[] = []) {
+    constructor(
+        config: AgentInstanceConfiguration,
+        /** The configuration related to this agent instance. */
+        identity: ChatAgentIdentityConfiguration,
+        chatModel: BaseChatModel,
+        plugins: AgentPluginBase[] = []
+    ) {
         this.data = config;
         this.chatModel = chatModel;
         this.plugins = plugins;
+        this.identity = identity;
     }
 
     /** Returns the name of this agent, using either the name in the configuration, or
      *   the configuration's identity. */
     get myName(): string {
-        return this.data.name ?? this.data.identity.chatName ?? this.data.identity.name;
+        return this.data.name ?? this.identity.chatName ?? this.identity.name;
     }
 
     /** The chat room that this agent is currently in. */
     chatRoom?: ChatRoom;
+
+    /** The configuration related to this agent instance. */
+    identity!: ChatAgentIdentityConfiguration;
 
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage[]> {
         // Resulting message list.
         const result = [] as PositionableMessage[];
 
         // Add the identity of this agent to the results.
-        this.data.identity.identityStatements.forEach(m => {
+        this.identity.identityStatements.forEach(m => {
             result.push({
                 location: MessagePositionTypes.Instructions,
                 messages: [
@@ -46,7 +57,7 @@ export class Agent implements IChatLifetimeContributor {
         });
 
         // Now insert the instructions.
-        this.data.identity.baseInstructions.forEach(m => {
+        this.identity.baseInstructions.forEach(m => {
             result.push({
                 location: MessagePositionTypes.Instructions,
                 messages: [

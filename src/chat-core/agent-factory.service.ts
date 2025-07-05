@@ -5,6 +5,7 @@ import { ModelServiceResolver } from "./agent/model-services/model-service-resol
 import { ChatAgentIdentityConfiguration } from "../model/shared-models/chat-core/agent-configuration.model";
 import { AgentInstanceConfiguration } from "../model/shared-models/chat-core/agent-instance-configuration.model";
 import { PluginInstanceReference } from "../model/shared-models/chat-core/plugin-instance-reference.model";
+import { AgentDbService } from "../database/chat-core/agent-db.service";
 
 
 /** Responsible for taking an agent configuration, and returning an agent from it. */
@@ -12,15 +13,22 @@ export class AgentServiceFactory {
     constructor(
         readonly modelResolver: ModelServiceResolver,
         readonly pluginResolver: IPluginResolver,
+        readonly agentDbService: AgentDbService,
     ) {
 
     }
 
     async getAgent(configuration: AgentInstanceConfiguration): Promise<Agent> {
-        const id = configuration.identity;
+        // Get the identity configuration.
+        const identity = await this.agentDbService.getAgentIdentityById(configuration.identity);
+
+        // If now found - we have problems.
+        if (!identity) {
+            throw new Error(`No agent identity configuration was found for id: ${configuration.identity}`);
+        }
 
         // Get the model for this configuration.
-        const model = await this.modelResolver.getModel(id.modelInfo);
+        const model = await this.modelResolver.getModel(identity.modelInfo);
 
         // Create the plugin instances.
         const allPlugins = [...configuration.instancePlugins, ...configuration.permanentPlugins];
@@ -30,7 +38,7 @@ export class AgentServiceFactory {
             .filter(p => !!p);
 
         // Return the agent.
-        return new Agent(configuration, model, plugins);
+        return new Agent(configuration, identity, model, plugins);
     }
 
     /** Initializes and returns a new agent, giving a specified identity. */
@@ -45,14 +53,14 @@ export class AgentServiceFactory {
         // Create the configuration for the agent.
         const configuration = {
             _id: new ObjectId(),
-            identity: identity,
+            identity: identity._id,
             permanentPlugins: plugins.map(p => p.getReference()),
             instancePlugins: [],
             projectId: identity.projectId, // Ensure projectId is provided
         } as AgentInstanceConfiguration;
 
         // Create the agent, and return it.
-        const result = new Agent(configuration, model, plugins);
+        const result = new Agent(configuration, identity, model, plugins);
         return result;
     }
 

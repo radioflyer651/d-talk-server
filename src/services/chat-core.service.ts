@@ -64,7 +64,15 @@ export class ChatCoreService {
         }
         // Remove the agent reference from the chat room's agents array
         chatRoom.agents = chatRoom.agents.filter(ref => !ref.instanceId.equals(agentInstanceId));
-        await this.chatRoomDbService.updateChatRoom(chatRoomId, { agents: chatRoom.agents });
+        // Remove the agent from any job instances in the chat room
+        if (Array.isArray(chatRoom.jobs)) {
+            for (const jobInstance of chatRoom.jobs) {
+                if (jobInstance.agentId && jobInstance.agentId.equals(agentInstanceId)) {
+                    jobInstance.agentId = undefined;
+                }
+            }
+        }
+        await this.chatRoomDbService.updateChatRoom(chatRoomId, { agents: chatRoom.agents, jobs: chatRoom.jobs });
         // Delete the agent instance from the database
         await this.agentDbService.deleteAgent(agentInstanceId);
     }

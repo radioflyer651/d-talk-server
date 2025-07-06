@@ -10,13 +10,13 @@ import { agentDbService } from '../app-globals';
 // Type for agent configuration
 import { ChatAgentIdentityConfiguration } from '../model/shared-models/chat-core/agent-configuration.model';
 
-export const agentsServer = express.Router();
+export const agentConfigsServer = express.Router();
 
 // TODO: We need to add more security for users who have project-rights to project-resources.
 //  Users shouldn't be able to access an agent if they don't have access to the project.
 
 // Get all agent identities for a project
-agentsServer.get('/agent-configurations/:projectId', async (req, res) => {
+agentConfigsServer.get('/agent-configurations/:projectId', async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
         if (!userId) {
@@ -34,7 +34,7 @@ agentsServer.get('/agent-configurations/:projectId', async (req, res) => {
 });
 
 // Get a single agent identity by ID
-agentsServer.get('/agent-configuration/:id', async (req, res) => {
+agentConfigsServer.get('/agent-configuration/:id', async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
         if (!userId) {
@@ -54,7 +54,7 @@ agentsServer.get('/agent-configuration/:id', async (req, res) => {
 });
 
 // Create a new agent identity
-agentsServer.post('/agent-configuration', async (req, res) => {
+agentConfigsServer.post('/agent-configuration', async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
         if (!userId) {
@@ -74,7 +74,7 @@ agentsServer.post('/agent-configuration', async (req, res) => {
 });
 
 // Update an agent identity by ID (ID should come from body, not path)
-agentsServer.put('/agent-configuration', async (req, res) => {
+agentConfigsServer.put('/agent-configuration', async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
         if (!userId) {
@@ -103,7 +103,7 @@ agentsServer.put('/agent-configuration', async (req, res) => {
 });
 
 // Delete an agent identity by ID
-agentsServer.delete('/agent-configuration/:id', async (req, res) => {
+agentConfigsServer.delete('/agent-configuration/:id', async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
         if (!userId) {

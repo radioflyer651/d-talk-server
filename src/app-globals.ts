@@ -15,7 +15,7 @@ export let dbHelper: MongoHelper;
 export let authDbService: AuthDbService;
 export let loggingService: LogDbService;
 export let chatDbService: ChatJobDbService;
-export let messageDbService: ChatRoomDbService;
+export let chatRoomDbService: ChatRoomDbService;
 export let projectDbService: ProjectDbService;
 export let agentDbService: AgentDbService;
 
@@ -34,7 +34,7 @@ export async function initializeServices(): Promise<void> {
     /* All DB Services. */
     loggingService = new LogDbService(dbHelper);
     chatDbService = new ChatJobDbService(dbHelper);
-    messageDbService = new ChatRoomDbService(dbHelper);
+    chatRoomDbService = new ChatRoomDbService(dbHelper);
     authDbService = new AuthDbService(dbHelper);
     projectDbService = new ProjectDbService(dbHelper);
     agentDbService = new AgentDbService(dbHelper);

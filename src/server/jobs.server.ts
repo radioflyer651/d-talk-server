@@ -2,7 +2,7 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-import { chatDbService, projectDbService } from '../app-globals';
+import { chatJobDbService, projectDbService } from '../app-globals';
 import { ChatJobConfiguration } from '../model/shared-models/chat-core/chat-job-data.model';
 
 export const jobsServer = express.Router();
@@ -27,7 +27,7 @@ jobsServer.get('/jobs/:projectId', async (req, res) => {
             return;
         }
         // Fetch all jobs for this project
-        const jobs = await chatDbService.getChatJobsByProject(projectId);
+        const jobs = await chatJobDbService.getChatJobsByProject(projectId);
         res.json(jobs);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch jobs' });
@@ -43,7 +43,7 @@ jobsServer.get('/job/:id', async (req, res) => {
             return;
         }
         const jobId = new ObjectId(req.params.id);
-        const job = await chatDbService.getChatJobById(jobId);
+        const job = await chatJobDbService.getChatJobById(jobId);
         if (!job) {
             res.status(404).json({ error: 'Job not found' });
             return;
@@ -75,7 +75,7 @@ jobsServer.post('/job', async (req, res) => {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
-        const created = await chatDbService.upsertChatJob(job);
+        const created = await chatJobDbService.upsertChatJob(job);
         res.status(201).json(created);
     } catch (error) {
         res.status(500).json({ error: 'Failed to create job' });
@@ -96,7 +96,7 @@ jobsServer.put('/job', async (req, res) => {
             return;
         }
         const jobId = new ObjectId(update._id);
-        const job = await chatDbService.getChatJobById(jobId);
+        const job = await chatJobDbService.getChatJobById(jobId);
         if (!job) {
             res.status(404).json({ error: 'Job not found' });
             return;
@@ -105,7 +105,7 @@ jobsServer.put('/job', async (req, res) => {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
-        const result = await chatDbService.updateChatJob(jobId, update);
+        const result = await chatJobDbService.updateChatJob(jobId, update);
         if (result > 0) {
             res.json({ success: true });
         } else {
@@ -125,7 +125,7 @@ jobsServer.delete('/job/:id', async (req, res) => {
             return;
         }
         const jobId = new ObjectId(req.params.id);
-        const job = await chatDbService.getChatJobById(jobId);
+        const job = await chatJobDbService.getChatJobById(jobId);
         if (!job) {
             res.status(404).json({ error: 'Job not found' });
             return;
@@ -134,7 +134,7 @@ jobsServer.delete('/job/:id', async (req, res) => {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
-        const result = await chatDbService.deleteChatJob(jobId);
+        const result = await chatJobDbService.deleteChatJob(jobId);
         if (result > 0) {
             res.json({ success: true });
         } else {

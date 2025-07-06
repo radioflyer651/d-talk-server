@@ -67,7 +67,7 @@ jobsServer.post('/job', async (req, res) => {
             return;
         }
         const job = req.body as ChatJobConfiguration;
-        if (!job || !job.projectId || !job.agentId) {
+        if (!job || !job.projectId) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
         }

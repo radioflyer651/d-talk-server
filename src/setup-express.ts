@@ -12,6 +12,7 @@ import { AuthenticatedSpecialRequest } from './model/authenticated-request.model
 import { adminRouter } from './server/admin/admin.server';
 import { projectRouter } from './server/project.server';
 import { agentsServer } from './server/agents.server';
+import { jobsServer } from './server/jobs.server';
 
 /** Initializes all routes and middleware for an express app. */
 export async function initializeExpressApp() {
@@ -92,6 +93,7 @@ export async function initializeExpressApp() {
   app.use('/admin', adminRouter);
   app.use(projectRouter);
   app.use(agentsServer);
+  app.use(jobsServer);
 
   app.use((req, res) => {
     res.status(404).send('Not Found');

@@ -220,7 +220,7 @@ export class ChatRoom implements IChatLifetimeContributor {
         this._currentlyExecutingJob = job;
         try {
             // Get the agent for this job.
-            const agent = this.agents.find(a => a.data._id.equals(job.data.agentId));
+            const agent = this.agents.find(a => a.data._id.equals(job.agentId));
 
             // If there's no agent, then there's nothing we can do here.  We're also
             //  exiting gracefully, to allow the process to keep going.
@@ -305,7 +305,7 @@ export class ChatRoom implements IChatLifetimeContributor {
 
         // Get the last message.
         this._events.next(<ChatRoomMessageEvent>{
-            agentId: this._currentlyExecutingJob!.data.agentId,
+            agentId: this._currentlyExecutingJob!.agentId,
             agentType: 'agent',
             chatRoomId: this.data._id,
             dateTime: new Date(),

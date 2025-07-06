@@ -26,7 +26,7 @@ export class JobHydrator implements IJobHydratorService {
         }
 
         // Create the new job.
-        const newJob = new ChatJob(jobConfiguration);
+        const newJob = new ChatJob(jobConfiguration, job);
 
         // Hydrate the plugins.
         newJob.plugins = await this.pluginHydrator.getPluginInstances(job.pluginReferences);

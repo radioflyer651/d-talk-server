@@ -4,10 +4,13 @@ import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-cont
 import { PositionableMessage } from "../../../model/shared-models/chat-core/positionable-message.model";
 import { ChatJobConfiguration } from "../../../model/shared-models/chat-core/chat-job-data.model";
 import { createIdForMessage } from "../../utilities/set-message-id.util";
+import { ChatJobInstance } from "../../../model/shared-models/chat-core/chat-job-instance.model";
+import { ObjectId } from "mongodb";
 
 export class ChatJob implements IChatLifetimeContributor {
     constructor(
         readonly data: ChatJobConfiguration,
+        readonly instanceData: ChatJobInstance,
     ) {
 
     }
@@ -18,6 +21,13 @@ export class ChatJob implements IChatLifetimeContributor {
 
     /** The set of plugins used in this chat job. */
     plugins: AgentPluginBase[] = [];
+
+    get agentId(): ObjectId | undefined {
+        return this.instanceData.agentId;
+    }
+    set agentId(value: ObjectId | undefined) {
+        this.instanceData.agentId = value;
+    }
 
     positionableMessages: PositionableMessage<BaseMessage>[] = [];
 

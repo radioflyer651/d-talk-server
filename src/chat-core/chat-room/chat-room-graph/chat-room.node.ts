@@ -65,8 +65,6 @@ export async function modifyCallMessages(state: typeof ChatState.State) {
         }
     }
 
-    // Update the message history with the modified messages
-    state.messageHistory = callMessages;
     return state;
 }
 

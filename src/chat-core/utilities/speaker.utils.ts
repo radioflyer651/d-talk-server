@@ -22,5 +22,9 @@ export function getSpeakerFromMessage(message: BaseMessage): MessageSpeaker | un
 
 /** Sets the speaker data for a specified message. */
 export function setSpeakerOnMessage(message: BaseMessage, speaker: MessageSpeaker): void {
+    if (!message.additional_kwargs) {
+        message.additional_kwargs = {};
+    }
+    
     message.additional_kwargs[MESSAGE_SPEAKER_KEY] = speaker;
 }

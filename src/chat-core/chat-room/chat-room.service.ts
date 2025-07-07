@@ -1,4 +1,4 @@
-import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages } from "@langchain/core/messages";
+import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, SystemMessage } from "@langchain/core/messages";
 import { Subject } from "rxjs";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
@@ -12,7 +12,7 @@ import { getDistinctObjectIds } from "../../utils/get-distinct-object-ids.utils"
 import { AgentServiceFactory } from "../agent-factory.service";
 import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
 import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
-import { IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
+import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
@@ -20,6 +20,7 @@ import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState } from "./chat-room-graph/chat-room.state";
 import { Agent } from "../agent/agent.service";
+import { MessagePositionTypes, PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 
 
 export class ChatRoom implements IChatLifetimeContributor {
@@ -259,7 +260,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             const graph = createChatRoomGraph();
 
             // Execute the chat call.
-            const result = await graph.invoke(graphState);
+            const result = await graph.invoke(graphState, {recursionLimit: 40});
 
             // Update the chat history.
             this.messages = result.messageHistory;
@@ -314,5 +315,18 @@ export class ChatRoom implements IChatLifetimeContributor {
             message: finalMessage,
             messageId: finalMessage.id!,
         });
+    }
+
+    async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
+        if (info.replyNumber === 0) {
+            const agents = this.agents.filter(a => this.chatJobs.some(j => j.agentId?.equals(a.data._id)));
+            let message = `You are currently chatting with the user, and the following agents: ` + agents.map(a => `(ID: ${a.data._id}) ${a.myName}`).join('\n');
+
+            return [
+                { location: MessagePositionTypes.AfterInstructions, message: new SystemMessage(message) }
+            ];
+        }
+
+        return [];
     }
 }

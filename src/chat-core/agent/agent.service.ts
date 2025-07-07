@@ -2,12 +2,14 @@ import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/
 import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
-import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
-import { BaseMessage } from "@langchain/core/messages";
-import { setSpeakerOnMessage } from "../utilities/speaker.utils";
+import { MessagePositionTypes, PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
+import { AIMessage, BaseMessage, SystemMessage } from "@langchain/core/messages";
+import { getSpeakerFromMessage, setSpeakerOnMessage } from "../utilities/speaker.utils";
 import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-core/agent-configuration.model";
 import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
 import { ChatRoom } from "../chat-room/chat-room.service";
+import { copyBaseMessages } from "../../utils/copy-base-message.utils";
+import { sanitizeMessageName } from "../../utils/sanitize-message-name.utils";
 
 export class Agent implements IChatLifetimeContributor {
     // The configuration for this agent instance
@@ -48,9 +50,29 @@ export class Agent implements IChatLifetimeContributor {
         if (info.replyNumber === 0) {
             result.push(...hydratePositionableMessages(this.identity.identityStatements));
             result.push(...hydratePositionableMessages(this.identity.baseInstructions));
+            result.push({ location: MessagePositionTypes.Instructions, message: new SystemMessage(`Your AgentId = ${this.data._id}`) });
+            result.push({ location: MessagePositionTypes.Instructions, message: new SystemMessage(`Your Name Is ${this.data.name ?? this.identity.chatName}`) });
         }
 
         // Return the results.
+        return result;
+    }
+
+    async modifyCallMessages(messageHistory: BaseMessage[]): Promise<BaseMessage[]> {
+        const copiedMessages = copyBaseMessages(messageHistory);
+        const result = copiedMessages.map(message => {
+            if (message instanceof AIMessage) {
+                const speaker = getSpeakerFromMessage(message);
+                if (this.data._id.equals(speaker?.speakerId)) {
+                    message.content = `AgentId: ${speaker?.speakerId}(You, ${message.name})\n\n${message.content.toString()}`;
+                } else {
+                    message.content = `AgentId: ${speaker?.speakerId} (NOT You, Their Name Is ${message.name})\n\n${message.content.toString()}`;
+                }
+            }
+
+            return message;
+        });
+
         return result;
     }
 
@@ -62,7 +84,7 @@ export class Agent implements IChatLifetimeContributor {
             return;
         }
 
-        lastMessage.name = this.myName;
+        lastMessage.name = sanitizeMessageName(this.myName);
         setSpeakerOnMessage(lastMessage, { speakerType: 'agent', speakerId: this.data._id.toString() });
     }
 

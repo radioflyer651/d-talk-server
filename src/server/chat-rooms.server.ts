@@ -55,11 +55,6 @@ chatRoomsServer.post('/chat-room', async (req, res) => {
     }
 });
 
-// Update a chat room by ID (ID should come from body, not path)
-chatRoomsServer.put('/chat-room', async (req, res) => {
-
-});
-
 // Delete a chat room by ID
 chatRoomsServer.delete('/chat-room/:id', async (req, res) => {
     try {
@@ -268,6 +263,34 @@ chatRoomsServer.delete('/chat-room/:roomId/job-instance/:jobInstanceId', async (
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to remove job instance from chat room' });
+    }
+});
+
+// Remove an agent from a job instance in a chat room
+chatRoomsServer.put('/chat-room/:roomId/job-instance/:jobInstanceId/remove-agent', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const chatRoomId = new ObjectId(req.params.roomId);
+        const jobInstanceId = new ObjectId(req.params.jobInstanceId);
+        // Fetch the chat room
+        const room = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!room) {
+            res.status(404).json({ error: 'Chat room not found' });
+            return;
+        }
+        // Check that the user is the owner or a participant
+        if (!room.userId.equals(userId) && !(room.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+        await chatCoreService.removeAgentFromJobInstance(chatRoomId, jobInstanceId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to remove agent from job instance' });
     }
 });
 

@@ -43,6 +43,9 @@ export class ChatCoreService {
         const createdAgent = await this.agentDbService.upsertAgent(newAgent);
 
         // Add the agent reference to the chat room's agents array
+        if (!chatRoom.agents) {
+            chatRoom.agents = [];
+        }
         chatRoom.agents.push({ identityId, instanceId: createdAgent._id });
         await this.chatRoomDbService.updateChatRoom(chatRoomId, { agents: chatRoom.agents });
 
@@ -142,4 +145,68 @@ export class ChatCoreService {
         jobInstance.agentId = agentInstanceId;
         await this.chatRoomDbService.updateChatRoom(chatRoomId, { jobs: chatRoom.jobs });
     }
+
+    async removeAgentFromJobInstance(chatRoomId: ObjectId, jobInstanceId: ObjectId) {
+        // Fetch the chat room
+        const chatRoom = await this.chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
+            throw new Error('Chat room not found');
+        }
+
+        // Find the chat job instance.
+        const instance = chatRoom.jobs.find(j => j.id.equals(jobInstanceId));
+
+        // Validate the instance.
+        if (!instance) {
+            throw new Error(`No instance was found for ID: ${jobInstanceId}`);
+        }
+
+        // Remove the agent.
+        instance.agentId = undefined;
+
+        // Update the job in the database.
+        await this.chatRoomDbService.updateChatRoom(chatRoomId, { jobs: chatRoom.jobs });
+    }
+
+    /**
+     * Gets all agent instances for a given chat room by its ID.
+     * @param chatRoomId The ObjectId of the chat room.
+     * @returns Array of AgentInstanceConfiguration for the chat room.
+     */
+    async getAgentInstancesForChatRoom(chatRoomId: ObjectId) {
+        // Fetch the chat room
+        const chatRoom = await this.chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
+            throw new Error('Chat room not found');
+        }
+        // Collect all agent instance IDs from the chat room's agents array
+        const agentInstanceIds = (chatRoom.agents || []).map(ref => ref.instanceId);
+        if (agentInstanceIds.length === 0) {
+            return [];
+        }
+        // Fetch all agent instances by their IDs
+        return await this.agentDbService.getAgentsByIds(agentInstanceIds);
+    }
+
+    /**
+     * Removes a job instance from a chat room by job instance ID.
+     * @param chatRoomId The ObjectId of the chat room.
+     * @param jobInstanceId The ObjectId of the job instance to remove.
+     */
+    async removeJobInstanceFromChatRoom(chatRoomId: ObjectId, jobInstanceId: ObjectId) {
+        // Fetch the chat room
+        const chatRoom = await this.chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
+            throw new Error('Chat room not found');
+        }
+        // Remove the job instance from the jobs array
+        const originalLength = chatRoom.jobs.length;
+        chatRoom.jobs = chatRoom.jobs.filter(j => !j.id.equals(jobInstanceId));
+        if (chatRoom.jobs.length === originalLength) {
+            throw new Error('Job instance not found in chat room');
+        }
+        // Update the chat room in the database
+        await this.chatRoomDbService.updateChatRoom(chatRoomId, { jobs: chatRoom.jobs });
+    }
+
 }

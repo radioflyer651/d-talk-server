@@ -24,14 +24,6 @@ export class ChatJobDbService extends DbService {
         ) as ChatJobConfiguration | undefined;
     }
 
-    /** Get all chat jobs for a given agent. */
-    async getChatJobsByAgent(agentId: ObjectId): Promise<ChatJobConfiguration[]> {
-        return await this.dbHelper.findDataItem<ChatJobConfiguration, { agentId: ObjectId; }>(
-            DbCollectionNames.ChatJobs,
-            { agentId }
-        ) as ChatJobConfiguration[];
-    }
-
     /** Get all chat jobs for a given project. */
     async getChatJobsByProject(projectId: ObjectId): Promise<ChatJobConfiguration[]> {
         return await this.dbHelper.findDataItem<ChatJobConfiguration, { projectId: ObjectId }>(

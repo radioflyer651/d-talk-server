@@ -9,6 +9,7 @@ import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
 import { agentDbService } from '../app-globals';
 // Type for agent configuration
 import { ChatAgentIdentityConfiguration } from '../model/shared-models/chat-core/agent-configuration.model';
+import { NewDbItem } from '../model/shared-models/db-operation-types.model';
 
 export const agentConfigsServer = express.Router();
 
@@ -61,7 +62,7 @@ agentConfigsServer.post('/agent-configuration', async (req, res) => {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const identity = req.body as ChatAgentIdentityConfiguration;
+        const identity = req.body as NewDbItem<ChatAgentIdentityConfiguration>;
         if (!identity || !identity.projectId || !identity.name) {
             res.status(400).json({ error: 'Missing required fields' });
             return;

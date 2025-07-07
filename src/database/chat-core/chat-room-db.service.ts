@@ -37,6 +37,14 @@ export class ChatRoomDbService extends DbService {
         ) as ChatRoomData[];
     }
 
+    /** Get all chat rooms for a given project ID. */
+    async getChatRoomsByProject(projectId: ObjectId): Promise<ChatRoomData[]> {
+        return await this.dbHelper.findDataItem<ChatRoomData, { projectId: ObjectId; }>(
+            DbCollectionNames.ChatRooms,
+            { projectId }
+        ) as ChatRoomData[];
+    }
+
     /** Update a chat room by its ObjectId. */
     async updateChatRoom(roomId: ObjectId, update: Partial<ChatRoomData>): Promise<number> {
         return await this.dbHelper.updateDataItems<ChatRoomData>(

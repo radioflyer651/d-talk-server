@@ -128,3 +128,34 @@ agentInstanceServer.post('/agent-instances/by-ids', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch agent instances by IDs' });
     }
 });
+
+// Get all agent instances for a given chat room, with project access check
+agentInstanceServer.get('/agent-instances/by-chat-room/:chatRoomId', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const chatRoomId = new ObjectId(req.params.chatRoomId);
+        // Dynamically import chatCoreService and chatRoomDbService from app-globals
+        const { chatCoreService, chatRoomDbService } = require('../app-globals');
+        // Fetch the chat room
+        const room = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!room) {
+            res.status(404).json({ error: 'Chat room not found' });
+            return;
+        }
+        // Check user access to the project (owner or participant)
+        const hasAccess = room.userId.equals(userId) || (room.userParticipants || []).some((id: any) => id.equals(userId));
+        if (!hasAccess) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+        // Get agent instances for the chat room
+        const agentInstances = await chatCoreService.getAgentInstancesForChatRoom(chatRoomId);
+        res.json(agentInstances);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch agent instances for chat room' });
+    }
+});

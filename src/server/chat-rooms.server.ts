@@ -4,6 +4,7 @@ import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
 import { chatCoreService, chatRoomDbService, projectDbService } from '../app-globals';
 import { ChatRoomData } from '../model/shared-models/chat-core/chat-room-data.model';
+import { isUserOwnerOfChatRoom } from '../utils/user-access.utils';
 
 export const chatRoomsServer = express.Router();
 
@@ -294,3 +295,34 @@ chatRoomsServer.put('/chat-room/:roomId/job-instance/:jobInstanceId/remove-agent
     }
 });
 
+chatRoomsServer.put(`/chat-room/:roomId/conversation/clear`, async (req, res) => {
+    try {
+        // Get the user.
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: `Unauthorized` });
+            return;
+        }
+
+        // Get the ID.
+        const chatRoomIdStr = req.params.roomId;
+        if (!ObjectId.isValid(chatRoomIdStr)) {
+            res.status(400).json({ error: 'Bad room ID.' });
+            return;
+        }
+
+        const chatRoomId = new ObjectId(chatRoomIdStr);
+
+        // Check that the user has access to the project.
+        if (!(await isUserOwnerOfChatRoom(userId, chatRoomId))) {
+            res.status(403).json({ error: `User is not the owner of the chat room.` });
+        }
+
+        // Clear the conversation.
+        await chatRoomDbService.updateChatRoomConversation(chatRoomId, []);
+        
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: `Failed to clear chat room chat history.` });
+    }
+});

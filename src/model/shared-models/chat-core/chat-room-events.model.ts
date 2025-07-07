@@ -1,5 +1,6 @@
 import { ObjectId } from "mongodb";
 import { IChatRoomEvent } from "./chat-room-event.model";
+import { BaseMessage } from "@langchain/core/messages";
 
 
 export interface ChatRoomMessageEvent extends IChatRoomEvent {
@@ -8,6 +9,6 @@ export interface ChatRoomMessageEvent extends IChatRoomEvent {
     agentType: 'agent' | 'user';
     agentId: ObjectId;
     dateTime: Date;
-    message: string;
+    message: BaseMessage;
     messageId: string;
 }

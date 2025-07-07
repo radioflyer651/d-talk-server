@@ -1,37 +1,37 @@
-import { BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, mapStoredMessagesToChatMessages } from "@langchain/core/messages";
-import { Agent } from "../agent.service";
-import { ChatRoomData } from "../../../model/shared-models/chat-core/chat-room-data.model";
-import { User } from "../../../model/shared-models/user.model";
+import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages } from "@langchain/core/messages";
 import { Subject } from "rxjs";
-import { IChatRoomEvent } from "../../../model/shared-models/chat-core/chat-room-event.model";
-import { ChatRoomMessageEvent } from "../../../model/shared-models/chat-core/chat-room-events.model";
-import { ChatRoomDbService } from "../../../database/chat-core/chat-room-db.service";
-import { ChatRoomBusyStateEvent } from "../../../model/shared-models/chat-core/chat-room-busy-state.model";
-import { IPluginResolver } from "../../agent-plugin/plugin-resolver.interface";
-import { ChatJob } from "./chat-job.service";
-import { AgentServiceFactory } from "../../agent-factory.service";
+import { AgentDbService } from "../../database/chat-core/agent-db.service";
+import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
+import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
+import { ChatRoomBusyStateEvent } from "../../model/shared-models/chat-core/chat-room-busy-state.model";
+import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data.model";
+import { IChatRoomEvent } from "../../model/shared-models/chat-core/chat-room-event.model";
+import { ChatRoomMessageEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
+import { User } from "../../model/shared-models/user.model";
+import { getDistinctObjectIds } from "../../utils/get-distinct-object-ids.utils";
+import { AgentServiceFactory } from "../agent-factory.service";
+import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
+import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
+import { IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
+import { createIdForMessage } from "../utilities/set-message-id.util";
+import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
-import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
-import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
-import { ChatCallState } from "./chat-room-graph/chat-room.state";
+import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
-import { createIdForMessage } from "../../utilities/set-message-id.util";
-import { AgentDbService } from '../../../database/chat-core/agent-db.service';
-import { setSpeakerOnMessage } from "../../utilities/speaker.utils";
-import { AgentInstanceConfiguration } from "../../../model/shared-models/chat-core/agent-instance-configuration.model";
-import { getDistinctObjectIds } from "../../../utils/get-distinct-object-ids.utils";
+import { ChatCallState } from "./chat-room-graph/chat-room.state";
+import { Agent } from "../agent/agent.service";
+
 
 export class ChatRoom implements IChatLifetimeContributor {
     constructor(
         readonly data: ChatRoomData,
         readonly agentFactory: AgentServiceFactory,
-        readonly chatDbService: ChatRoomDbService,
+        readonly chatRoomDbService: ChatRoomDbService,
         readonly pluginResolver: IPluginResolver,
         readonly jobHydratorService: IJobHydratorService,
         readonly agentDbService: AgentDbService,
     ) {
-        // Deserialize the message data.
-        this.messages = mapStoredMessagesToChatMessages(this.data.conversation);
+        this.messages = mapStoredMessagesToChatMessages(this.data.conversation ?? []);
     }
 
     private _events = new Subject<IChatRoomEvent>();
@@ -147,7 +147,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             newAgents = await Promise.all(newAgentPromises);
 
             // Update the chat room data, so we now have the instance references included.
-            await this.chatDbService.updateChatRoom(this.data._id, { agents: this.data.agents });
+            await this.chatRoomDbService.updateChatRoom(this.data._id, { agents: this.data.agents });
         }
 
         // Create the agents from these.
@@ -186,7 +186,7 @@ export class ChatRoom implements IChatLifetimeContributor {
                 agentId: user._id,
                 agentType: 'user',
                 dateTime: new Date(),
-                message: message,
+                message: newMessage,
                 messageId: newMessage.id!,
             });
 
@@ -197,7 +197,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             await this.executeTurnsForChatMessage();
 
         } catch (err) {
-
+            console.error(err);
         } finally {
             // Update our busy state.
             this.setBusyState(false);
@@ -283,17 +283,18 @@ export class ChatRoom implements IChatLifetimeContributor {
     /** Saves the state of the chat room. */
     protected async saveConversation(): Promise<void> {
         this.updateDataForStorage();
-        await this.chatDbService.updateChatRoomConversation(this.data._id, this.data.conversation);
+        await this.chatRoomDbService.updateChatRoomConversation(this.data._id, this.data.conversation);
     }
 
     async saveChatRoom(): Promise<void> {
         this.updateDataForStorage();
-        await this.chatDbService.updateChatRoom(this.data._id, this.data);
+        await this.chatRoomDbService.updateChatRoom(this.data._id, this.data);
     }
 
     /** Logs an error to the database, for this chat room. */
     protected async logError(error: object) {
-        await this.chatDbService.addChatRoomLog(this.data._id, error);
+        console.error(error);
+        await this.chatRoomDbService.addChatRoomLog(this.data._id, error);
     }
 
     /** The current chat job that's being processed, if any. */
@@ -310,7 +311,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             chatRoomId: this.data._id,
             dateTime: new Date(),
             eventType: 'new-chat-message',
-            message: finalMessage.text,
+            message: finalMessage,
             messageId: finalMessage.id!,
         });
     }

@@ -2,7 +2,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { MessagePositionTypes, PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 
 /** Inserts as set of PositionableMessage s into a specified set of BaseMessage s. */
-export function insertPositionableMessages(positionableMessages: PositionableMessage[], messages: BaseMessage[]): BaseMessage[] {
+export function insertPositionableMessages(positionableMessages: PositionableMessage<BaseMessage>[], messages: BaseMessage[]): BaseMessage[] {
     const organizer = new MessageOrganizer(messages, positionableMessages);
     return organizer.getMessageList();
 }
@@ -11,14 +11,14 @@ export function insertPositionableMessages(positionableMessages: PositionableMes
 export class MessageOrganizer {
     constructor(
         public messageList: BaseMessage[],
-        positionableMessages?: PositionableMessage[]
+        positionableMessages?: PositionableMessage<BaseMessage>[]
     ) {
         if (positionableMessages) {
             this.positionableMessages = positionableMessages;
         }
     }
 
-    positionableMessages: PositionableMessage[] = [];
+    positionableMessages: PositionableMessage<BaseMessage>[] = [];
 
     getMessageList(): BaseMessage[] {
         const messages = this.messageList.slice();
@@ -39,11 +39,14 @@ export class MessageOrganizer {
         // Place them in order.
         this.positionableMessages.forEach(m => {
             switch (m.location) {
+                case MessagePositionTypes.Instructions:
+                    instructions.push(m.message);
+                    break;
                 case MessagePositionTypes.AfterInstructions:
-                    instructions.push(...m.messages);
+                    instructions.push(m.message);
                     break;
                 case MessagePositionTypes.AfterAgentIdentity:
-                    firstMessages.push(...m.messages);
+                    firstMessages.push(m.message);
                     break;
                 case MessagePositionTypes.OffsetFromFront:
                     if (m.offset === undefined || m.offset === null) {
@@ -51,7 +54,7 @@ export class MessageOrganizer {
                     }
                     {
                         const idx = Math.min(Math.max(0, m.offset), messageSlots.length - 1);
-                        messageSlots[idx].push(...m.messages);
+                        messageSlots[idx].push(m.message);
                     }
                     break;
                 case MessagePositionTypes.OffsetFromEnd:
@@ -60,11 +63,11 @@ export class MessageOrganizer {
                     }
                     {
                         const idx = Math.max(0, messageSlots.length - 1 - m.offset);
-                        messageSlots[idx].push(...m.messages);
+                        messageSlots[idx].push(m.message);
                     }
                     break;
                 case MessagePositionTypes.Last:
-                    lastMessages.push(...m.messages);
+                    lastMessages.push(m.message);
                     break;
                 default:
                     throw new Error(`Unknown message location: ${m.location}`);

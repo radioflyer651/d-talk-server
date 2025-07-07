@@ -3,7 +3,6 @@ import { DbCollectionNames } from "../model/db-collection-names.constants";
 import { User } from "../model/shared-models/user.model";
 import { MongoHelper } from "../mongo-helper";
 import { DbService } from "./db-service";
-import { nullToUndefined } from "../utils/empty-and-null.utils";
 import { UserSecrets } from "../model/shared-models/user-secrets.model";
 import { NewDbItem } from "../model/shared-models/db-operation-types.model";
 
@@ -59,6 +58,15 @@ export class AuthDbService extends DbService {
         return await this.dbHelper.findDataItem<User, { userName: any }>(
             DbCollectionNames.Users,
             { userName: { $regex: `^${userName}$`, $options: 'i' } },
+            { findOne: true }
+        ) as User | undefined;
+    }
+
+    /** Get a user by their ObjectId. */
+    async getUserById(userId: ObjectId): Promise<User | undefined> {
+        return await this.dbHelper.findDataItem<User, { _id: ObjectId }>(
+            DbCollectionNames.Users,
+            { _id: userId },
             { findOne: true }
         ) as User | undefined;
     }

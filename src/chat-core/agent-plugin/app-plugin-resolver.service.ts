@@ -5,8 +5,9 @@ import { PluginInstanceReference } from "../../model/shared-models/chat-core/plu
 import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
 
 export class AppPluginResolver implements IPluginResolver {
-    getPluginInstance(pluginContext: PluginInstanceReference): Promise<AgentPluginBase | undefined> {
-        throw new Error("Method not implemented.");
+    async getPluginInstance(pluginContext: PluginInstanceReference): Promise<AgentPluginBase | undefined> {
+        console.error('AppPluginResolver not fully implemented');
+        return undefined;
     }
 
     async getPluginInstances(pluginReferences: PluginInstanceReference[]): Promise<AgentPluginBase[]> {
@@ -20,8 +21,9 @@ export class AppPluginResolver implements IPluginResolver {
         return result as AgentPluginBase[];
     }
 
-    createPluginInstance(pluginReference: PluginSpecification): Promise<AgentPluginBase> {
-        throw new Error("Method not implemented.");
+    async createPluginInstance(pluginReference: PluginSpecification): Promise<AgentPluginBase> {
+        console.error('AppPluginResolver not fully implemented');
+        return {} as AgentPluginBase;
     }
 
 }

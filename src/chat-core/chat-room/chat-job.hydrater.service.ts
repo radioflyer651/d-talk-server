@@ -1,15 +1,15 @@
-import { ChatRoomDbService } from "../../../database/chat-core/chat-room-db.service";
-import { IPluginResolver } from "../../agent-plugin/plugin-resolver.interface";
-import { ChatJobConfiguration } from "../../../model/shared-models/chat-core/chat-job-data.model";
+import { ChatJobDbService } from "../../database/chat-core/chat-job-db.service";
+import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
+import { ChatJobInstance } from "../../model/shared-models/chat-core/chat-job-instance.model";
+import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
+import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { ChatJob } from "./chat-job.service";
-import { hydratePositionableMessages } from "../../../utils/positionable-message-hydration.utils";
-import { ChatJobInstance } from "../../../model/shared-models/chat-core/chat-job-instance.model";
-import { ChatJobDbService } from "../../../database/chat-core/chat-job-db.service";
+
 
 export class JobHydrator implements IJobHydratorService {
     constructor(
-        readonly chatDbService: ChatRoomDbService,
+        readonly chatRoomDbService: ChatRoomDbService,
         readonly pluginHydrator: IPluginResolver,
         readonly chatJobDbService: ChatJobDbService,
     ) {

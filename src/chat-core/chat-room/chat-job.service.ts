@@ -1,11 +1,12 @@
-import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
-import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
-import { PositionableMessage } from "../../../model/shared-models/chat-core/positionable-message.model";
-import { ChatJobConfiguration } from "../../../model/shared-models/chat-core/chat-job-data.model";
-import { createIdForMessage } from "../../utilities/set-message-id.util";
-import { ChatJobInstance } from "../../../model/shared-models/chat-core/chat-job-instance.model";
+import { BaseMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
+import { ChatJobConfiguration } from "../../model/shared-models/chat-core/chat-job-data.model";
+import { ChatJobInstance } from "../../model/shared-models/chat-core/chat-job-instance.model";
+import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
+import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
+import { IChatLifetimeContributor, ChatCallInfo } from "../chat-lifetime-contributor.interface";
+import { createIdForMessage } from "../utilities/set-message-id.util";
+
 
 export class ChatJob implements IChatLifetimeContributor {
     constructor(
@@ -35,7 +36,7 @@ export class ChatJob implements IChatLifetimeContributor {
         // The job should have the most important system information to inform the LLM on.  Make sure it's stuff is last.
         if (info.replyNumber === 0) {
             // Create a deep clone of the messages.
-            const clones = this.positionableMessages.map(msg => JSON.parse(JSON.stringify(msg))) as PositionableMessage<BaseMessage>[];
+            const clones = this.positionableMessages.slice();
 
             // Update the IDs on the messages.
             clones.forEach(c => c.message.id = createIdForMessage());

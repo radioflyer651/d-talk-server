@@ -13,7 +13,7 @@ export async function postChatReplyDecider(state: typeof ChatState.State) {
 export async function shouldCallToolsDecider(state: typeof ChatState.State) {
     const aiMessage = state.messageHistory[state.messageHistory.length - 1] as AIMessage;
 
-    if (aiMessage.tool_calls) {
+    if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
         return 'call-tools';
     }
 

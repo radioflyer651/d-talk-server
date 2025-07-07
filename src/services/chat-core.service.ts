@@ -208,5 +208,4 @@ export class ChatCoreService {
         // Update the chat room in the database
         await this.chatRoomDbService.updateChatRoom(chatRoomId, { jobs: chatRoom.jobs });
     }
-
 }

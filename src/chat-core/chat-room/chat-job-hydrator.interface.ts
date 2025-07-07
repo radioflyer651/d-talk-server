@@ -1,5 +1,4 @@
-import { ChatJobConfiguration } from "../../../model/shared-models/chat-core/chat-job-data.model";
-import { ChatJobInstance } from "../../../model/shared-models/chat-core/chat-job-instance.model";
+import { ChatJobInstance } from "../../model/shared-models/chat-core/chat-job-instance.model";
 import { ChatJob } from "./chat-job.service";
 
 

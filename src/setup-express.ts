@@ -15,6 +15,7 @@ import { agentConfigsServer } from './server/agent-configs.server';
 import { jobsServer } from './server/jobs.server';
 import { chatRoomsServer } from './server/chat-rooms.server';
 import { agentInstanceServer } from './server/agent-instances.server';
+import { chattingServer } from './server/chatting.server';
 
 /** Initializes all routes and middleware for an express app. */
 export async function initializeExpressApp() {
@@ -98,6 +99,7 @@ export async function initializeExpressApp() {
   app.use(jobsServer);
   app.use(chatRoomsServer);
   app.use(agentInstanceServer);
+  app.use(chattingServer);
 
   app.use((req, res) => {
     res.status(404).send('Not Found');

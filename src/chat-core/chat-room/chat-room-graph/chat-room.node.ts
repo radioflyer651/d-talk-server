@@ -1,9 +1,9 @@
-import { AIMessage, AIMessageChunk, BaseMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
+import { BaseMessage, AIMessage, ToolMessage, AIMessageChunk } from "@langchain/core/messages";
+import { PositionableMessage } from "../../../model/shared-models/chat-core/positionable-message.model";
+import { insertPositionableMessages } from "../../utilities/insert-positionable-messages.util";
+import { setMessageId } from "../../utilities/set-message-id.util";
 import { ChatCallState, ChatState } from "./chat-room.state";
-import { insertPositionableMessages } from "../../../utilities/insert-positionable-messages.util";
-import { PositionableMessage } from "../../../../model/shared-models/chat-core/positionable-message.model";
-import { ObjectId } from "mongodb";
-import { setMessageId } from "../../../utilities/set-message-id.util";
+
 
 
 /**
@@ -98,6 +98,7 @@ export async function handleReply(state: typeof ChatState.State, reply: any) {
     const handlePromises = state.lifetimeContributors
         .filter(c => typeof c.handleReply === 'function')
         .map(c => c.handleReply!(reply));
+
     const replyResults = await Promise.all(handlePromises);
 
     // Filter out undefined results (contributors that didn't add messages)

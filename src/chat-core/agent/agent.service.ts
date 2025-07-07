@@ -1,13 +1,13 @@
 import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
 import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { ChatRoom } from "./chat-room/chat-room.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { BaseMessage } from "@langchain/core/messages";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-core/agent-configuration.model";
 import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
+import { ChatRoom } from "../chat-room/chat-room.service";
 
 export class Agent implements IChatLifetimeContributor {
     // The configuration for this agent instance

@@ -1,8 +1,8 @@
 import { BaseMessage } from "@langchain/core/messages";
 import { Annotation } from "@langchain/langgraph";
-import { IChatLifetimeContributor } from "../../../chat-lifetime-contributor.interface";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { DynamicTool } from "@langchain/core/tools";
+import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 
 
 export const ChatState = Annotation.Root({

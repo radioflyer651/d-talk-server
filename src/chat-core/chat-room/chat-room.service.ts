@@ -240,6 +240,13 @@ export class ChatRoom implements IChatLifetimeContributor {
                 ...job.plugins,
             ];
 
+            // Set the properties on all of the plugins.
+            plugins.forEach(p => {
+                p.agent = agent;
+                p.chatRoom = this;
+                p.chatJob = job;
+            });
+
             // Create the lifetime contributors for this chat interaction.
             const contributors: IChatLifetimeContributor[] = [
                 agent,
@@ -260,7 +267,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             const graph = createChatRoomGraph();
 
             // Execute the chat call.
-            const result = await graph.invoke(graphState, {recursionLimit: 40});
+            const result = await graph.invoke(graphState, { recursionLimit: 40 });
 
             // Update the chat history.
             this.messages = result.messageHistory;

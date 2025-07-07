@@ -1,13 +1,31 @@
-import { ObjectId } from "mongodb";
 import { AgentPluginBase } from "./agent-plugin-base.service";
 import { IPluginResolver } from "./plugin-resolver.interface";
 import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
+import { IPluginTypeResolver } from "./i-plugin-type-resolver";
 
 export class AppPluginResolver implements IPluginResolver {
+    constructor(
+        protected readonly typeResolverServices: IPluginTypeResolver<any>[],
+    ) {
+
+    }
+
+    private getResolver(pluginType: string): IPluginTypeResolver<any> {
+        const resolver = this.typeResolverServices.find(r => r.canImplementType(pluginType));
+
+        if (!resolver) {
+            throw new Error(`No plugin resolver found for type: ${pluginType}`);
+        }
+
+        return resolver;
+    }
+    
     async getPluginInstance(pluginContext: PluginInstanceReference): Promise<AgentPluginBase | undefined> {
-        console.error('AppPluginResolver not fully implemented');
-        return undefined;
+        const resolver = this.getResolver(pluginContext.pluginSpecification.pluginType);
+
+        // Return the instance of this.
+        return resolver.hydratePlugin(pluginContext);
     }
 
     async getPluginInstances(pluginReferences: PluginInstanceReference[]): Promise<AgentPluginBase[]> {
@@ -22,8 +40,10 @@ export class AppPluginResolver implements IPluginResolver {
     }
 
     async createPluginInstance(pluginReference: PluginSpecification): Promise<AgentPluginBase> {
-        console.error('AppPluginResolver not fully implemented');
-        return {} as AgentPluginBase;
+        const resolver = this.getResolver(pluginReference.pluginType);
+
+        // Return the instance of this.
+        return resolver.createNewPlugin(pluginReference.configuration);
     }
 
 }

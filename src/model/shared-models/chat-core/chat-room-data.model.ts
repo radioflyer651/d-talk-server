@@ -2,6 +2,7 @@ import { StoredMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
 import { AgentReference } from "./agent-reference.model";
 import { ChatJobInstance } from "./chat-job-instance.model";
+import { PluginInstanceReference } from "./plugin-instance-reference.model";
 
 export interface ChatRoomData {
     _id: ObjectId;
@@ -37,5 +38,10 @@ export interface ChatRoomData {
 
     /** A set of log messages that may help in debugging. */
     logs: object[];
+
+    /** Because chat rooms don't have "configurations" they will only have plugin
+     *   instances.  They'll never have a matching PluginSpecification to match up to,
+     *   but their instances will still have a specification of their own.  (The nested instance is the ONLY instance in this case.)     */
+    plugins: PluginInstanceReference[];
 }
 

@@ -1,27 +1,30 @@
-import { DynamicTool } from "@langchain/core/tools";
-import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { ObjectId } from "mongodb";
 import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
 import { IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
+import { Agent } from "../agent/agent.service";
+import { ChatRoom } from "../chat-room/chat-room.service";
+import { ChatJob } from "../chat-room/chat-job.service";
 
-
-export type AgentPluginBaseParams = { specification?: PluginSpecification, _id?: ObjectId; };
 
 /** Base class for agent plugins, providing basic lifecycle hooks and protocols. */
-export abstract class AgentPluginBase<T = any> implements IChatLifetimeContributor {
-    constructor(
-        params?: AgentPluginBaseParams
+export abstract class AgentPluginBase implements IChatLifetimeContributor {
+    protected constructor(
+        params: PluginInstanceReference | PluginSpecification
     ) {
-        if (params) {
-            this.specification = params.specification;
-            if (params._id) {
-                this._id = params._id;
-            }
+        if ('pluginType' in params) {
+            this.specification = params as PluginSpecification;
+        } else {
+            // Recast for typescript.
+            const instance = params as PluginInstanceReference;
+            this.specification = instance.pluginSpecification;
+            this._id = instance._id;
         }
     }
 
-    /** Gets or sets the ObjectID of this plugin.  This ID is used for context data, if nothing else. */
+    /** Gets or sets the ObjectID of this plugin.  This ID is used for context data, if nothing else. 
+     *   We set the ID at initialization, since it won't be set by anything else.
+    */
     _id: ObjectId = new ObjectId();
 
     /** Returns the unique identifier of this plugin that can be used for reference. */
@@ -30,7 +33,17 @@ export abstract class AgentPluginBase<T = any> implements IChatLifetimeContribut
     /** Returns details to make the agent aware of for this plugin. */
     abstract readonly agentUserManual?: string;
 
-    creationContext?: T;
+    /** Gets or sets agent whose turn it currently is.
+     *   This is set by the chatroom. */
+    agent!: Agent;
+
+    /** Gets or sets the current chat room that the plugin
+     *   is being called in. */
+    chatRoom!: ChatRoom;
+
+    /** Gets or sets the chat job that the current agent
+     *   is speaking for. */
+    chatJob!: ChatJob;
 
     specification?: PluginSpecification;
 

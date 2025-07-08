@@ -16,7 +16,7 @@ chattingServer.post('/chat-room/:roomId/message', async (req, res) => {
         }
         const chatRoomId = new ObjectId(req.params.roomId);
         const { message } = req.body;
-        if (!message) {
+        if (typeof message !== 'string') {
             res.status(400).json({ error: 'Missing required field: message' });
             return;
         }

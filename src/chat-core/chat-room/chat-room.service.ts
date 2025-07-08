@@ -178,24 +178,26 @@ export class ChatRoom implements IChatLifetimeContributor {
             // Update our busy state.
             this.setBusyState(true);
 
-            // Add this message to the conversation.
-            const newMessage = new HumanMessage(message, { id: createIdForMessage(), name: user.displayName ?? user.userName });
-            setSpeakerOnMessage(newMessage, { speakerType: 'user', speakerId: user._id.toString() });
-            this.messages.push(newMessage);
+            if (message?.trim() !== '') {
+                // Add this message to the conversation.
+                const newMessage = new HumanMessage(message, { id: createIdForMessage(), name: user.displayName ?? user.userName });
+                setSpeakerOnMessage(newMessage, { speakerType: 'user', speakerId: user._id.toString() });
+                this.messages.push(newMessage);
 
-            // Trigger the event so observers pick it up.
-            this._events.next(<ChatRoomMessageEvent>{
-                eventType: 'new-chat-message',
-                chatRoomId: this.data._id!,
-                agentId: user._id,
-                agentType: 'user',
-                dateTime: new Date(),
-                message: newMessage,
-                messageId: newMessage.id!,
-            });
+                // Trigger the event so observers pick it up.
+                this._events.next(<ChatRoomMessageEvent>{
+                    eventType: 'new-chat-message',
+                    chatRoomId: this.data._id!,
+                    agentId: user._id,
+                    agentType: 'user',
+                    dateTime: new Date(),
+                    message: newMessage,
+                    messageId: newMessage.id!,
+                });
 
-            // Update the messages in the database.
-            await this.saveConversation();
+                // Update the messages in the database.
+                await this.saveConversation();
+            }
 
             // Execute the chat messages.
             await this.executeTurnsForChatMessage();

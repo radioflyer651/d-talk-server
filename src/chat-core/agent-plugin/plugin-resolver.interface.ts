@@ -18,5 +18,5 @@ export interface IPluginResolver {
     /** Hydrates all plugins in a specified set of plugin specifications and instances.  If a plugin is not initialized yet, it will be, and will be added to the pluginInstances parameter.
      *   If indicated, the plugins will be added to the attachmentTarget's plugin list. 
      *   The return value is a set of "new" plugins (that weren't instantiated before), and existing plugins (those that were).*/
-    hydrateAllPlugins(pluginReferences: PluginSpecification[], pluginInstances: PluginInstanceReference[], attachmentTarget: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<{ newPlugins: AgentPluginBase[], existingPlugins: AgentPluginBase[]; }>;
+    hydrateAllPlugins(pluginReferences: PluginSpecification[], pluginInstances: PluginInstanceReference[], attachmentTarget: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<{ newPlugins: AgentPluginBase[], existingPlugins: AgentPluginBase[]; pluginsRemoved: boolean; }>;
 }

@@ -68,7 +68,7 @@ export class AppPluginResolver implements IPluginResolver {
 
     /** Totally hydrates all plugins in a specified set of plugin specifications and instances.  If a plugin is not initialized yet, it will be, and will be added to the pluginInstances parameter.
      *   If indicated, the plugins will be added to the attachmentTarget's plugin list. */
-    async hydrateAllPlugins(pluginReferences: PluginSpecification[], pluginInstances: PluginInstanceReference[], attachmentTarget: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<{ newPlugins: AgentPluginBase[], existingPlugins: AgentPluginBase[]; }> {
+    async hydrateAllPlugins(pluginReferences: PluginSpecification[], pluginInstances: PluginInstanceReference[], attachmentTarget: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<{ newPlugins: AgentPluginBase[], existingPlugins: AgentPluginBase[]; pluginsRemoved: boolean; }> {
         // Find any plugin that hasn't been implemented yet.
         const missingPlugins = pluginReferences.filter(r => !pluginInstances.some(p => p.pluginSpecification.id.equals(r.id)));
 
@@ -78,6 +78,14 @@ export class AppPluginResolver implements IPluginResolver {
             // Start the generation of the plugins.
             newPluginsPromises = missingPlugins.map(p => this.createPluginInstance(p, attachmentTarget, false));
         }
+
+        // Find any plugins that should be removed, and remove them.
+        const pluginsToRemove = pluginInstances.filter(p => !pluginReferences.some(r => r.id.equals(p.pluginSpecification.id)));
+        const pluginsRemoved = pluginsToRemove.length > 0;
+        pluginsToRemove.forEach(p => {
+            const index = pluginInstances.indexOf(p);
+            pluginInstances.splice(index, 1);
+        });
 
         // Hydrate the existing plugins.
         let existingPluginsPromise: Promise<AgentPluginBase[]> = Promise.resolve([]);
@@ -106,6 +114,7 @@ export class AppPluginResolver implements IPluginResolver {
         return {
             newPlugins,
             existingPlugins,
+            pluginsRemoved
         };
     }
 }

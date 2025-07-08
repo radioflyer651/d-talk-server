@@ -29,6 +29,8 @@ export class JobHydrator implements IJobHydratorService {
         const newJob = new ChatJob(jobConfiguration, job);
 
         // Hydrate the plugins.
+        //  NOTE: Since plugin instances aren't stored on the job instances, but the chat rooms, we can't
+        //  do anything about saving the job if it had new/removed plugins in this method.
         await this.pluginHydrator.hydrateAllPlugins(jobConfiguration.plugins, job.pluginReferences, newJob, true);
 
         // Hydrate the messages.

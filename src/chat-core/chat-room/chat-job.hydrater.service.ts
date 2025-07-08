@@ -29,7 +29,7 @@ export class JobHydrator implements IJobHydratorService {
         const newJob = new ChatJob(jobConfiguration, job);
 
         // Hydrate the plugins.
-        newJob.plugins = await this.pluginHydrator.getPluginInstances(job.pluginReferences);
+        newJob.plugins = await this.pluginHydrator.getPluginInstances(job.pluginReferences, newJob);
 
         // Hydrate the messages.
         newJob.positionableMessages = hydratePositionableMessages(jobConfiguration.instructions);

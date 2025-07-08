@@ -29,15 +29,20 @@ export class AgentServiceFactory {
         // Get the model for this configuration.
         const model = await this.modelResolver.getModel(identity.modelInfo);
 
+        // Create the agent.
+        const agent = new Agent(configuration, identity, model);
+
         // Create the plugin instances.
         const allPlugins = [...configuration.instancePlugins, ...configuration.permanentPlugins];
         const pluginPromises = allPlugins
-            .map(p => this.pluginResolver.getPluginInstance(p));
+            .map(p => this.pluginResolver.getPluginInstance(p, agent));
         const plugins = (await Promise.all(pluginPromises))
             .filter(p => !!p);
 
+        agent.plugins = plugins;
+
         // Return the agent.
-        return new Agent(configuration, identity, model, plugins);
+        return agent;
     }
 
     /** Initializes and returns a new agent, giving a specified identity. */
@@ -45,22 +50,30 @@ export class AgentServiceFactory {
         // Get the model.
         const model = await this.modelResolver.getModel(identity.modelInfo);
 
-        // Create the plugins.
-        const plugins = await Promise.all(identity.plugins
-            .map(async p => this.pluginResolver.createPluginInstance(p)));
-
         // Create the configuration for the agent.
         const configuration = {
             _id: new ObjectId(),
             identity: identity._id,
-            permanentPlugins: plugins.map(p => p.getReference()),
+            permanentPlugins: [],
             instancePlugins: [],
             projectId: identity.projectId, // Ensure projectId is provided
         } as AgentInstanceConfiguration;
 
-        // Create the agent, and return it.
-        const result = new Agent(configuration, identity, model, plugins);
-        return result;
+        // Create the agent.
+        const agent = new Agent(configuration, identity, model);
+
+        // Create the plugins.
+        const plugins = await Promise.all(identity.plugins
+            .map(async p => this.pluginResolver.createPluginInstance(p, agent, false)));
+
+        // Set the references on the agent.
+        configuration.permanentPlugins = plugins.map(p => p.getReference());
+
+        // Place the plugins on the agent.
+        agent.plugins = plugins;
+
+        // Return the agent.
+        return agent;
     }
 
 }

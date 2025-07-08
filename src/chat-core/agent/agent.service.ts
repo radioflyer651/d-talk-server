@@ -17,7 +17,7 @@ export class Agent implements IChatLifetimeContributor {
     // The chat model used by this agent
     readonly chatModel: BaseChatModel;
     // Plugins (context plugins, tools, etc.)
-    readonly plugins: AgentPluginBase[];
+    plugins: AgentPluginBase[];
 
     constructor(
         config: AgentInstanceConfiguration,

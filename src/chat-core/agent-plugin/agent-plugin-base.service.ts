@@ -6,6 +6,8 @@ import { Agent } from "../agent/agent.service";
 import { ChatRoom } from "../chat-room/chat-room.service";
 import { ChatJob } from "../chat-room/chat-job.service";
 
+/** The types that a plugin can be attached to. */
+export type PluginAttachmentTargetTypes = ChatRoom | Agent | ChatJob;
 
 /** Base class for agent plugins, providing basic lifecycle hooks and protocols. */
 export abstract class AgentPluginBase implements IChatLifetimeContributor {
@@ -21,6 +23,10 @@ export abstract class AgentPluginBase implements IChatLifetimeContributor {
             this._id = instance._id;
         }
     }
+
+    /** Gets or sets the target that this plugin is attached to.  Sometimes, this is needed
+     *   for contextual reasons. */
+    attachedTo?: PluginAttachmentTargetTypes;
 
     /** Gets or sets the ObjectID of this plugin.  This ID is used for context data, if nothing else. 
      *   We set the ID at initialization, since it won't be set by anything else.

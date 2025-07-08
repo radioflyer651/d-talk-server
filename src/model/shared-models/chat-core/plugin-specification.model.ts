@@ -1,6 +1,5 @@
 import { ObjectId } from "mongodb";
 
-
 /** This type is used to indicate, on a configuration, that it requires a specific plugin.  When an instance of
  *   whatever it's attached to is created, a plugin instance must be instantiated (created or rehydrated) for this plugin specification. */
 export interface PluginSpecification<T = any> {

@@ -1,4 +1,4 @@
-import { AgentPluginBase } from "./agent-plugin-base.service";
+import { AgentPluginBase, PluginAttachmentTargetTypes } from "./agent-plugin-base.service";
 import { IPluginResolver } from "./plugin-resolver.interface";
 import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
@@ -20,16 +20,25 @@ export class AppPluginResolver implements IPluginResolver {
 
         return resolver;
     }
-    
-    async getPluginInstance(pluginContext: PluginInstanceReference): Promise<AgentPluginBase | undefined> {
+
+    async getPluginInstance(pluginContext: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<AgentPluginBase | undefined> {
         const resolver = this.getResolver(pluginContext.pluginSpecification.pluginType);
 
-        // Return the instance of this.
-        return resolver.hydratePlugin(pluginContext);
+        // Get the plugins.
+        const plugins = await resolver.hydratePlugin(pluginContext, attachedTo);
+
+        // Set them on the target.
+        attachedTo.plugins = plugins;
+
+        // Return them.
+        return plugins;
     }
 
-    async getPluginInstances(pluginReferences: PluginInstanceReference[]): Promise<AgentPluginBase[]> {
-        const result = await (await Promise.all(pluginReferences.map(p => this.getPluginInstance(p))));
+    async getPluginInstances(pluginReferences: PluginInstanceReference[], attachedTo: PluginAttachmentTargetTypes): Promise<AgentPluginBase[]> {
+        const result = await (await Promise.all(pluginReferences.map(p => this.getPluginInstance(p, attachedTo)))).filter(x => !!x);
+
+        // Add these to the attachment target.
+        attachedTo.plugins = result;
 
         // If we couldn't resolve any, then we probably have issues.
         if (result.some(x => !x)) {
@@ -39,11 +48,17 @@ export class AppPluginResolver implements IPluginResolver {
         return result as AgentPluginBase[];
     }
 
-    async createPluginInstance(pluginReference: PluginSpecification): Promise<AgentPluginBase> {
+    async createPluginInstance(pluginReference: PluginSpecification, attachmentTarget: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<AgentPluginBase> {
         const resolver = this.getResolver(pluginReference.pluginType);
 
         // Return the instance of this.
-        return resolver.createNewPlugin(pluginReference.configuration);
+        const result = await resolver.createNewPlugin(pluginReference.configuration, attachmentTarget);
+
+        if (attachToAttachmentTarget && attachmentTarget.plugins) {
+            attachmentTarget.plugins = [result];
+        }
+
+        return result;
     }
 
 }

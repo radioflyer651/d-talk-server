@@ -35,7 +35,6 @@ export class ChatCoreService {
             identity: identityId,
             name: agentName,
             plugins: [],
-            permanentPlugins: [],
             projectId: chatRoom.projectId
         };
 

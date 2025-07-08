@@ -54,6 +54,10 @@ export abstract class AgentPluginBase implements IChatLifetimeContributor {
 
     specification?: PluginSpecification;
 
+    /** Higher priorities have actions occur closer to the LLM chat call, and lower numbers
+     *   occur prior to the chat call. */
+    priority: number = 0;
+
     /** Returns a reference to this plugin. */
     getReference(): PluginInstanceReference {
         if (!this.specification) {

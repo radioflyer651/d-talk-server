@@ -259,6 +259,13 @@ export class ChatRoom implements IChatLifetimeContributor {
                 ...this.externalLifetimeServices
             ];
 
+            contributors.sort((c1, c2) => {
+                const order1 = c1.priority ?? 0;
+                const order2 = c2.priority ?? 0;
+
+                return order1 - order2;
+            });
+
             // Create the graph state to call the chat.
             const graphState: typeof ChatCallState.State = {
                 chatModel: agent.chatModel,

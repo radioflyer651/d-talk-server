@@ -3,6 +3,11 @@ import { PositionableMessage } from "../model/shared-models/chat-core/positionab
 import { DynamicTool } from "@langchain/core/tools";
 
 export interface IChatLifetimeContributor {
+
+    /** Higher priorities have actions occur closer to the LLM chat call, and lower numbers
+     *   occur prior to the chat call. */
+    priority?: number;
+
     /**
      * Not part of the life-time, but when implemented, provides tools that may
      * be called by the LLM during the chat session.
@@ -31,6 +36,9 @@ export interface IChatLifetimeContributor {
      */
     addPreChatMessages?(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]>;
 
+    /** Provides the opportunity to inspect chat messages before the actual chat call is made. */
+    inspectChatCallMessages?(callMessages: BaseMessage[], chatHistory: BaseMessage[]): Promise<void>;
+
     // Chat occurs here
 
     /**
@@ -50,4 +58,6 @@ export interface IChatLifetimeContributor {
 
 export interface ChatCallInfo {
     replyNumber: number;
+    callMessages: BaseMessage[];
+    messageHistory: BaseMessage[];
 }

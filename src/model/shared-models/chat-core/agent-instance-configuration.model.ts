@@ -5,7 +5,7 @@ import { PluginInstanceReference } from "./plugin-instance-reference.model";
 /** Represents a specific instance of a chat agent, from a specific identity. */
 export interface AgentInstanceConfiguration {
     _id: ObjectId;
-    
+
     /** The ID of the project this agent belongs to. */
     projectId: ObjectId;
 
@@ -14,12 +14,7 @@ export interface AgentInstanceConfiguration {
 
     /** An optional name to give to this instance of an agent. */
     name?: string;
-    
-    /** The instance IDs of the plugins that the agent has available to them. 
-     *   These plugins are made available through the agent identity only.    */
-    permanentPlugins: PluginInstanceReference[];
 
-    /** A dictionary of string (object IDs) referring to the identity.plugins IDs,
-     *   and values of the configurations of the plugin. */
-    instancePlugins: PluginInstanceReference[];
+    /** A list of plugin instances created for this agent. */
+    plugins: PluginInstanceReference[];
 }

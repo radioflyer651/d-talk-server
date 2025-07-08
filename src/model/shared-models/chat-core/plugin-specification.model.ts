@@ -15,3 +15,14 @@ export interface PluginSpecification<T = any> {
      *   but need to indicate what type of memories the plugin should be creating/retrieving. */
     configuration: T;
 }
+
+/** TypeGuard for the PluginSpecification type. */
+export function isPluginSpecification(target: any): target is PluginSpecification {
+    return (
+        typeof target === "object" &&
+        target !== null &&
+        "id" in target &&
+        "pluginType" in target &&
+        "configuration" in target
+    );
+}

@@ -167,6 +167,9 @@ export class ChatRoom implements IChatLifetimeContributor {
     /** Creates chat jobs from the data, and resolves their plugins. */
     private async hydrateChatJobs() {
         this.chatJobs = await this.jobHydratorService.hydrateJobs(this.data.jobs);
+
+        // The chat job instances may have been altered, so we need to save the references, just to be sure.
+        await this.chatRoomDbService.updateChatRoom(this.data._id, { jobs: this.data.jobs });
     }
 
     /** Called when a message is received from a user in this chat room. */

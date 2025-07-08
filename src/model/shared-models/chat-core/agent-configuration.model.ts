@@ -3,9 +3,10 @@ import { PluginSpecification } from "./plugin-specification.model";
 import { ModelServiceParams } from "./model-service-params.model";
 import { PositionableMessage } from "./positionable-message.model";
 import { StoredMessage } from "@langchain/core/messages";
+import { IPluginConfigurationAttachmentType } from "./plugin-configuration-attachement-types.model";
 
 /** The configurable items that make up a chat agent. */
-export interface ChatAgentIdentityConfiguration {
+export interface ChatAgentIdentityConfiguration extends IPluginConfigurationAttachmentType {
     _id: ObjectId;
 
     /** The information needed to specify and crate a chat model to support his agent. */

@@ -6,6 +6,7 @@ import { Agent } from "../agent/agent.service";
 import { ChatRoom } from "../chat-room/chat-room.service";
 import { ChatJob } from "../chat-room/chat-job.service";
 
+// TODO: This type should be an interface, applied to the attachment target types themselves.
 /** The types that a plugin can be attached to. */
 export type PluginAttachmentTargetTypes = ChatRoom | Agent | ChatJob;
 

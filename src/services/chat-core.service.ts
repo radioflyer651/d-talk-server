@@ -34,7 +34,7 @@ export class ChatCoreService {
         const newAgent: NewDbItem<AgentInstanceConfiguration> = {
             identity: identityId,
             name: agentName,
-            instancePlugins: [],
+            plugins: [],
             permanentPlugins: [],
             projectId: chatRoom.projectId
         };

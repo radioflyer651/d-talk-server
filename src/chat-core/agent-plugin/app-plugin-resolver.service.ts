@@ -21,24 +21,29 @@ export class AppPluginResolver implements IPluginResolver {
         return resolver;
     }
 
-    async getPluginInstance(pluginContext: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<AgentPluginBase | undefined> {
+    async getPluginInstance(pluginContext: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<AgentPluginBase | undefined> {
         const resolver = this.getResolver(pluginContext.pluginSpecification.pluginType);
 
         // Get the plugins.
         const plugins = await resolver.hydratePlugin(pluginContext, attachedTo);
 
         // Set them on the target.
-        attachedTo.plugins = plugins;
+        if (attachToAttachmentTarget) {
+            attachedTo.plugins = plugins;
+        }
 
         // Return them.
         return plugins;
     }
 
-    async getPluginInstances(pluginReferences: PluginInstanceReference[], attachedTo: PluginAttachmentTargetTypes): Promise<AgentPluginBase[]> {
-        const result = await (await Promise.all(pluginReferences.map(p => this.getPluginInstance(p, attachedTo)))).filter(x => !!x);
+    async getPluginInstances(pluginReferences: PluginInstanceReference[], attachedTo: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<AgentPluginBase[]> {
+        const result = await (await Promise.all(pluginReferences.map(p => this.getPluginInstance(p, attachedTo, false)))).filter(x => !!x);
 
         // Add these to the attachment target.
-        attachedTo.plugins = result;
+        // Set them on the target.
+        if (attachToAttachmentTarget) {
+            attachedTo.plugins = result;
+        }
 
         // If we couldn't resolve any, then we probably have issues.
         if (result.some(x => !x)) {
@@ -52,7 +57,7 @@ export class AppPluginResolver implements IPluginResolver {
         const resolver = this.getResolver(pluginReference.pluginType);
 
         // Return the instance of this.
-        const result = await resolver.createNewPlugin(pluginReference.configuration, attachmentTarget);
+        const result = await resolver.createNewPlugin(pluginReference, attachmentTarget);
 
         if (attachToAttachmentTarget && attachmentTarget.plugins) {
             attachmentTarget.plugins = [result];
@@ -61,6 +66,48 @@ export class AppPluginResolver implements IPluginResolver {
         return result;
     }
 
+    /** Totally hydrates all plugins in a specified set of plugin specifications and instances.  If a plugin is not initialized yet, it will be, and will be added to the pluginInstances parameter.
+     *   If indicated, the plugins will be added to the attachmentTarget's plugin list. */
+    async hydrateAllPlugins(pluginReferences: PluginSpecification[], pluginInstances: PluginInstanceReference[], attachmentTarget: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<{ newPlugins: AgentPluginBase[], existingPlugins: AgentPluginBase[]; }> {
+        // Find any plugin that hasn't been implemented yet.
+        const missingPlugins = pluginReferences.filter(r => !pluginInstances.some(p => p.pluginSpecification.id.equals(r.id)));
+
+        // Create the new plugin instances.
+        let newPluginsPromises: Promise<AgentPluginBase>[] = [];
+        if (missingPlugins.length > 0) {
+            // Start the generation of the plugins.
+            newPluginsPromises = missingPlugins.map(p => this.createPluginInstance(p, attachmentTarget, false));
+        }
+
+        // Hydrate the existing plugins.
+        let existingPluginsPromise: Promise<AgentPluginBase[]> = Promise.resolve([]);
+        if (pluginInstances.length > 0) {
+            existingPluginsPromise = this.getPluginInstances(pluginInstances, attachmentTarget, false);
+        }
+
+        // Wait for both promise sets to complete.
+        const newPlugins = await Promise.all(newPluginsPromises);
+        const existingPlugins = await existingPluginsPromise;
+
+        // Combine them.
+        const allPlugins = [...existingPlugins, ...newPlugins];
+
+        // add any new plugins to the pluginInstances list.
+        if (newPlugins.length > 0) {
+            pluginInstances.push(...newPlugins.map(p => p.getReference()));
+        }
+
+        // Attach them to the target, if necessary.
+        if (attachToAttachmentTarget) {
+            attachmentTarget.plugins = allPlugins;
+        }
+
+        // Return the plugins.
+        return {
+            newPlugins,
+            existingPlugins,
+        };
+    }
 }
 
 

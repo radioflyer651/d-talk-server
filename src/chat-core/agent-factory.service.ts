@@ -32,14 +32,15 @@ export class AgentServiceFactory {
         // Create the agent.
         const agent = new Agent(configuration, identity, model);
 
-        // Create the plugin instances.
-        const allPlugins = [...configuration.instancePlugins, ...configuration.permanentPlugins];
-        const pluginPromises = allPlugins
-            .map(p => this.pluginResolver.getPluginInstance(p, agent));
-        const plugins = (await Promise.all(pluginPromises))
-            .filter(p => !!p);
+        // Hydrate the plugins for this agent.
+        configuration.plugins = configuration.plugins ?? [];
+        const hydratedPlugins = await this.pluginResolver.hydrateAllPlugins(identity.plugins, configuration.plugins, agent, true);
 
-        agent.plugins = plugins;
+        // If there are new plugins, then we need to update the agent instance in the database to record this new information.
+        //  NOTE: The configuration.plugins property was updated in the previous call.
+        if (hydratedPlugins.newPlugins.length > 0) {
+            await this.agentDbService.updateAgent(configuration._id, { plugins: configuration.plugins });
+        }
 
         // Return the agent.
         return agent;
@@ -55,22 +56,21 @@ export class AgentServiceFactory {
             _id: new ObjectId(),
             identity: identity._id,
             permanentPlugins: [],
-            instancePlugins: [],
+            plugins: [],
             projectId: identity.projectId, // Ensure projectId is provided
         } as AgentInstanceConfiguration;
 
         // Create the agent.
         const agent = new Agent(configuration, identity, model);
 
-        // Create the plugins.
-        const plugins = await Promise.all(identity.plugins
-            .map(async p => this.pluginResolver.createPluginInstance(p, agent, false)));
+        // Hydrate the plugins for this agent.
+        const hydratedPlugins = await this.pluginResolver.hydrateAllPlugins(identity.plugins, configuration.plugins, agent, true);
 
-        // Set the references on the agent.
-        configuration.permanentPlugins = plugins.map(p => p.getReference());
-
-        // Place the plugins on the agent.
-        agent.plugins = plugins;
+        // If there are new plugins, then we need to update the agent instance in the database to record this new information.
+        //  NOTE: The configuration.plugins property was updated in the previous call.
+        if (hydratedPlugins.newPlugins.length > 0) {
+            await this.agentDbService.updateAgent(configuration._id, { plugins: configuration.plugins });
+        }
 
         // Return the agent.
         return agent;

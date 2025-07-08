@@ -3,6 +3,8 @@ export const ROOM_INFO_PLUGIN_TYPE_ID = 'room-info-plugin';
 export const OTHER_AGENTS_INVISIBLE_PLUGIN = 'other-agents-invisible';
 export const DEBUG_PLUGIN = 'debug';
 export const ACT_DRUNK = 'act-drunk';
+export const OTHER_AGENT_MESSAGES_AS_USER = 'other-agent-messages-as-user';
+export const THIS_AGENT_MESSAGE_AS_USER = 'this-agent-messages-as-user';
 
 export interface PluginInfo {
     pluginType: string;
@@ -41,6 +43,15 @@ export const pluginInformation: PluginInfo[] = [
         attachesToChatRoom: true,
         attachesToJob: true,
         description: 'When agents respond, they will not see messages from other agents in the room.',
+        defaultParameterCreator: () => undefined,
+    },
+    {
+        pluginType: OTHER_AGENT_MESSAGES_AS_USER,
+        displayName: 'Convert Other Agent Messages To User Messages',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        description: `When the agent is responding to an LLM message, all other agent messages will appear as user messages instead of agent/ai messages.`,
         defaultParameterCreator: () => undefined,
     },
     {

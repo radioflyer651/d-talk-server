@@ -4,6 +4,7 @@ import { DebugPluginResolver } from "./chat-core/plugin-implementations/plugin-r
 import { OtherAgentMessagesAsUserPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/other-agent-messages-as-user.plugin-resolver";
 import { OtherAgentsInvisiblePluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/other-agents-invisible.plugin-resolver";
 import { RoomInfoPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/room-info.plugin-resolver";
+import { UserMessagesIgnoredPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/user-messages-ignored.plugin-resolver";
 
 
 export const pluginTypeResolvers: IPluginTypeResolver<any>[] = [
@@ -12,4 +13,5 @@ export const pluginTypeResolvers: IPluginTypeResolver<any>[] = [
     new OtherAgentsInvisiblePluginResolver(),
     new DebugPluginResolver(),
     new OtherAgentMessagesAsUserPluginResolver(),
+    new UserMessagesIgnoredPluginResolver(),
 ];

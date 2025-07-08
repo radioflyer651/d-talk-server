@@ -1,10 +1,10 @@
-
 export const ROOM_INFO_PLUGIN_TYPE_ID = 'room-info-plugin';
 export const OTHER_AGENTS_INVISIBLE_PLUGIN = 'other-agents-invisible';
 export const DEBUG_PLUGIN = 'debug';
 export const ACT_DRUNK = 'act-drunk';
 export const OTHER_AGENT_MESSAGES_AS_USER = 'other-agent-messages-as-user';
 export const THIS_AGENT_MESSAGE_AS_USER = 'this-agent-messages-as-user';
+export const USER_MESSAGES_IGNORED_PLUGIN_TYPE_ID = 'user-messages-ignored';
 
 export interface PluginInfo {
     pluginType: string;
@@ -60,6 +60,15 @@ export const pluginInformation: PluginInfo[] = [
         attachesToAgent: true,
         attachesToChatRoom: false,
         attachesToJob: true,
+        defaultParameterCreator: () => undefined,
+    },
+    {
+        pluginType: USER_MESSAGES_IGNORED_PLUGIN_TYPE_ID,
+        displayName: 'Ignore User Messages',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        description: 'Causes the agent to ignore user messages when responding to chat.',
         defaultParameterCreator: () => undefined,
     },
 ];

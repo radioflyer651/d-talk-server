@@ -56,6 +56,10 @@ export function objectIdToStringConverter(target: any) {
  *   If the target is not an object, then it is returned as-is.  If it's a string that is a valid
  *   ObjectId, then it is converted to an ObjectId. */
 export function stringToObjectIdConverter(target: any, cloneObject: boolean = true) {
+    if (target instanceof ObjectId) {
+        return target;
+    }
+    
     // If the value is a string that is a valid ObjectId, convert and return it.
     if (typeof target === "string" && ObjectId.isValid(target)) {
         return new ObjectId(target);

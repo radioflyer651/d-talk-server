@@ -76,6 +76,10 @@ export class SocketServer {
             }
         });
 
+        this.initialize();
+    }
+
+    protected initialize(): void {
         const onConnectionFunction = async (socket: Socket) => {
             // Determine if they can connect or not.
             if (!(await this.onConnect(socket))) {
@@ -252,7 +256,7 @@ export class SocketServer {
                 // Send the event.
                 subscriber.next({
                     socket,
-                    data: stringToObjectIdConverter(argsCopy),
+                    data: stringToObjectIdConverter(argsCopy, false),
                     eventName: event,
                     userId: socket.data?.userId,
                     callback: resolverCallback
@@ -317,5 +321,27 @@ export class SocketServer {
     /** Emits an event to all connections. */
     emitEventToAll(eventName: string, ...args: any[]): void {
         this.socketServer.emit(eventName, ...args);
+    }
+
+    /** Emits an event to a "room", which is like a group. */
+    emitEventToRoom(roomName: string, eventName: string, ...args: any[]): void {
+        this.socketServer.in(roomName).emit(eventName, ...args);
+    }
+
+    /** Instructs a socket to join a specified "room". */
+    joinRoom(socket: Socket, roomName: string): void {
+        // This is just for abstraction.
+        socket.join(roomName);
+    }
+
+    /** Instructs a socket to leave a specified "room". */
+    leaveRoom(socket: Socket, roomName: string): void {
+        // This is just for abstraction.
+        socket.leave(roomName);
+    }
+
+    /** Sends a specified message to a specified chat room. */
+    sendMessageToRoom(roomName: string, eventName: string, ...args: any[]): void {
+        this.socketServer.in(roomName).emit(eventName, ...args);
     }
 }

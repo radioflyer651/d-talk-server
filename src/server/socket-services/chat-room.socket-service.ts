@@ -1,76 +1,49 @@
-import { from, lastValueFrom, mergeMap, of } from "rxjs";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
 import { SocketServer } from "../socket.server";
 import { SocketServiceBase } from "./socket-server-base.socket-service";
-import { ObjectId } from "mongodb";
-import { IChatLifetimeContributor } from "../../chat-core/chat-lifetime-contributor.interface";
-import { BaseMessage } from "@langchain/core/messages";
-import { UserChatEventArgs } from "../../model/shared-models/user-chat-event.model";
-import { ChatRoom } from "../../chat-core/agent/chat-room/chat-room.service";
 import { AgentServiceFactory } from "../../chat-core/agent-factory.service";
 import { IPluginResolver } from "../../chat-core/agent-plugin/plugin-resolver.interface";
-import { JobHydrator } from "../../chat-core/agent/chat-room/chat-job.hydrater.service";
-import { Socket } from "socket.io";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
+import { JobHydrator } from "../../chat-core/chat-room/chat-job.hydrater.service";
+import { MESSAGE_CHUNK_MESSAGE, MessageChunkMessage } from "../../model/shared-models/chat-core/socket-messaging/message-chunk-message.socket-model";
+import { ENTER_CHAT_ROOM, EnterChatRoomMessage, EXIT_CHAT_ROOM, ExitChatRoomMessage, getChatRoomRoomName } from "../../model/shared-models/chat-core/socket-messaging/general-messaging.socket-model";
 
 
 export class ChatRoomSocketServer extends SocketServiceBase {
     constructor(
-        socketService: SocketServer,
+        socketServer: SocketServer,
         readonly chatDbService: ChatRoomDbService,
         readonly agentServiceFactory: AgentServiceFactory,
         readonly pluginResolver: IPluginResolver,
         readonly hydratorService: JobHydrator,
         readonly agentDbService: AgentDbService,
     ) {
-        super(socketService);
+        super(socketServer);
     }
 
     async initialize(): Promise<void> {
-        this.socketServer.subscribeToEvent('sendChatMessage')
-            .pipe(mergeMap(event => {
-                const args = event.data as UserChatEventArgs;
-                return from(this.callChatMessage(args[0], args[1], event.userId!, event.socket));
-            }));
-    }
+        // this.socketServer.subscribeToEvent('sendChatMessage')
+        //     .pipe(mergeMap(event => {
+        //         const args = event.data as UserChatEventArgs;
+        //         return from(this.callChatMessage(args[0], args[1], event.userId!, event.socket));
+        //     }));
 
-    private async callChatMessage(chatRoomId: ObjectId, message: string, userId: ObjectId, socket: Socket): Promise<void> {
-        // Get the chat room for this ID.
-        const roomData = await this.chatDbService.getChatRoomById(chatRoomId);
-
-        // Validate the database data.
-        if (!roomData) {
-            throw new Error(`No room exists with the id: ${chatRoomId}`);
-        }
-
-        // Validate the owner.
-        if (roomData.userId.equals(userId) && !roomData.userParticipants.some(p => p.equals(userId))) {
-            throw new Error(`User ${userId} does not own chat room ${chatRoomId}, and is not a member of the chat room.`);
-        }
-
-        // Create the chat room from this data.
-        const chatRoom = new ChatRoom(roomData,
-            this.agentServiceFactory,
-            this.chatDbService,
-            this.pluginResolver,
-            this.hydratorService,
-            this.agentDbService,
-        );
-
-        // Add a handler to send messages to the client when they're completed on the job.
-        chatRoom.externalLifetimeServices.push({
-            handleReply: async (message) => {
-                if (message.getType() === 'ai' && !message.tool_calls) {
-                    await this.sendChatMessage([message], socket);
-                }
-
-                return undefined;
-            }
+        this.socketServer.subscribeToEvent(ENTER_CHAT_ROOM).subscribe((ev) => {
+            const args = ev.data[0] as EnterChatRoomMessage;
+            this.socketServer.joinRoom(ev.socket, getChatRoomRoomName(args.roomId));
         });
 
+        this.socketServer.subscribeToEvent(EXIT_CHAT_ROOM).subscribe(ev => {
+            const args = ev.data[0] as ExitChatRoomMessage;
+            this.socketServer.leaveRoom(ev.socket, getChatRoomRoomName(args.roomId));
+        });
     }
 
-    public async sendChatMessage(newMessage: BaseMessage[], socket: Socket): Promise<void> {
-        this.socketServer.emitEvent(socket, 'receive-chat-message');
+    /** Sends a message fragment to listeners of a specified chat room, which is a streamed portion of an LLM response. */
+    async sendNewChatMessageChunk(messageChunk: MessageChunkMessage): Promise<void> {
+        this.socketServer.sendMessageToRoom(getChatRoomRoomName(messageChunk.chatRoomId), MESSAGE_CHUNK_MESSAGE, messageChunk);
     }
+
 }
+
+

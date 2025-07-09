@@ -1,4 +1,4 @@
-import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, SystemMessage } from "@langchain/core/messages";
+import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, SystemMessage, AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { Subject } from "rxjs";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
@@ -18,11 +18,16 @@ import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
-import { ChatCallState } from "./chat-room-graph/chat-room.state";
+import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
 import { Agent } from "../agent/agent.service";
 import { MessagePositionTypes, PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
+import { StreamEvent } from "@langchain/core/tracers/log_stream";
+import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
 
+/*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
+/** Provides basic interactive functionality for sending a message, from a user, to a chat room
+ *   and getting an LLM response.  */
 export class ChatRoom implements IChatLifetimeContributor {
     constructor(
         readonly data: ChatRoomData,
@@ -31,6 +36,7 @@ export class ChatRoom implements IChatLifetimeContributor {
         readonly pluginResolver: IPluginResolver,
         readonly jobHydratorService: IJobHydratorService,
         readonly agentDbService: AgentDbService,
+        readonly chatRoomSocketServer: ChatRoomSocketServer,
     ) {
         this.messages = mapStoredMessagesToChatMessages(this.data.conversation ?? []);
     }
@@ -91,6 +97,8 @@ export class ChatRoom implements IChatLifetimeContributor {
     set messages(value: BaseMessage[]) {
         this._messages = value;
     }
+
+    abortSignal?: AbortSignal;
 
     private _externalLifetimeServices: IChatLifetimeContributor[] = [];
     /** External set of IChatLifetimeContributor services that will be connected to chat requests.
@@ -279,10 +287,54 @@ export class ChatRoom implements IChatLifetimeContributor {
             const graph = createChatRoomGraph();
 
             // Execute the chat call.
-            const result = await graph.invoke(graphState, { recursionLimit: 40 });
+            const result = graph.streamEvents(graphState, { version: 'v2', recursionLimit: 40 });
+            const newMessages = [];
+            let lastEvent: StreamEvent | undefined = undefined;
+            for await (const ev of result) {
+                if (this.abortSignal?.aborted) {
+                    break;
+                }
+
+                if (ev.event === 'on_chat_model_stream') {
+                    const chunk = ev.data.chunk as AIMessageChunk;
+                    newMessages[newMessages.length - 1] += chunk.content;
+                    this.chatRoomSocketServer.sendNewChatMessageChunk({
+                        chatRoomId: this.data._id,
+                        messageId: chunk.id!,
+                        chunk: chunk.text,
+                        speakerId: this._currentlyExecutingJob.agentId!,
+                        speakerName: this._agents.find(a => a.data._id.equals(this._currentlyExecutingJob!.agentId!))?.myName ?? ''
+                    });
+
+                } else if (ev.event === 'on_chat_model_start') {
+                    newMessages.push('');
+                }
+
+                lastEvent = ev;
+            }
+
+            if (this.abortSignal?.aborted) {
+                await result.cancel('user aborted');
+                const newAiMessages = newMessages.map(m => {
+                    const nm = new AIMessage(m);
+                    nm.name = agent.myName ?? '';
+                    setSpeakerOnMessage(nm, { speakerId: agent.data._id.toString(), speakerType: 'agent' });
+                    return nm;
+                });
+
+                // Add these to the conversation, and save them.
+                this.messages.push(...newAiMessages);
+                await this.saveConversation();
+            }
 
             // Update the chat history.
-            this.messages = result.messageHistory;
+            const lastMessage = (lastEvent?.data.output) as typeof ChatState.State | undefined;
+            if (lastMessage) {
+                this.messages = lastMessage.messageHistory;
+            } else {
+                throw new Error(`Expected messages to be returned from call graph, but got none.`);
+            }
+
         } catch (err) {
             this.logError({
                 message: `Error occurred while executing chat job: ${job.myName}`,
@@ -334,18 +386,5 @@ export class ChatRoom implements IChatLifetimeContributor {
             message: finalMessage,
             messageId: finalMessage.id!,
         });
-    }
-
-    async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
-        if (info.replyNumber === 0) {
-            const agents = this.agents.filter(a => this.chatJobs.some(j => j.agentId?.equals(a.data._id)));
-            let message = `You are currently chatting with the user, and the following agents: ` + agents.map(a => `(ID: ${a.data._id}) ${a.myName}`).join('\n');
-
-            return [
-                { location: MessagePositionTypes.AfterInstructions, message: new SystemMessage(message) }
-            ];
-        }
-
-        return [];
     }
 }

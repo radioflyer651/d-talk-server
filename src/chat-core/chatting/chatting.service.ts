@@ -10,6 +10,7 @@ import { BaseMessage } from "@langchain/core/messages";
 import { ChatRoomMessageEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
 import { AuthDbService } from "../../database/auth-db.service";
 import { User } from "../../model/shared-models/user.model";
+import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
 
 
 /** Responsible for accepting chat calls, typically from the API, and dispatching the request, and returning messages. */
@@ -21,11 +22,12 @@ export class ChattingService {
         readonly jobHydratorService: IJobHydratorService,
         readonly agentDbService: AgentDbService,
         readonly authDbService: AuthDbService,
+        readonly chatRoomSocketServer: ChatRoomSocketServer,
     ) {
 
     }
 
-    async receiveChatMessage(chatRoomId: ObjectId, message: string, userOrUserId: ObjectId | User) {
+    async receiveChatMessage(chatRoomId: ObjectId, message: string, userOrUserId: ObjectId | User, signal?: AbortSignal) {
         // Get the data from the database.
         const chatRoomData = await this.chatRoomDbService.getChatRoomById(chatRoomId);
 
@@ -53,7 +55,11 @@ export class ChattingService {
             this.chatRoomDbService,
             this.pluginResolver,
             this.jobHydratorService,
-            this.agentDbService);
+            this.agentDbService,
+            this.chatRoomSocketServer);
+            
+        // Set the abort signal, in case we have one.
+        chatRoom.abortSignal = signal;
 
         // Make sure it's initialized.
         await chatRoom.startupInitialization();

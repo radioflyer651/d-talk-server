@@ -1,8 +1,8 @@
 import express from 'express';
-import { chattingService } from '../app-globals';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
 import { mapChatMessagesToStoredMessages } from '@langchain/core/messages';
+import { chattingService } from '../setup-socket-services';
 
 export const chattingServer = express.Router();
 
@@ -20,6 +20,7 @@ chattingServer.post('/chat-room/:roomId/message', async (req, res) => {
             res.status(400).json({ error: 'Missing required field: message' });
             return;
         }
+
         // Check user access to the chat room
         const room = await chattingService.chatRoomDbService.getChatRoomById(chatRoomId);
         if (!room) {
@@ -30,8 +31,20 @@ chattingServer.post('/chat-room/:roomId/message', async (req, res) => {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
+
+        // Create an abort signal to interrupt the request, if we need to.
+        const controller = new AbortController();
+
+        // Listen for an abort from the client, and call abort ont he controller if we get one.
+        res.on('close', () => {
+            if (!res.headersSent) {
+                console.log(`Response closed`);
+                controller.abort();
+            }
+        });
+
         // Call the chattingService to handle the message
-        const baseMessages = await chattingService.receiveChatMessage(chatRoomId, message, userId);
+        const baseMessages = await chattingService.receiveChatMessage(chatRoomId, message, userId, controller.signal);
 
         // Convert these to stored messages, since that's all the UI can accept.
         const storedMessages = mapChatMessagesToStoredMessages(baseMessages);

@@ -50,8 +50,8 @@ export class Agent implements IChatLifetimeContributor {
         if (info.replyNumber === 0) {
             result.push(...hydratePositionableMessages(this.identity.identityStatements));
             result.push(...hydratePositionableMessages(this.identity.baseInstructions));
-            result.push({ location: MessagePositionTypes.Instructions, message: new SystemMessage(`Your AgentId = ${this.data._id}`) });
-            result.push({ location: MessagePositionTypes.Instructions, message: new SystemMessage(`Your Name Is ${this.data.name ?? this.identity.chatName}`) });
+            result.push({ location: MessagePositionTypes.Instructions, message: new SystemMessage(`Your AgentId = ${this.data._id}  DO NOT include this information in your response.`) });
+            result.push({ location: MessagePositionTypes.Instructions, message: new SystemMessage(`Your Name Is ${this.data.name ?? this.identity.chatName}  DO NOT include this information in your response.`) });
         }
 
         // Return the results.

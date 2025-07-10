@@ -354,12 +354,8 @@ chatRoomsServer.put('/chat-room/:roomId/job-instance/:jobId/disabled', async (re
             return;
         }
         // Update the job's disabled property
-        const result = await chatRoomDbService.setChatJobDisabled(chatRoomId, new ObjectId(jobId), disabled);
-        if (result > 0) {
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Job instance not found or not updated' });
-        }
+        await chatRoomDbService.setChatJobDisabled(chatRoomId, new ObjectId(jobId), disabled);
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to set job instance disabled status' });
     }
@@ -396,6 +392,67 @@ chatRoomsServer.put('/chat-room/:roomId/job-instance/:jobId/order', async (req, 
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to set job instance order' });
+    }
+});
+
+// Update a chat message in a conversation
+chatRoomsServer.put('/chat-room/:roomId/conversation/message/:messageId', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const chatRoomId = new ObjectId(req.params.roomId);
+        const messageId = req.params.messageId;
+        const { newContent } = req.body;
+        if (typeof newContent !== 'string' || !newContent.trim()) {
+            res.status(400).json({ error: 'Missing or invalid field: newContent' });
+            return;
+        }
+        // Fetch the chat room
+        const chatRoom = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
+            res.status(404).json({ error: 'Chat room not found' });
+            return;
+        }
+        // Check user access (owner or participant)
+        if (!chatRoom.userId.equals(userId) && !(chatRoom.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+        await chatRoomDbService.updateChatMessageInConversation(chatRoomId, messageId, newContent);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update chat message' });
+    }
+});
+
+// Delete a chat message from a conversation
+chatRoomsServer.delete('/chat-room/:roomId/conversation/message/:messageId', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const chatRoomId = new ObjectId(req.params.roomId);
+        const messageId = req.params.messageId;
+        // Fetch the chat room
+        const chatRoom = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
+            res.status(404).json({ error: 'Chat room not found' });
+            return;
+        }
+        // Check user access (owner or participant)
+        if (!chatRoom.userId.equals(userId) && !(chatRoom.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+        await chatRoomDbService.deleteChatMessageFromConversation(chatRoomId, messageId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete chat message' });
     }
 });
 

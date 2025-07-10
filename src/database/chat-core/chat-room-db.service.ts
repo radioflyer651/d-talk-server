@@ -112,45 +112,6 @@ export class ChatRoomDbService extends DbService {
     }
 
     /** Updates a chat message in a specified room, with a specified message ID, to have new specified content. */
-    async updateChatMessageInConversation_2(roomId: ObjectId, messageId: string, newContent: string): Promise<void> {
-        // Ensure the message ID is valid - we don't want any goofy mistakes here.
-        if (messageId.trimEnd() === '') {
-            throw new Error(`messageId cannot be empty.`);
-        }
-
-        await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
-            await collection.updateOne(
-                {
-                    $or: [
-                        {
-                            _id: roomId,
-                            conversation: {
-                                $elemMatch:
-                                    // For agent messages.
-                                    { 'data.id': messageId },
-                            }
-                        },
-                        {
-                            _id: roomId,
-                            conversation: {
-                                $elemMatch: {
-                                    // For user messages.
-                                    'data.additional_kwargs.id': messageId
-                                }
-                            }
-                        },
-                    ]
-                },
-                {
-                    $set: {
-                        "conversation.$.data.content": newContent
-                    }
-                }
-            );
-        });
-    };
-
-    /** Updates a chat message in a specified room, with a specified message ID, to have new specified content. */
     async updateChatMessageInConversation(roomId: ObjectId, messageId: string, newContent: string): Promise<void> {
         // Ensure the message ID is valid - we don't want any goofy mistakes here.
         if (messageId.trimEnd() === '') {
@@ -219,24 +180,27 @@ export class ChatRoomDbService extends DbService {
     /**
      * Set the 'disabled' property of a Chat Job Instance in a specified Chat Room.
      */
-    async setChatJobDisabled(roomId: ObjectId, jobId: ObjectId, disabled: boolean): Promise<number> {
+    async setChatJobDisabled(roomId: ObjectId, jobId: ObjectId, disabled: boolean) {
         // Ensure jobId is valid
         if (!jobId) {
             throw new Error(`jobId cannot be empty.`);
         }
         // Update the 'disabled' property of the job with the specified jobId in the jobs array
         // @ts-ignore: MongoDB $elemMatch is valid for the query
-        return await this.dbHelper.updateDataItems<ChatRoomData>(
-            DbCollectionNames.ChatRooms,
-            {
-                _id: roomId,
-                // @ts-ignore
-                jobs: { $elemMatch: { id: jobId } }
-            },
-            {
-                "jobs.$.disabled": disabled
-            },
-            { updateOne: true }
-        );
+        return await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne(
+                {
+                    _id: roomId,
+                    // @ts-ignore
+                    jobs: { $elemMatch: { id: jobId } }
+                },
+                {
+                    $set: {
+                        "jobs.$.disabled": disabled
+                    }
+                }
+            );
+        });
+
     }
 }

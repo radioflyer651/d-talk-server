@@ -4,6 +4,7 @@ import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data
 import { ObjectId } from "mongodb";
 import { UpsertDbItem, isNewDbItem } from "../../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
+import { ChatRoom } from "../../chat-core/chat-room/chat-room.service";
 
 export class ChatRoomDbService extends DbService {
     constructor(
@@ -83,6 +84,59 @@ export class ChatRoomDbService extends DbService {
             { updateOne: true }
         );
     }
+
+    /** Deletes a specified message from the conversation of a specified chat room. */
+    async deleteChatMessageFromConversation(roomId: ObjectId, messageId: string): Promise<void> {
+
+        // Ensure the message ID is valid - we don't want any goofy mistakes here.
+        if (messageId.trimEnd() === '') {
+            throw new Error(`messageId cannot be empty.`);
+        }
+
+        return await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne({ _id: roomId, }, {
+                $pull: {
+                    conversation: {
+                        //@ts-ignore  This actually works.
+                        'data.additional_kwargs.id': messageId
+                    }
+                }
+            });
+
+            await collection.updateOne({ _id: roomId, }, {
+                $pull: {
+                    //@ts-ignore  This actually works.
+                    conversation: { 'data.id': messageId }
+                }
+            });
+        });
+    }
+
+    /** Updates a chat message in a specified room, with a specified message ID, to have new specified content. */
+    async updateChatMessageInConversation(roomId: ObjectId, messageId: string, newContent: string): Promise<void> {
+        await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne(
+                {
+                    _id: roomId,
+                    conversation: {
+                        $elemMatch: {
+                            $or: [
+                                // For agent messages.
+                                { data: { id: messageId } },
+                                // For user messages.
+                                { data: { additional_kwargs: { id: messageId } } },
+                            ]
+                        }
+                    }
+                },
+                {
+                    $set: {
+                        "conversation.$.content": newContent
+                    }
+                }
+            );
+        });
+    };
 
     /**
      * Add a new log message to the logs array of a chat room by its ObjectId.

@@ -326,3 +326,77 @@ chatRoomsServer.put(`/chat-room/:roomId/conversation/clear`, async (req, res) =>
         res.status(500).json({ error: `Failed to clear chat room chat history.` });
     }
 });
+
+// Update a chat message in a chat room
+chatRoomsServer.put('/chat-room/:roomId/message/:messageId', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const chatRoomId = new ObjectId(req.params.roomId);
+        const messageId = req.params.messageId;
+        const { newContent } = req.body;
+        if (!newContent) {
+            res.status(400).json({ error: 'Missing required field: newContent' });
+            return;
+        }
+        // Fetch the chat room
+        const room = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!room) {
+            res.status(404).json({ error: 'Chat room not found' });
+            return;
+        }
+        // Fetch the project
+        const project = await projectDbService.getProjectById(room.projectId);
+        if (!project) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+        // Check access: project owner or participant
+        if (!project.creatorId.equals(userId) && !(room.userParticipants || []).some((id) => id.equals(userId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+        await chatRoomDbService.updateChatMessageInConversation(chatRoomId, messageId, newContent);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update chat message' });
+    }
+});
+
+// Delete a chat message in a chat room
+chatRoomsServer.delete('/chat-room/:roomId/message/:messageId', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const chatRoomId = new ObjectId(req.params.roomId);
+        const messageId = req.params.messageId;
+        // Fetch the chat room
+        const room = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!room) {
+            res.status(404).json({ error: 'Chat room not found' });
+            return;
+        }
+        // Fetch the project
+        const project = await projectDbService.getProjectById(room.projectId);
+        if (!project) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+        // Check access: project owner or participant
+        if (!project.creatorId.equals(userId) && !(room.userParticipants || []).some((id) => id.equals(userId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+        await chatRoomDbService.deleteChatMessageFromConversation(chatRoomId, messageId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete chat message' });
+    }
+});
+

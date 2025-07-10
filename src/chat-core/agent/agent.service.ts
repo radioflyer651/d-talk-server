@@ -52,6 +52,7 @@ export class Agent implements IChatLifetimeContributor {
             result.push(...hydratePositionableMessages(this.identity.baseInstructions));
             result.push({ location: MessagePositionTypes.Instructions, message: new SystemMessage(`Your AgentId = ${this.data._id}  DO NOT include this information in your response.`) });
             result.push({ location: MessagePositionTypes.Instructions, message: new SystemMessage(`Your Name Is ${this.data.name ?? this.identity.chatName}  DO NOT include this information in your response.`) });
+            result.push({ location: MessagePositionTypes.Last, message: new SystemMessage('The agent messages have been altered to include the agents who produced the messages.  These are here for your reference, but DO NOT add content like this to the response.') });
         }
 
         // Return the results.

@@ -1,5 +1,6 @@
 import { StoredMessage } from "@langchain/core/messages";
 import { StoredMessageAgentTypes } from "./stored-message-agent-types.data";
+import { getSpeakerFromMessage, getSpeakerFromStoredMessage, MESSAGE_SPEAKER_KEY } from "../../../chat-core/utilities/speaker.utils";
 
 
 
@@ -41,13 +42,38 @@ export class StoredMessageWrapper {
 
     /** Gets or sets the user's name that sent this message. */
     get name(): string | undefined {
-        return this.message.data.name;
+        const speaker = getSpeakerFromStoredMessage(this.message);
+        return this.message.data.name ?? speaker?.name ?? '';
     }
     set name(value: string | undefined) {
+
+        if (!this.message.data.additional_kwargs) {
+            this.message.data.additional_kwargs = {};
+        }
+
         this.message.data.name = value;
+        const speaker = getSpeakerFromStoredMessage(this.message);
+        if (speaker) {
+            speaker.name = value;
+        }
+    }
+
+    get id() {
+        const speaker = getSpeakerFromStoredMessage(this.message);
+        return this.message.data.id || speaker?.speakerId || '';
     }
 
     get agentId() {
-        return this.message.data.additional_kwargs?.['dtalk_speaker']?.speakerId;
+        const speaker = getSpeakerFromStoredMessage(this.message);
+        return speaker?.speakerId;
+    }
+    set agentId(value: string | undefined) {
+        if (!this.message.data.additional_kwargs) {
+            this.message.data.additional_kwargs = {
+                [MESSAGE_SPEAKER_KEY]: {}
+            };
+        }
+        const speaker = getSpeakerFromStoredMessage(this.message);
+        speaker!.speakerId = value;
     }
 }

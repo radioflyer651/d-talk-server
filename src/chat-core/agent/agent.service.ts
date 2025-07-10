@@ -85,8 +85,9 @@ export class Agent implements IChatLifetimeContributor {
             return;
         }
 
-        lastMessage.name = sanitizeMessageName(this.myName);
-        setSpeakerOnMessage(lastMessage, { speakerType: 'agent', speakerId: this.data._id.toString() });
+        const name = sanitizeMessageName(this.myName);
+        lastMessage.name = name;
+        setSpeakerOnMessage(lastMessage, { speakerType: 'agent', speakerId: this.data._id.toString(), name: name });
     }
 
     async peekToolCallMessages(messageHistory: BaseMessage[], messageCalls: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
@@ -99,7 +100,8 @@ export class Agent implements IChatLifetimeContributor {
         //  then we're done.  These are the new messages we care about.
         for (const msg of messages) {
             if (typeof msg.getType === "function" && msg.getType() === "tool") {
-                setSpeakerOnMessage(msg, { speakerType: 'agent', speakerId: this.data._id.toString() });
+                const name = sanitizeMessageName(this.myName);
+                setSpeakerOnMessage(msg, { speakerType: 'agent', speakerId: this.data._id.toString(), name: name });
             } else {
                 break;
             }

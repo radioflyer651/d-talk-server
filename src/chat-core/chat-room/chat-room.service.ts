@@ -188,8 +188,9 @@ export class ChatRoom implements IChatLifetimeContributor {
 
             if (message?.trim() !== '') {
                 // Add this message to the conversation.
-                const newMessage = new HumanMessage(message, { id: createIdForMessage(), name: user.displayName ?? user.userName });
-                setSpeakerOnMessage(newMessage, { speakerType: 'user', speakerId: user._id.toString() });
+                const name = user.displayName ?? user.userName;
+                const newMessage = new HumanMessage(message, { id: createIdForMessage(), name: name });
+                setSpeakerOnMessage(newMessage, { speakerType: 'user', speakerId: user._id.toString(), name: name });
                 this.messages.push(newMessage);
 
                 // Trigger the event so observers pick it up.
@@ -318,22 +319,23 @@ export class ChatRoom implements IChatLifetimeContributor {
                 const newAiMessages = newMessages.map(m => {
                     const nm = new AIMessage(m);
                     nm.name = agent.myName ?? '';
-                    setSpeakerOnMessage(nm, { speakerId: agent.data._id.toString(), speakerType: 'agent' });
+                    setSpeakerOnMessage(nm, { speakerId: agent.data._id.toString(), speakerType: 'agent', name: nm.name });
                     return nm;
                 });
 
                 // Add these to the conversation, and save them.
                 this.messages.push(...newAiMessages);
-                await this.saveConversation();
+            } else {
+                // Update the chat history.
+                const lastMessage = (lastEvent?.data.output) as typeof ChatState.State | undefined;
+                if (lastMessage) {
+                    this.messages = lastMessage.messageHistory;
+                } else {
+                    throw new Error(`Expected messages to be returned from call graph, but got none.`);
+                }
             }
 
-            // Update the chat history.
-            const lastMessage = (lastEvent?.data.output) as typeof ChatState.State | undefined;
-            if (lastMessage) {
-                this.messages = lastMessage.messageHistory;
-            } else {
-                throw new Error(`Expected messages to be returned from call graph, but got none.`);
-            }
+            await this.saveConversation();
 
         } catch (err) {
             this.logError({

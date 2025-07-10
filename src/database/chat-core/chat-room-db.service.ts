@@ -87,7 +87,6 @@ export class ChatRoomDbService extends DbService {
 
     /** Deletes a specified message from the conversation of a specified chat room. */
     async deleteChatMessageFromConversation(roomId: ObjectId, messageId: string): Promise<void> {
-
         // Ensure the message ID is valid - we don't want any goofy mistakes here.
         if (messageId.trimEnd() === '') {
             throw new Error(`messageId cannot be empty.`);
@@ -113,25 +112,83 @@ export class ChatRoomDbService extends DbService {
     }
 
     /** Updates a chat message in a specified room, with a specified message ID, to have new specified content. */
+    async updateChatMessageInConversation_2(roomId: ObjectId, messageId: string, newContent: string): Promise<void> {
+        // Ensure the message ID is valid - we don't want any goofy mistakes here.
+        if (messageId.trimEnd() === '') {
+            throw new Error(`messageId cannot be empty.`);
+        }
+
+        await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne(
+                {
+                    $or: [
+                        {
+                            _id: roomId,
+                            conversation: {
+                                $elemMatch:
+                                    // For agent messages.
+                                    { 'data.id': messageId },
+                            }
+                        },
+                        {
+                            _id: roomId,
+                            conversation: {
+                                $elemMatch: {
+                                    // For user messages.
+                                    'data.additional_kwargs.id': messageId
+                                }
+                            }
+                        },
+                    ]
+                },
+                {
+                    $set: {
+                        "conversation.$.data.content": newContent
+                    }
+                }
+            );
+        });
+    };
+
+    /** Updates a chat message in a specified room, with a specified message ID, to have new specified content. */
     async updateChatMessageInConversation(roomId: ObjectId, messageId: string, newContent: string): Promise<void> {
+        // Ensure the message ID is valid - we don't want any goofy mistakes here.
+        if (messageId.trimEnd() === '') {
+            throw new Error(`messageId cannot be empty.`);
+        }
+
+        await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne(
+                {
+                    _id: roomId,
+                    conversation: {
+                        $elemMatch:
+                            // For agent messages.
+                            { 'data.id': messageId },
+                    }
+                },
+                {
+                    $set: {
+                        "conversation.$.data.content": newContent
+                    }
+                }
+            );
+        });
+
         await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
             await collection.updateOne(
                 {
                     _id: roomId,
                     conversation: {
                         $elemMatch: {
-                            $or: [
-                                // For agent messages.
-                                { data: { id: messageId } },
-                                // For user messages.
-                                { data: { additional_kwargs: { id: messageId } } },
-                            ]
+                            // For user messages.
+                            'data.additional_kwargs.id': messageId
                         }
                     }
                 },
                 {
                     $set: {
-                        "conversation.$.content": newContent
+                        "conversation.$.data.content": newContent
                     }
                 }
             );

@@ -161,7 +161,7 @@ chatRoomsServer.put('/chat-room/:roomId/job-instance/:jobInstanceId/assign-agent
             return;
         }
         // Use the ChatCoreService to assign the agent to the job instance
-        await chatCoreService.assignAgentToJobInstance(chatRoomId, new ObjectId(agentInstanceId), jobInstanceId);
+        await chatCoreService.assignAgentToJobInstance(chatRoomId, new ObjectId(agentInstanceId as string), jobInstanceId);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to assign agent to job instance' });
@@ -320,15 +320,15 @@ chatRoomsServer.put(`/chat-room/:roomId/conversation/clear`, async (req, res) =>
 
         // Clear the conversation.
         await chatRoomDbService.updateChatRoomConversation(chatRoomId, []);
-        
+
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: `Failed to clear chat room chat history.` });
     }
 });
 
-// Update a chat message in a chat room
-chatRoomsServer.put('/chat-room/:roomId/message/:messageId', async (req, res) => {
+// Set the 'disabled' property of a job instance in a chat room
+chatRoomsServer.put('/chat-room/:roomId/job-instance/:jobId/disabled', async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
         if (!userId) {
@@ -336,38 +336,37 @@ chatRoomsServer.put('/chat-room/:roomId/message/:messageId', async (req, res) =>
             return;
         }
         const chatRoomId = new ObjectId(req.params.roomId);
-        const messageId = req.params.messageId;
-        const { newContent } = req.body;
-        if (!newContent) {
-            res.status(400).json({ error: 'Missing required field: newContent' });
+        const jobId = req.params.jobId;
+        const { disabled } = req.body;
+        if (typeof disabled !== 'boolean') {
+            res.status(400).json({ error: 'Missing or invalid field: disabled' });
             return;
         }
         // Fetch the chat room
-        const room = await chatRoomDbService.getChatRoomById(chatRoomId);
-        if (!room) {
+        const chatRoom = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
             res.status(404).json({ error: 'Chat room not found' });
             return;
         }
-        // Fetch the project
-        const project = await projectDbService.getProjectById(room.projectId);
-        if (!project) {
-            res.status(404).json({ error: 'Project not found' });
-            return;
-        }
-        // Check access: project owner or participant
-        if (!project.creatorId.equals(userId) && !(room.userParticipants || []).some((id) => id.equals(userId))) {
+        // Check user access (owner or participant)
+        if (!chatRoom.userId.equals(userId) && !(chatRoom.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
-        await chatRoomDbService.updateChatMessageInConversation(chatRoomId, messageId, newContent);
-        res.json({ success: true });
+        // Update the job's disabled property
+        const result = await chatRoomDbService.setChatJobDisabled(chatRoomId, new ObjectId(jobId), disabled);
+        if (result > 0) {
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ error: 'Job instance not found or not updated' });
+        }
     } catch (error) {
-        res.status(500).json({ error: 'Failed to update chat message' });
+        res.status(500).json({ error: 'Failed to set job instance disabled status' });
     }
 });
 
-// Delete a chat message in a chat room
-chatRoomsServer.delete('/chat-room/:roomId/message/:messageId', async (req, res) => {
+// Set the order of a job instance in a chat room
+chatRoomsServer.put('/chat-room/:roomId/job-instance/:jobId/order', async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
         if (!userId) {
@@ -375,28 +374,28 @@ chatRoomsServer.delete('/chat-room/:roomId/message/:messageId', async (req, res)
             return;
         }
         const chatRoomId = new ObjectId(req.params.roomId);
-        const messageId = req.params.messageId;
+        const jobId = new ObjectId(req.params.jobId);
+        const { newPosition } = req.body;
+        if (typeof newPosition !== 'number' || newPosition < 0) {
+            res.status(400).json({ error: 'Missing or invalid field: newPosition' });
+            return;
+        }
         // Fetch the chat room
-        const room = await chatRoomDbService.getChatRoomById(chatRoomId);
-        if (!room) {
+        const chatRoom = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
             res.status(404).json({ error: 'Chat room not found' });
             return;
         }
-        // Fetch the project
-        const project = await projectDbService.getProjectById(room.projectId);
-        if (!project) {
-            res.status(404).json({ error: 'Project not found' });
-            return;
-        }
-        // Check access: project owner or participant
-        if (!project.creatorId.equals(userId) && !(room.userParticipants || []).some((id) => id.equals(userId))) {
+        // Check user access (owner or participant)
+        if (!chatRoom.userId.equals(userId) && !(chatRoom.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
-        await chatRoomDbService.deleteChatMessageFromConversation(chatRoomId, messageId);
+        // Set the job order
+        await chatCoreService.setJobInstanceOrder(chatRoomId, jobId, newPosition);
         res.json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to delete chat message' });
+        res.status(500).json({ error: 'Failed to set job instance order' });
     }
 });
 

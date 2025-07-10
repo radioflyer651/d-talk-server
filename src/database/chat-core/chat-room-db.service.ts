@@ -215,4 +215,28 @@ export class ChatRoomDbService extends DbService {
             { updateOne: true }
         );
     }
+
+    /**
+     * Set the 'disabled' property of a Chat Job Instance in a specified Chat Room.
+     */
+    async setChatJobDisabled(roomId: ObjectId, jobId: ObjectId, disabled: boolean): Promise<number> {
+        // Ensure jobId is valid
+        if (!jobId) {
+            throw new Error(`jobId cannot be empty.`);
+        }
+        // Update the 'disabled' property of the job with the specified jobId in the jobs array
+        // @ts-ignore: MongoDB $elemMatch is valid for the query
+        return await this.dbHelper.updateDataItems<ChatRoomData>(
+            DbCollectionNames.ChatRooms,
+            {
+                _id: roomId,
+                // @ts-ignore
+                jobs: { $elemMatch: { id: jobId } }
+            },
+            {
+                "jobs.$.disabled": disabled
+            },
+            { updateOne: true }
+        );
+    }
 }

@@ -207,4 +207,32 @@ export class ChatCoreService {
         // Update the chat room in the database
         await this.chatRoomDbService.updateChatRoom(chatRoomId, { jobs: chatRoom.jobs });
     }
+
+    /** Moves a specified job, in a specified chat room, to a new position in the execution order. */
+    async setJobInstanceOrder(chatRoomId: ObjectId, jobId: ObjectId, newPosition: number): Promise<void> {
+        // Get the chat room.
+        const room = await this.chatRoomDbService.getChatRoomById(chatRoomId);
+
+        // If not found, then we have issues.
+        if (!room) {
+            throw new Error(`No Room with the ID ${chatRoomId} was found.`);
+        }
+
+        // Take the job out of the jobs list, and validate it.
+        const jobIndex = room.jobs.findIndex(j => j.id.equals(jobId));
+        if (jobIndex < 0) {
+            throw new Error(`No job with ID ${jobId} was found.`);
+        }
+        const job = room.jobs.splice(jobIndex, 1)[0];
+
+        // Place the job back, in the proper position.
+        if (newPosition > room.jobs.length - 1) {
+            room.jobs.push(job);
+        } else {
+            room.jobs.splice(newPosition, 0, job);
+        }
+
+        // Save the jobs back to the chat room.
+        this.chatRoomDbService.updateChatRoom(chatRoomId, { jobs: room.jobs });
+    }
 }

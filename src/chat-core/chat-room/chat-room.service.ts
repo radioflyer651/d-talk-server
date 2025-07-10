@@ -222,7 +222,7 @@ export class ChatRoom implements IChatLifetimeContributor {
     /** After a user message is received, this is the process for executing each chat job. */
     protected async executeTurnsForChatMessage(): Promise<void> {
         // Execute the jobs for this chat room.
-        for (let j of this.chatJobs) {
+        for (let j of this.chatJobs.filter(j => !j.instanceData.disabled)) {
             await this.executeTurnForJob(j);
         }
 

@@ -1,8 +1,6 @@
 import { StoredMessage } from "@langchain/core/messages";
 import { StoredMessageAgentTypes } from "./stored-message-agent-types.data";
-import { getSpeakerFromMessage, getSpeakerFromStoredMessage, MESSAGE_SPEAKER_KEY } from "../../../chat-core/utilities/speaker.utils";
-
-
+import { getSpeakerFromStoredMessage, MESSAGE_SPEAKER_KEY } from "../../../chat-core/utilities/speaker.utils";
 
 export class StoredMessageWrapper {
     constructor(

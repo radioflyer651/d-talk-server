@@ -11,67 +11,18 @@ export class AgentDbService extends DbService {
         super(dbHelper);
     }
 
-    /** Create or update an agent instance. */
-    async upsertAgent(agent: UpsertDbItem<AgentInstanceConfiguration>): Promise<AgentInstanceConfiguration> {
-        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.Agents, agent) as AgentInstanceConfiguration;
-    }
-
-    /** Get an agent instance by its ObjectId. */
-    async getAgentById(agentId: ObjectId): Promise<AgentInstanceConfiguration | undefined> {
-        return await this.dbHelper.findDataItem<AgentInstanceConfiguration, { _id: ObjectId; }>(
-            DbCollectionNames.Agents,
-            { _id: agentId },
-            { findOne: true }
-        ) as AgentInstanceConfiguration | undefined;
-    }
-
-    /** Get all agent instances for a given identity. */
-    async getAgentsByIdentity(identityId: ObjectId): Promise<AgentInstanceConfiguration[]> {
-        return await this.dbHelper.findDataItem<AgentInstanceConfiguration, { "identity._id": ObjectId; }>(
-            DbCollectionNames.Agents,
-            { "identity._id": identityId }
-        ) as AgentInstanceConfiguration[];
-    }
-
-    /** Update an agent instance by its ObjectId. */
-    async updateAgent(agentId: ObjectId, update: Partial<AgentInstanceConfiguration>): Promise<number> {
-        return await this.dbHelper.updateDataItems<AgentInstanceConfiguration>(
-            DbCollectionNames.Agents,
-            { _id: agentId },
-            update,
-            { updateOne: true }
-        );
-    }
-
-    /** Delete an agent instance by its ObjectId. */
-    async deleteAgent(agentId: ObjectId): Promise<number> {
-        return await this.dbHelper.deleteDataItems<AgentInstanceConfiguration, { _id: ObjectId; }>(
-            DbCollectionNames.Agents,
-            { _id: agentId },
-            { deleteMany: false }
-        );
-    }
-
-    /** Get multiple agent instances by an array of ObjectIds. */
-    async getAgentsByIds(agentIds: ObjectId[]): Promise<AgentInstanceConfiguration[]> {
-        return await this.dbHelper.findDataItem<AgentInstanceConfiguration, { _id: { $in: ObjectId[]; }; }>(
-            DbCollectionNames.Agents,
-            { _id: { $in: agentIds } }
-        ) as AgentInstanceConfiguration[];
-    }
-
     /** Create or update a chat agent identity configuration. */
-    async upsertAgentIdentity(identity: UpsertDbItem<ChatAgentIdentityConfiguration & { _id: ObjectId; }>): Promise<ChatAgentIdentityConfiguration & { _id: ObjectId; }> {
-        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.AgentConfigurations, identity) as ChatAgentIdentityConfiguration & { _id: ObjectId; };
+    async upsertAgentIdentity(identity: UpsertDbItem<ChatAgentIdentityConfiguration>): Promise<ChatAgentIdentityConfiguration> {
+        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.AgentConfigurations, identity) as ChatAgentIdentityConfiguration;
     }
 
     /** Get a chat agent identity configuration by its ObjectId. */
-    async getAgentIdentityById(identityId: ObjectId): Promise<(ChatAgentIdentityConfiguration & { _id: ObjectId; }) | undefined> {
-        return await this.dbHelper.findDataItem<ChatAgentIdentityConfiguration & { _id: ObjectId; }, { _id: ObjectId; }>(
+    async getAgentIdentityById(identityId: ObjectId): Promise<ChatAgentIdentityConfiguration | undefined> {
+        return await this.dbHelper.findDataItem<ChatAgentIdentityConfiguration>(
             DbCollectionNames.AgentConfigurations,
             { _id: identityId },
             { findOne: true }
-        ) as (ChatAgentIdentityConfiguration & { _id: ObjectId; }) | undefined;
+        ) as ChatAgentIdentityConfiguration | undefined;
     }
 
     /** Get multiple agent instances by an array of ObjectIds. */
@@ -84,16 +35,16 @@ export class AgentDbService extends DbService {
 
 
     /** Get all agent identity configurations for a given project. */
-    async getAgentIdentitiesByProject(projectId: ObjectId): Promise<(ChatAgentIdentityConfiguration & { _id: ObjectId; })[]> {
-        return await this.dbHelper.findDataItem<ChatAgentIdentityConfiguration & { _id: ObjectId; }, { projectId: ObjectId; }>(
+    async getAgentIdentitiesByProject(projectId: ObjectId): Promise<ChatAgentIdentityConfiguration[]> {
+        return await this.dbHelper.findDataItem<ChatAgentIdentityConfiguration, { projectId: ObjectId; }>(
             DbCollectionNames.AgentConfigurations,
             { projectId }
-        ) as (ChatAgentIdentityConfiguration & { _id: ObjectId; })[];
+        ) as ChatAgentIdentityConfiguration[];
     }
 
     /** Update a chat agent identity configuration by its ObjectId. */
     async updateAgentIdentity(identityId: ObjectId, update: Partial<ChatAgentIdentityConfiguration>): Promise<number> {
-        return await this.dbHelper.updateDataItems<ChatAgentIdentityConfiguration & { _id: ObjectId; }>(
+        return await this.dbHelper.updateDataItems<ChatAgentIdentityConfiguration>(
             DbCollectionNames.AgentConfigurations,
             { _id: identityId },
             update,
@@ -103,9 +54,18 @@ export class AgentDbService extends DbService {
 
     /** Delete a chat agent identity configuration by its ObjectId. */
     async deleteAgentIdentity(identityId: ObjectId): Promise<number> {
-        return await this.dbHelper.deleteDataItems<ChatAgentIdentityConfiguration & { _id: ObjectId; }, { _id: ObjectId; }>(
+        return await this.dbHelper.deleteDataItems<ChatAgentIdentityConfiguration>(
             DbCollectionNames.AgentConfigurations,
             { _id: identityId },
+            { deleteMany: false }
+        );
+    }
+
+    /** Delete a chat agent identity configuration by its ObjectId. */
+    async deleteAgentIdentitiesByProjectId(projectId: ObjectId): Promise<number> {
+        return await this.dbHelper.deleteDataItems<ChatAgentIdentityConfiguration>(
+            DbCollectionNames.AgentConfigurations,
+            { projectId: projectId },
             { deleteMany: false }
         );
     }

@@ -5,6 +5,7 @@ export enum DbCollectionNames {
     Projects = 'projects',
     ChatRooms = 'chat-rooms',
     Agents = 'chat-agents',
+    AgentInstances ='agent-instances',
     Plugins = 'plugins',
     ChatJobs = 'chat-jobs',
     UserSecrets = 'user-secrets',

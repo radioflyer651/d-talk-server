@@ -1,4 +1,4 @@
-import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, SystemMessage, AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { Subject } from "rxjs";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
@@ -12,7 +12,7 @@ import { getDistinctObjectIds } from "../../utils/get-distinct-object-ids.utils"
 import { AgentServiceFactory } from "../agent-factory.service";
 import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
 import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
-import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
+import { IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
@@ -20,9 +20,9 @@ import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
 import { Agent } from "../agent/agent.service";
-import { MessagePositionTypes, PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { StreamEvent } from "@langchain/core/tracers/log_stream";
 import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
+import { AgentInstanceDbService } from "../../database/chat-core/agent-instance-db.service";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
@@ -36,6 +36,7 @@ export class ChatRoom implements IChatLifetimeContributor {
         readonly pluginResolver: IPluginResolver,
         readonly jobHydratorService: IJobHydratorService,
         readonly agentDbService: AgentDbService,
+        readonly agentInstanceDbService: AgentInstanceDbService,
         readonly chatRoomSocketServer: ChatRoomSocketServer,
     ) {
         this.messages = mapStoredMessagesToChatMessages(this.data.conversation ?? []);
@@ -116,7 +117,7 @@ export class ChatRoom implements IChatLifetimeContributor {
         let existingAgents: AgentInstanceConfiguration[] = [];
         const existingAgentIds = this.data.agents.map(a => a.instanceId).filter(a => !!a);
         if (existingAgentIds.length > 0) {
-            existingAgents = await this.agentDbService.getAgentsByIds(existingAgentIds);
+            existingAgents = await this.agentInstanceDbService.getAgentInstancesByIds(existingAgentIds);
         }
 
         // Get any agents that haven't been initialized yet.

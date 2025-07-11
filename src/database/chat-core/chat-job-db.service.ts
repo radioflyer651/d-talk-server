@@ -26,7 +26,7 @@ export class ChatJobDbService extends DbService {
 
     /** Get all chat jobs for a given project. */
     async getChatJobsByProject(projectId: ObjectId): Promise<ChatJobConfiguration[]> {
-        return await this.dbHelper.findDataItem<ChatJobConfiguration, { projectId: ObjectId }>(
+        return await this.dbHelper.findDataItem<ChatJobConfiguration, { projectId: ObjectId; }>(
             DbCollectionNames.ChatJobs,
             { projectId }
         ) as ChatJobConfiguration[];
@@ -47,6 +47,15 @@ export class ChatJobDbService extends DbService {
         return await this.dbHelper.deleteDataItems<ChatJobConfiguration, { _id: ObjectId; }>(
             DbCollectionNames.ChatJobs,
             { _id: jobId },
+            { deleteMany: false }
+        );
+    }
+
+    /** Delete a chat job by its ObjectId. */
+    async deleteChatJobsByProjectId(projectId: ObjectId): Promise<number> {
+        return await this.dbHelper.deleteDataItems<ChatJobConfiguration>(
+            DbCollectionNames.ChatJobs,
+            { projectId: projectId },
             { deleteMany: false }
         );
     }

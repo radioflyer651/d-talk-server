@@ -5,6 +5,7 @@ import { ModelServiceResolver } from "./agent/model-services/model-service-resol
 import { ChatAgentIdentityConfiguration } from "../model/shared-models/chat-core/agent-configuration.model";
 import { AgentInstanceConfiguration } from "../model/shared-models/chat-core/agent-instance-configuration.model";
 import { AgentDbService } from "../database/chat-core/agent-db.service";
+import { AgentInstanceDbService } from "../database/chat-core/agent-instance-db.service";
 
 
 /** Responsible for taking an agent configuration, and returning an agent from it. */
@@ -13,6 +14,7 @@ export class AgentServiceFactory {
         readonly modelResolver: ModelServiceResolver,
         readonly pluginResolver: IPluginResolver,
         readonly agentDbService: AgentDbService,
+        readonly agentInstanceDbService: AgentInstanceDbService,
     ) {
 
     }
@@ -39,7 +41,7 @@ export class AgentServiceFactory {
         // If there are new plugins, then we need to update the agent instance in the database to record this new information.
         //  NOTE: The configuration.plugins property was updated in the previous call.
         if (hydratedPlugins.newPlugins.length > 0 || hydratedPlugins.pluginsRemoved) {
-            await this.agentDbService.updateAgent(configuration._id, { plugins: configuration.plugins });
+            await this.agentInstanceDbService.updateAgent(configuration._id, { plugins: configuration.plugins });
         }
 
         // Return the agent.
@@ -69,7 +71,7 @@ export class AgentServiceFactory {
         // If there are new plugins, then we need to update the agent instance in the database to record this new information.
         //  NOTE: The configuration.plugins property was updated in the previous call.
         if (hydratedPlugins.newPlugins.length > 0 || hydratedPlugins.pluginsRemoved) {
-            await this.agentDbService.updateAgent(configuration._id, { plugins: configuration.plugins });
+            await this.agentInstanceDbService.updateAgent(configuration._id, { plugins: configuration.plugins });
         }
 
         // Return the agent.

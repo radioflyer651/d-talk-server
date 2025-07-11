@@ -11,6 +11,7 @@ import { ChatRoomMessageEvent } from "../../model/shared-models/chat-core/chat-r
 import { AuthDbService } from "../../database/auth-db.service";
 import { User } from "../../model/shared-models/user.model";
 import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
+import { AgentInstanceDbService } from "../../database/chat-core/agent-instance-db.service";
 
 
 /** Responsible for accepting chat calls, typically from the API, and dispatching the request, and returning messages. */
@@ -23,6 +24,7 @@ export class ChattingService {
         readonly agentDbService: AgentDbService,
         readonly authDbService: AuthDbService,
         readonly chatRoomSocketServer: ChatRoomSocketServer,
+        readonly agentInstanceDbService: AgentInstanceDbService,
     ) {
 
     }
@@ -56,8 +58,10 @@ export class ChattingService {
             this.pluginResolver,
             this.jobHydratorService,
             this.agentDbService,
-            this.chatRoomSocketServer);
-            
+            this.agentInstanceDbService,
+            this.chatRoomSocketServer,
+        );
+
         // Set the abort signal, in case we have one.
         chatRoom.abortSignal = signal;
 

@@ -5,12 +5,14 @@ import { ProjectDbService } from "../database/chat-core/project-db.service";
 import { ObjectId } from 'mongodb';
 import { NewDbItem } from "../model/shared-models/db-operation-types.model";
 import { AgentInstanceConfiguration } from "../model/shared-models/chat-core/agent-instance-configuration.model";
+import { AgentInstanceDbService } from '../database/chat-core/agent-instance-db.service';
 
 
 /** Handles non-pure data operations for Chat operations. */
 export class ChatCoreService {
     constructor(
         readonly agentDbService: AgentDbService,
+        readonly agentInstanceDbService: AgentInstanceDbService,
         readonly chatRoomDbService: ChatRoomDbService,
         readonly chatJobDbService: ChatJobDbService,
         readonly projectDbService: ProjectDbService,
@@ -39,7 +41,7 @@ export class ChatCoreService {
         };
 
         // Insert the agent instance
-        const createdAgent = await this.agentDbService.upsertAgent(newAgent);
+        const createdAgent = await this.agentInstanceDbService.upsertAgent(newAgent);
 
         // Add the agent reference to the chat room's agents array
         if (!chatRoom.agents) {
@@ -76,7 +78,7 @@ export class ChatCoreService {
         }
         await this.chatRoomDbService.updateChatRoom(chatRoomId, { agents: chatRoom.agents, jobs: chatRoom.jobs });
         // Delete the agent instance from the database
-        await this.agentDbService.deleteAgent(agentInstanceId);
+        await this.agentInstanceDbService.deleteAgent(agentInstanceId);
     }
 
     /**
@@ -184,7 +186,7 @@ export class ChatCoreService {
             return [];
         }
         // Fetch all agent instances by their IDs
-        return await this.agentDbService.getAgentsByIds(agentInstanceIds);
+        return await this.agentInstanceDbService.getAgentInstancesByIds(agentInstanceIds);
     }
 
     /**

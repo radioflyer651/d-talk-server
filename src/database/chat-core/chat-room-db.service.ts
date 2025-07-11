@@ -65,6 +65,15 @@ export class ChatRoomDbService extends DbService {
         );
     }
 
+    /** Delete a chat room by its ObjectId. */
+    async deleteChatRoomsByProjectId(projectId: ObjectId): Promise<number> {
+        return await this.dbHelper.deleteDataItems<ChatRoomData>(
+            DbCollectionNames.ChatRooms,
+            { projectId: projectId },
+            { deleteMany: true }
+        );
+    }
+
     /** Update the isBusy property of a chat room by its ObjectId. */
     async setChatRoomBusy(roomId: ObjectId, isBusy: boolean): Promise<number> {
         return await this.dbHelper.updateDataItems<ChatRoomData>(

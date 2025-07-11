@@ -11,6 +11,7 @@ export class OllamaAiAgentService extends ModelServiceBase {
     protected async getChatModelBase(params: OllamaModelServiceParams): Promise<BaseChatModel> {
         // Create the parameters for the model creation.
         const ollamaParams: ChatOllamaInput = {
+            maxRetries: 5,
             ...params
         };
 

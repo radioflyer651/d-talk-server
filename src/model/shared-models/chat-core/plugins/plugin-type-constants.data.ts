@@ -6,6 +6,7 @@ export const OTHER_AGENT_MESSAGES_AS_USER = 'other-agent-messages-as-user';
 export const THIS_AGENT_MESSAGE_AS_USER = 'this-agent-messages-as-user';
 export const USER_MESSAGES_IGNORED_PLUGIN_TYPE_ID = 'user-messages-ignored';
 export const LABEL_AGENT_SPEAKERS_PLUGIN_TYPE_ID = 'label-agent-speakers';
+export const IGNORE_SPECIFIC_AGENT_PLUGIN_TYPE_ID = 'ignore-specific-agent';
 
 export interface PluginInfo {
     pluginType: string;
@@ -80,5 +81,14 @@ export const pluginInformation: PluginInfo[] = [
         attachesToJob: true,
         description: 'Labels the agents that are speaking in the chat.',
         defaultParameterCreator: () => undefined,
+    },
+    {
+        pluginType: IGNORE_SPECIFIC_AGENT_PLUGIN_TYPE_ID,
+        displayName: 'Ignore Specific Agent',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        description: 'Causes the agent to ignore messages from specific agents.',
+        defaultParameterCreator: () => ({ agentIds: [] }),
     },
 ];

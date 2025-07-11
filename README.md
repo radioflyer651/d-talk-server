@@ -44,8 +44,17 @@ All components/feature that are able to be applied to agents will be able to pro
 #### Long Term Memory
 At least one ore more Subconscious Agent will be implemented to monitor and store information during chat interactions, as well as recall long term memory.
 
-### LLM Service Support
+#### LLM Service Support
 Chat agents may be configured for various LLM providers using LangChain's abstractions.  Further, they will be able to use various models from those providers through configuration.
+
+### Chat Jobs
+Chat jobs are fulfilled by agents.  Like agents, jobs have configurations that exist in the project, and chat rooms create instances of the chat jobs.
+
+Chat jobs have many similarities with Agents, in that they provide instructions for the LLMs, have plugins, and have configurations/instances.
+
+Each job instance must have an agent instance assigned to it.  When a chat sequence is initiated, the application will execute each job, in order.  The agent of that job will have its own identity and instructions, and the job is intended to provide actionable instructions, which the agent will execute on its turn.
+
+An agent can be assigned to multiple jobs.
 
 ### Data Stores
 

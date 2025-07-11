@@ -6,4 +6,8 @@ export interface OllamaModelParams extends ModelServiceParams<OllamaModelService
 
 export interface OllamaModelServiceParams {
     model: string;
+    numPredict?: number;
+    temperature?: number;
+    keepAlive?: string | number; // default 5m.
+    format?: string;
 }

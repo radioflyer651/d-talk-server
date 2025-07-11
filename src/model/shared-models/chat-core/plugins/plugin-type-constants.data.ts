@@ -5,6 +5,7 @@ export const ACT_DRUNK = 'act-drunk';
 export const OTHER_AGENT_MESSAGES_AS_USER = 'other-agent-messages-as-user';
 export const THIS_AGENT_MESSAGE_AS_USER = 'this-agent-messages-as-user';
 export const USER_MESSAGES_IGNORED_PLUGIN_TYPE_ID = 'user-messages-ignored';
+export const LABEL_AGENT_SPEAKERS_PLUGIN_TYPE_ID = 'label-agent-speakers';
 
 export interface PluginInfo {
     pluginType: string;
@@ -69,6 +70,15 @@ export const pluginInformation: PluginInfo[] = [
         attachesToChatRoom: true,
         attachesToJob: true,
         description: 'Causes the agent to ignore user messages when responding to chat.',
+        defaultParameterCreator: () => undefined,
+    },
+    {
+        pluginType: LABEL_AGENT_SPEAKERS_PLUGIN_TYPE_ID,
+        displayName: 'Label Agent Speakers',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        description: 'Labels the agents that are speaking in the chat.',
         defaultParameterCreator: () => undefined,
     },
 ];

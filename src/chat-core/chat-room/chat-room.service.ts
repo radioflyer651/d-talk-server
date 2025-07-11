@@ -291,6 +291,7 @@ export class ChatRoom implements IChatLifetimeContributor {
             const result = graph.streamEvents(graphState, { version: 'v2', recursionLimit: 40 });
             const newMessages = [];
             let lastEvent: StreamEvent | undefined = undefined;
+            let currentMessageId: string = '';
             for await (const ev of result) {
                 if (this.abortSignal?.aborted) {
                     break;
@@ -319,6 +320,11 @@ export class ChatRoom implements IChatLifetimeContributor {
                 const newAiMessages = newMessages.map(m => {
                     const nm = new AIMessage(m);
                     nm.name = agent.myName ?? '';
+                    nm.id = createIdForMessage();
+                    if (!nm.additional_kwargs) {
+                        nm.additional_kwargs = {};
+                    }
+                    nm.additional_kwargs.id = nm.id;
                     setSpeakerOnMessage(nm, { speakerId: agent.data._id.toString(), speakerType: 'agent', name: nm.name });
                     return nm;
                 });

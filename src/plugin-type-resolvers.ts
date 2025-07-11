@@ -5,6 +5,7 @@ import { OtherAgentMessagesAsUserPluginResolver } from "./chat-core/plugin-imple
 import { OtherAgentsInvisiblePluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/other-agents-invisible.plugin-resolver";
 import { RoomInfoPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/room-info.plugin-resolver";
 import { UserMessagesIgnoredPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/user-messages-ignored.plugin-resolver";
+import { LabelAgentSpeakersPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/label-agent-speakers-plugin-resolver";
 
 
 export const pluginTypeResolvers: IPluginTypeResolver<any>[] = [
@@ -14,4 +15,5 @@ export const pluginTypeResolvers: IPluginTypeResolver<any>[] = [
     new DebugPluginResolver(),
     new OtherAgentMessagesAsUserPluginResolver(),
     new UserMessagesIgnoredPluginResolver(),
+    new LabelAgentSpeakersPluginResolver(),
 ];

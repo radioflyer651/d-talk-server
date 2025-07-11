@@ -59,24 +59,6 @@ export class Agent implements IChatLifetimeContributor {
         return result;
     }
 
-    async modifyCallMessages(messageHistory: BaseMessage[]): Promise<BaseMessage[]> {
-        const copiedMessages = copyBaseMessages(messageHistory);
-        const result = copiedMessages.map(message => {
-            if (message instanceof AIMessage) {
-                const speaker = getSpeakerFromMessage(message);
-                if (this.data._id.equals(speaker?.speakerId)) {
-                    message.content = `AgentId: ${speaker?.speakerId}(You, ${message.name})\n\n${message.content.toString()}`;
-                } else {
-                    message.content = `AgentId: ${speaker?.speakerId} (NOT You, Their Name Is ${message.name})\n\n${message.content.toString()}`;
-                }
-            }
-
-            return message;
-        });
-
-        return result;
-    }
-
     async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
         // Get the last message, and add our name to it.
         const lastMessage = newMessages[newMessages.length - 1];

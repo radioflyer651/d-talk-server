@@ -1,4 +1,4 @@
-import { chatRoomDbService, agentServiceFactory, pluginResolver, jobHydratorService, agentDbService, authDbService, agentInstanceDbService } from "./app-globals";
+import { chatRoomDbService, agentServiceFactory, pluginResolver, jobHydratorService, agentDbService, authDbService, agentInstanceDbService, chatRoomHydratorService } from "./app-globals";
 import { ChattingService } from "./chat-core/chatting/chatting.service";
 import { ChatRoomSocketServer } from "./server/socket-services/chat-room.socket-service";
 import { SocketServer } from "./server/socket.server";
@@ -34,5 +34,6 @@ export async function setupSocketServices(socketServer: SocketServer): Promise<v
         agentDbService,
         authDbService,
         chatRoomSocketServer,
-        agentInstanceDbService);
+        agentInstanceDbService,
+        chatRoomHydratorService);
 }

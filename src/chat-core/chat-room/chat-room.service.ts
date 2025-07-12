@@ -1,30 +1,24 @@
 import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { Subject } from "rxjs";
-import { AgentDbService } from "../../database/chat-core/agent-db.service";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
-import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
 import { ChatRoomBusyStateEvent } from "../../model/shared-models/chat-core/chat-room-busy-state.model";
 import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data.model";
 import { IChatRoomEvent } from "../../model/shared-models/chat-core/chat-room-event.model";
-import { ChatRoomMessageEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
+import { ChatRoomMessageChunkEvent, ChatRoomMessageEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
 import { User } from "../../model/shared-models/user.model";
-import { getDistinctObjectIds } from "../../utils/get-distinct-object-ids.utils";
-import { AgentServiceFactory } from "../agent-factory.service";
 import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
-import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
-import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
 import { Agent } from "../agent/agent.service";
 import { StreamEvent } from "@langchain/core/tracers/log_stream";
 import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
-import { AgentInstanceDbService } from "../../database/chat-core/agent-instance-db.service";
 import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
-import { hydratePositionableMessage, hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
+import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
+import { Project } from "../../model/shared-models/chat-core/project.model";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
@@ -33,13 +27,7 @@ import { hydratePositionableMessage, hydratePositionableMessages } from "../../u
 export class ChatRoom implements IChatLifetimeContributor {
     constructor(
         readonly data: ChatRoomData,
-        readonly agentFactory: AgentServiceFactory,
         readonly chatRoomDbService: ChatRoomDbService,
-        readonly pluginResolver: IPluginResolver,
-        readonly jobHydratorService: IJobHydratorService,
-        readonly agentDbService: AgentDbService,
-        readonly agentInstanceDbService: AgentInstanceDbService,
-        readonly chatRoomSocketServer: ChatRoomSocketServer,
     ) {
         this.messages = mapStoredMessagesToChatMessages(this.data.conversation ?? []);
     }
@@ -62,11 +50,6 @@ export class ChatRoom implements IChatLifetimeContributor {
             eventType: "chat-room-busy-status-changed",
             newValue: newState
         });
-    }
-
-    async startupInitialization() {
-        await this.hydrateAgents();
-        await this.hydrateChatJobs();
     }
 
     private _agents: Agent[] = [];
@@ -101,6 +84,14 @@ export class ChatRoom implements IChatLifetimeContributor {
         this._messages = value;
     }
 
+    private _project!: Project;
+    get project(): Project {
+        return this._project;
+    }
+    set project(value: Project) {
+        this._project = value;
+    }
+
     abortSignal?: AbortSignal;
 
     private _externalLifetimeServices: IChatLifetimeContributor[] = [];
@@ -111,76 +102,6 @@ export class ChatRoom implements IChatLifetimeContributor {
     }
     set externalLifetimeServices(value: IChatLifetimeContributor[]) {
         this._externalLifetimeServices = value;
-    }
-
-    /** Loads the agent data, and creates new Agent objects for each. */
-    private async hydrateAgents(): Promise<void> {
-        // Get the agents from the database.
-        let existingAgents: AgentInstanceConfiguration[] = [];
-        const existingAgentIds = this.data.agents.map(a => a.instanceId).filter(a => !!a);
-        if (existingAgentIds.length > 0) {
-            existingAgents = await this.agentInstanceDbService.getAgentInstancesByIds(existingAgentIds);
-        }
-
-        // Get any agents that haven't been initialized yet.
-        let newAgents: Agent[] = [];
-        const newAgentConfigReferences = this.data.agents.filter(a => !a.instanceId);
-        if (newAgentConfigReferences.length > 0) {
-            // Get just the unique object IDs for the new agent configurations.
-            const newAgentConfigIds = getDistinctObjectIds(newAgentConfigReferences.map(r => r.identityId));
-
-            // Get the agent configurations.
-            const newAgentConfigs = await this.agentDbService.getAgentIdentitiesByIds(newAgentConfigIds);
-
-            // Create the enw agents.  We're doing it this long way in case an agent is listed twice.
-            //  In that case, we'll have a single Agent Configuration for multiple references.
-            const newAgentPromises = newAgentConfigReferences.map(async ref => {
-                // Get the config for this.
-                const config = newAgentConfigs.find(c => c._id.equals(ref.identityId));
-
-                // This would be strange, but...
-                if (!config) {
-                    throw new Error(`No config found for ID: ${ref.identityId}`);
-                }
-
-                // Create a new agent for this configuration.
-                const newAgent = await this.agentFactory.createAgent(config);
-
-                // Now, update the reference, since it's still attached to the chat room data.  Thus, we update
-                //  the chat room data.
-                ref.instanceId = newAgent.data._id;
-
-                // Return the agent, creating an array of agents.
-                return newAgent;
-            });
-
-            // Wait for the new agents to be resolved.  This variable was previously
-            //  created and will be added to the rest of the agents that already exist.
-            newAgents = await Promise.all(newAgentPromises);
-
-            // Update the chat room data, so we now have the instance references included.
-            await this.chatRoomDbService.updateChatRoom(this.data._id, { agents: this.data.agents });
-        }
-
-        // Create the agents from these.
-        const agentPromises = existingAgents.map(c => this.agentFactory.getAgent(c));
-        const agents = await Promise.all(agentPromises);
-        // Add the new agents.
-        agents.push(...newAgents);
-
-        // Set the chat room on these to this chat.
-        agents.forEach(c => c.chatRoom = this);
-
-        // Set the property with the agents.
-        this.agents = agents;
-    }
-
-    /** Creates chat jobs from the data, and resolves their plugins. */
-    private async hydrateChatJobs() {
-        this.chatJobs = await this.jobHydratorService.hydrateJobs(this.data.jobs);
-
-        // The chat job instances may have been altered, so we need to save the references, just to be sure.
-        await this.chatRoomDbService.updateChatRoom(this.data._id, { jobs: this.data.jobs });
     }
 
     /** Called when a message is received from a user in this chat room. */
@@ -294,16 +215,19 @@ export class ChatRoom implements IChatLifetimeContributor {
             const result = graph.streamEvents(graphState, { version: 'v2', recursionLimit: 40 });
             const newMessages = [];
             let lastEvent: StreamEvent | undefined = undefined;
-            let currentMessageId: string = '';
             for await (const ev of result) {
                 if (this.abortSignal?.aborted) {
                     break;
                 }
 
+                // Stream the value out to listeners.
                 if (ev.event === 'on_chat_model_stream') {
                     const chunk = ev.data.chunk as AIMessageChunk;
                     newMessages[newMessages.length - 1] += chunk.content;
-                    this.chatRoomSocketServer.sendNewChatMessageChunk({
+
+                    // Send the event out, so potentially a socket can send this message part to the UI.
+                    this._events.next(<ChatRoomMessageChunkEvent>{
+                        eventType: 'new-chat-message-chunk',
                         chatRoomId: this.data._id,
                         messageId: chunk.id!,
                         chunk: chunk.text,
@@ -319,7 +243,13 @@ export class ChatRoom implements IChatLifetimeContributor {
             }
 
             if (this.abortSignal?.aborted) {
-                await result.cancel('user aborted');
+                try {
+                    await result.cancel('user aborted');
+                } catch (err) {
+                    // This shouldn't happen, but just in case.
+                    console.error(`Error caught when cancelling LLM stream.`, err);
+                }
+                
                 const newAiMessages = newMessages.map(m => {
                     const nm = new AIMessage(m);
                     nm.name = agent.myName ?? '';
@@ -359,13 +289,18 @@ export class ChatRoom implements IChatLifetimeContributor {
     }
 
     async addPreChatMessages?(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
+        // Collect the messages we want.
+        const roomMessages = this.data.roomInstructions ?? [];
+        const projectMessages = this.project.projectKnowledge ?? []; // This functionality should probably move to another location (making a project a lifetime contributor.)
+        const allMessages = [...roomMessages, ...projectMessages];
+
         // If we don't have any roomInstructions, then there's nothing to do.
-        if (!this.data.roomInstructions || this.data.roomInstructions.length < 1) {
+        if (allMessages.length < 1) {
             return [];
         }
 
         // Add the messages for the room onto the call history.
-        return hydratePositionableMessages(this.data.roomInstructions);
+        return hydratePositionableMessages(allMessages);
     }
 
 

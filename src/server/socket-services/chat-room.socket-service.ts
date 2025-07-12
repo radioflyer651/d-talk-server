@@ -4,7 +4,7 @@ import { SocketServiceBase } from "./socket-server-base.socket-service";
 import { AgentServiceFactory } from "../../chat-core/agent-factory.service";
 import { IPluginResolver } from "../../chat-core/agent-plugin/plugin-resolver.interface";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
-import { JobHydrator } from "../../chat-core/chat-room/chat-job.hydrater.service";
+import { JobHydrator } from "../../chat-core/chat-room/chat-job.hydrator.service";
 import { MESSAGE_CHUNK_MESSAGE, MessageChunkMessage } from "../../model/shared-models/chat-core/socket-messaging/message-chunk-message.socket-model";
 import { ENTER_CHAT_ROOM, EnterChatRoomMessage, EXIT_CHAT_ROOM, ExitChatRoomMessage, getChatRoomRoomName } from "../../model/shared-models/chat-core/socket-messaging/general-messaging.socket-model";
 

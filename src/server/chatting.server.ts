@@ -38,7 +38,6 @@ chattingServer.post('/chat-room/:roomId/message', async (req, res) => {
         // Listen for an abort from the client, and call abort ont he controller if we get one.
         res.on('close', () => {
             if (!res.headersSent) {
-                console.log(`Response closed`);
                 controller.abort();
             }
         });

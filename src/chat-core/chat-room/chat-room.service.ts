@@ -12,7 +12,7 @@ import { getDistinctObjectIds } from "../../utils/get-distinct-object-ids.utils"
 import { AgentServiceFactory } from "../agent-factory.service";
 import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
 import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
-import { IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
+import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
@@ -23,6 +23,8 @@ import { Agent } from "../agent/agent.service";
 import { StreamEvent } from "@langchain/core/tracers/log_stream";
 import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
 import { AgentInstanceDbService } from "../../database/chat-core/agent-instance-db.service";
+import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
+import { hydratePositionableMessage, hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
@@ -355,6 +357,17 @@ export class ChatRoom implements IChatLifetimeContributor {
             this._currentlyExecutingJob = undefined;
         }
     }
+
+    async addPreChatMessages?(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
+        // If we don't have any roomInstructions, then there's nothing to do.
+        if (!this.data.roomInstructions || this.data.roomInstructions.length < 1) {
+            return [];
+        }
+
+        // Add the messages for the room onto the call history.
+        return hydratePositionableMessages(this.data.roomInstructions);
+    }
+
 
     /** Updates the data property on this chat room, synchronizing it with the chat room data. */
     public updateDataForStorage(): void {

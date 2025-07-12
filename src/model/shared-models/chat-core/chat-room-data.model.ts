@@ -3,6 +3,7 @@ import { ObjectId } from "mongodb";
 import { AgentReference } from "./agent-reference.model";
 import { ChatJobInstance } from "./chat-job-instance.model";
 import { PluginInstanceReference } from "./plugin-instance-reference.model";
+import { PositionableMessage } from "./positionable-message.model";
 
 export interface ChatRoomData {
     _id: ObjectId;
@@ -30,6 +31,9 @@ export interface ChatRoomData {
     /** The chat messages for the room. */
     conversation: StoredMessage[];
 
+    /** Messages/instructions to be used for all agents in the chat room. */
+    roomInstructions: PositionableMessage<StoredMessage>[];
+    
     /** A set of documents that are being worked on in this chat room. */
     documents: ObjectId[];
 

@@ -94,6 +94,16 @@ export class ChatRoomDbService extends DbService {
         );
     }
 
+    /** Update the conversation property of a chat room by its ObjectId. */
+    async updateChatRoomInstructions(roomId: ObjectId, roomInstructions: ChatRoomData["roomInstructions"]): Promise<number> {
+        return await this.dbHelper.updateDataItems<ChatRoomData>(
+            DbCollectionNames.ChatRooms,
+            { _id: roomId },
+            { roomInstructions },
+            { updateOne: true }
+        );
+    }
+
     /** Deletes a specified message from the conversation of a specified chat room. */
     async deleteChatMessageFromConversation(roomId: ObjectId, messageId: string): Promise<void> {
         // Ensure the message ID is valid - we don't want any goofy mistakes here.

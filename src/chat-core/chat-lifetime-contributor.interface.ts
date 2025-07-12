@@ -1,6 +1,7 @@
 import { BaseMessage, AIMessage } from "@langchain/core/messages";
 import { PositionableMessage } from "../model/shared-models/chat-core/positionable-message.model";
-import { DynamicTool } from "@langchain/core/tools";
+import { DynamicTool, StructuredToolInterface, Tool } from "@langchain/core/tools";
+import { ToolNode } from "@langchain/langgraph/dist/prebuilt/tool_node";
 
 export interface IChatLifetimeContributor {
 
@@ -12,7 +13,7 @@ export interface IChatLifetimeContributor {
      * Not part of the life-time, but when implemented, provides tools that may
      * be called by the LLM during the chat session.
      */
-    getTools?(): Promise<DynamicTool[]>;
+    getTools?(): Promise<(ToolNode | StructuredToolInterface)[]>;
 
     /**
      * Called once at the start of the chat session to allow the contributor to initialize any state or resources.

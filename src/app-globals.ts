@@ -13,7 +13,7 @@ import { ModelServiceResolver } from "./chat-core/agent/model-services/model-ser
 import { AppPluginResolver } from "./chat-core/agent-plugin/app-plugin-resolver.service";
 import { JobHydrator } from "./chat-core/chat-room/chat-job.hydrator.service";
 import { modelResolverServices } from "./model-service-instances";
-import { pluginTypeResolvers } from "./plugin-type-resolvers";
+import { initializePluginTypeResolvers, pluginTypeResolvers } from "./plugin-type-resolvers";
 import { SocketServer } from "./server/socket.server";
 import { AgentInstanceDbService } from "./database/chat-core/agent-instance-db.service";
 import { ChatRoomHydratorService } from "./chat-core/chat-room/chat-room-hydrator.service";
@@ -47,6 +47,7 @@ export let socketServer: SocketServer;
 export async function initializeServices(): Promise<void> {
     // Load the configuration.
     const config = await getAppConfig();
+    await initializePluginTypeResolvers(config);
 
     /** The mongo helper used in all DB Services. */
     dbHelper = new MongoHelper(config.mongo.connectionString, config.mongo.databaseName);

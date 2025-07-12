@@ -7,15 +7,22 @@ import { RoomInfoPluginResolver } from "./chat-core/plugin-implementations/plugi
 import { UserMessagesIgnoredPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/user-messages-ignored.plugin-resolver";
 import { LabelAgentSpeakersPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/label-agent-speakers-plugin-resolver";
 import { IgnoreSpecificAgentPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/ignore-specific-agent-plugin-resolver";
+import { WebSearchPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/web-search.plugin-resolver";
+import { IAppConfig } from "./model/app-config.model";
 
 
-export const pluginTypeResolvers: IPluginTypeResolver<any>[] = [
-    new RoomInfoPluginResolver(),
-    new ActDrunkPluginResolver(),
-    new OtherAgentsInvisiblePluginResolver(),
-    new DebugPluginResolver(),
-    new OtherAgentMessagesAsUserPluginResolver(),
-    new UserMessagesIgnoredPluginResolver(),
-    new LabelAgentSpeakersPluginResolver(),
-    new IgnoreSpecificAgentPluginResolver(),
-];
+export let pluginTypeResolvers: IPluginTypeResolver<any>[] = [];
+
+export async function initializePluginTypeResolvers(config: IAppConfig) {
+    pluginTypeResolvers.push(...[
+        new RoomInfoPluginResolver(),
+        new ActDrunkPluginResolver(),
+        new OtherAgentsInvisiblePluginResolver(),
+        new DebugPluginResolver(),
+        new OtherAgentMessagesAsUserPluginResolver(),
+        new UserMessagesIgnoredPluginResolver(),
+        new LabelAgentSpeakersPluginResolver(),
+        new IgnoreSpecificAgentPluginResolver(),
+        new WebSearchPluginResolver(config.tavilyConfiguration.apiKey),
+    ]);
+}

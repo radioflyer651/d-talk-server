@@ -7,6 +7,7 @@ export const THIS_AGENT_MESSAGE_AS_USER = 'this-agent-messages-as-user';
 export const USER_MESSAGES_IGNORED_PLUGIN_TYPE_ID = 'user-messages-ignored';
 export const LABEL_AGENT_SPEAKERS_PLUGIN_TYPE_ID = 'label-agent-speakers';
 export const IGNORE_SPECIFIC_AGENT_PLUGIN_TYPE_ID = 'ignore-specific-agent';
+export const WEB_SEARCH_PLUGIN_TYPE_ID = 'web-search-plugin';
 
 export interface PluginInfo {
     pluginType: string;
@@ -90,5 +91,14 @@ export const pluginInformation: PluginInfo[] = [
         attachesToJob: true,
         description: 'Causes the agent to ignore messages from specific agents.',
         defaultParameterCreator: () => ({ agentIds: [] }),
+    },
+    {
+        pluginType: WEB_SEARCH_PLUGIN_TYPE_ID,
+        displayName: 'Web Search',
+        description: 'Allows agents to perform web searches and return results.',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => ({})
     },
 ];

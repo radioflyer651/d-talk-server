@@ -9,6 +9,7 @@ export interface IAppConfig {
     chatSocketIoEndpoint: string;
     /** The path of the socket.  This is different than the namespace. */
     chatSocketIoPath: string;
+    tavilyConfiguration: TavilyConfiguration;
 }
 
 export interface OpenAiConfig {
@@ -25,3 +26,6 @@ export interface ServerConfig {
     port: number;
 }
 
+export interface TavilyConfiguration {
+    apiKey: string;
+}

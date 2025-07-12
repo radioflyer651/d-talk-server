@@ -1,4 +1,6 @@
 import { ObjectId } from "mongodb";
+import { PositionableMessage } from "./positionable-message.model";
+import { StoredMessage } from "@langchain/core/messages";
 
 
 /** The "container" for an entire dataset, of related chat data.
@@ -15,4 +17,7 @@ export interface Project {
 
     /** A description of this project's purpose, if any. */
     description: string;
+
+    /** Gets or sets the list of project knowledge items that can be used in agents, roles, or rooms. */
+    projectKnowledge: PositionableMessage<StoredMessage>[];
 }

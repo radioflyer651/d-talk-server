@@ -44,7 +44,8 @@ projectRouter.post('/project', async (req, res) => {
         const newProject: NewDbItem<Project> = {
             creatorId: userId,
             name,
-            description: ''
+            description: '',
+            projectKnowledge: []
         };
         const created = await projectDbService.upsertProject(newProject);
 
@@ -85,6 +86,38 @@ projectRouter.put('/project/:id', async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ error: 'Failed to update project' });
+    }
+});
+
+// Update the projectKnowledge property of a project
+projectRouter.put('/project/:id/project-knowledge', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const projectId = new ObjectId(req.params.id);
+        const { projectKnowledge } = req.body;
+        if (!Array.isArray(projectKnowledge)) {
+            res.status(400).json({ error: 'Missing or invalid field: projectKnowledge' });
+            return;
+        }
+        // Fetch the project from the database
+        const project = await projectDbService.getProjectById(projectId);
+        if (!project || String(project.creatorId) !== String(userId)) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+        // Update only the projectKnowledge property
+        const result = await projectDbService.updateProject(projectId, { projectKnowledge });
+        if (result > 0) {
+            res.json({ success: true });
+        } else {
+            res.status(404).json({ error: 'Project not found or not updated' });
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update project knowledge' });
     }
 });
 

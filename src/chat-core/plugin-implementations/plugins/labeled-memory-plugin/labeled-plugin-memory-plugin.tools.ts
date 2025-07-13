@@ -1,6 +1,5 @@
 import { StructuredToolInterface, tool } from "@langchain/core/tools";
 import { z } from "zod";
-import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import { LabeledMemoryPluginParams } from "../../../../model/shared-models/chat-core/plugins/labeled-memory-plugin.params";
 import { nullToUndefined } from "../../../../utils/empty-and-null.utils";
 import { BaseStore } from "@langchain/langgraph";

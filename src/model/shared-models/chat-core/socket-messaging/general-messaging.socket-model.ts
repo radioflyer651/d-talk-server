@@ -14,5 +14,5 @@ export interface ExitChatRoomMessage {
 
 /** Returns the SocketIO room name for a ChatRoom, specified by its ID. */
 export function getChatRoomRoomName(roomId: ObjectId) {
-    return `chat-room-${roomId.toHexString()}`;
+    return `chat-room-${roomId.toString()}`;
 }

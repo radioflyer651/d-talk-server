@@ -16,7 +16,7 @@ Be sure to use the search or list functions before deciding whether or not to re
 /** Returns the message history (and new messages) needed for the memory plugin to retrieve data from the memory store. */
 function getRetrievalInstructions(params: LabeledMemoryPluginParams, messageHistory: BaseMessage[]): BaseMessage[] {
     const instructions: BaseMessage[] = [
-        new SystemMessage(`You are a memory manager for an LLM.  You inspect memory data that can be included in chat calls, and provide it to the main LLM for their use.`),
+        new SystemMessage(`You are a memory manager for an LLM.  You inspect memory data that can be included in chat calls, and provide it to the main LLM for their use.  Do not repeat information already in the conversation history.  The LLM already knows this.`),
         new SystemMessage(memoryStoreInstructions),
         new SystemMessage(`The following is the purpose of this particular memory set you should be concerned with:\n${params.memorySetPurpose}`),
         ...messageHistory,
@@ -69,6 +69,16 @@ export async function performMemoryCall(state: typeof LabeledMemoryPluginState.S
 
     // Make the LLM call.
     const result = await llm.bindTools!(tools).invoke(state.messages);
+    if (result.tool_calls || result.tool_call_chunks) {
+        if (result.tool_calls) {
+            console.log(result.tool_calls.map(c => c.name).join('\n'));
+        } else {
+            console.log(result.tool_call_chunks?.map(c => c.name).join('\n'));
+        }
+    } else {
+        console.log(result.text);
+    }
+
     state.messages.push(result);
 
     // For now, just return the state as-is
@@ -76,7 +86,7 @@ export async function performMemoryCall(state: typeof LabeledMemoryPluginState.S
 }
 
 export async function summarizeMemoryData(state: typeof LabeledMemoryPluginState.State) {
-    state.messages.push(new SystemMessage(`Add a summary of the data you believe the main LLM should know from your memory operations.`));
+    state.messages.push(new SystemMessage(`Add a summary of the data you believe the main LLM should know from your memory operations.  Make sure there is a high amount of detail in the summary to allow more understanding.`));
 
     // Get the LLM.  Handle the addition to the tools, if we can.
     let llm = state.chatModel;
@@ -85,7 +95,7 @@ export async function summarizeMemoryData(state: typeof LabeledMemoryPluginState
     const result = await llm.invoke(state.messages);
     state.resultingMemoryMessages = [result];
 
-    console.log(result);
+    console.log(result.text);
 
     // For now, just return the state as-is
     return state;

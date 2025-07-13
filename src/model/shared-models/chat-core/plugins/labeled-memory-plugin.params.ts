@@ -53,7 +53,7 @@ export function validateLabeledMemoryPluginParams(params: LabeledMemoryPluginPar
     }
 
     // Validate memoryKey
-    if (!Array.isArray(params.keyMeanings) || params.keyMeanings.length < 1) {
+    if (!Array.isArray(params.memoryKeyPrefix) || params.memoryKeyPrefix.length < 1) {
         issues.push("memoryKey must be a non-empty array.");
     }
 

@@ -7,21 +7,26 @@ import { BaseStore } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 
 
+/** Returns the memory namespace for a specified LabeledMemoryPluginParams. */
+function getNamespace(params: LabeledMemoryPluginParams): string[] {
+    return [params.projectId.toString(), ...params.memoryKeyPrefix];
+}
 
-function createGetMemoryKeyTool(mongoStore: BaseStore) {
+
+function createGetMemoryKeyTool(mongoStore: BaseStore, params: LabeledMemoryPluginParams) {
     const getMemoryKeyToolSchema = {
         name: 'retrieve_memory_item',
         description: `Retrieves a specific memory item, specified by its key array.`,
         schema: z.object({
-            namespace: z.array(z.string()).describe(`The array of keys to get the memory item of.  Think of this as a nested folder structure with a bunch of items inside.`),
+            // namespace: z.array(z.string()).describe(`The array of keys to get the memory item of.  Think of this as a nested folder structure with a bunch of items inside.`),
             key: z.string().describe('The name of the memory item to retrieve from the specific namespace.')
         })
     };
 
 
     return tool(
-        async ({ namespace, key: memoryItem }: z.infer<typeof getMemoryKeyToolSchema.schema>) => {
-            return await mongoStore.get(namespace, memoryItem);
+        async ({ key: memoryItem }: z.infer<typeof getMemoryKeyToolSchema.schema>) => {
+            return await mongoStore.get(getNamespace(params), memoryItem);
         },
         getMemoryKeyToolSchema
     );
@@ -51,50 +56,50 @@ function createListNamespacesMemoryTool(mongoStore: BaseStore, params: LabeledMe
     );
 };
 
-function createPutMemoryTool(mongoStore: BaseStore) {
+function createPutMemoryTool(mongoStore: BaseStore, params: LabeledMemoryPluginParams) {
     const putMemoryToolSchema = {
         name: 'store_or_update_memory_item',
         description: `Stores or updates a memory item in the specified namespace.`,
         schema: z.object({
-            namespace: z.array(z.string()).describe('The array of keys representing the namespace.  This must be an array of strings, like ["key1", "key2", "key3"]'),
+            // namespace: z.array(z.string()).describe('The array of keys representing the namespace.  This must be an array of strings, like ["key1", "key2", "key3"]'),
             key: z.string().describe('The name of the memory item to store or update.'),
             // value: z.record(z.any()).describe('The data to store for this memory item.  This is a record set of values, like {"firstProp": 1, "secondProp": "two"}'),
             value: z.object({}).passthrough().describe('The data to store for this memory item.  This is a record set of values, like {"firstProp": 1, "secondProp": "two"}'),
         })
     };
     return tool(
-        async ({ namespace, key, value }: z.infer<typeof putMemoryToolSchema.schema>) => {
-            await mongoStore.put(namespace, key, value);
+        async ({ key, value }: z.infer<typeof putMemoryToolSchema.schema>) => {
+            await mongoStore.put(getNamespace(params), key, value);
             return { success: true };
         },
         putMemoryToolSchema
     );
 }
 
-function createDeleteMemoryTool(mongoStore: BaseStore) {
+function createDeleteMemoryTool(mongoStore: BaseStore, params: LabeledMemoryPluginParams) {
     const deleteMemoryToolSchema = {
         name: 'delete_memory_item',
         description: `Deletes a memory item from the specified namespace.`,
         schema: z.object({
-            namespace: z.array(z.string()).describe('The array of keys representing the namespace.'),
+            // namespace: z.array(z.string()).describe('The array of keys representing the namespace.'),
             key: z.string().describe('The name of the memory item to delete.')
         })
     };
     return tool(
-        async ({ namespace, key }: z.infer<typeof deleteMemoryToolSchema.schema>) => {
-            await mongoStore.delete(namespace, key);
+        async ({ key }: z.infer<typeof deleteMemoryToolSchema.schema>) => {
+            await mongoStore.delete(getNamespace(params), key);
             return { success: true };
         },
         deleteMemoryToolSchema
     );
 }
 
-function createSearchMemoryItemsTool(mongoStore: BaseStore) {
+function createSearchMemoryItemsTool(mongoStore: BaseStore, params: LabeledMemoryPluginParams) {
     const searchMemoryItemsToolSchema = {
         name: 'search_memory_items',
         description: `Searches for memory items within a namespace prefix, with optional filters and semantic query.`,
         schema: z.object({
-            namespacePrefix: z.array(z.string()).describe('The array of keys representing the namespace prefix.'),
+            // namespacePrefix: z.array(z.string()).describe('The array of keys representing the namespace prefix.'),
             filter: z.record(z.any()).optional().describe('Optional filter for exact matches or comparison operators.'),
             limit: z.number().int().optional().describe('Maximum number of items to return.'),
             offset: z.number().int().optional().describe('Number of items to skip before returning results.'),
@@ -103,7 +108,7 @@ function createSearchMemoryItemsTool(mongoStore: BaseStore) {
     };
     return tool(
         async (options: z.infer<typeof searchMemoryItemsToolSchema.schema>) => {
-            return await mongoStore.search(options.namespacePrefix, options);
+            return await mongoStore.search(getNamespace(params), options);
         },
         searchMemoryItemsToolSchema
     );
@@ -112,15 +117,15 @@ function createSearchMemoryItemsTool(mongoStore: BaseStore) {
 /** Returns all of the tools needed for the LabeledMemoryPluginParams. */
 export function getMemoryTools(mongoStore: BaseStore, params: LabeledMemoryPluginParams, isForWriteOperations: boolean) {
     const result: (ToolNode | StructuredToolInterface)[] = [
-        createGetMemoryKeyTool(mongoStore),
-        createListNamespacesMemoryTool(mongoStore, params),
-        createSearchMemoryItemsTool(mongoStore),
+        createGetMemoryKeyTool(mongoStore, params),
+        // createListNamespacesMemoryTool(mongoStore, params),
+        createSearchMemoryItemsTool(mongoStore, params),
     ];
 
     if (params.canWrite && isForWriteOperations) {
         result.push(...[
-            createPutMemoryTool(mongoStore),
-            createDeleteMemoryTool(mongoStore),
+            createPutMemoryTool(mongoStore, params),
+            createDeleteMemoryTool(mongoStore, params),
         ]);
     }
 

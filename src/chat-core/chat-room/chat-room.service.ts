@@ -220,26 +220,29 @@ export class ChatRoom implements IChatLifetimeContributor {
                     break;
                 }
 
-                // Stream the value out to listeners.
-                if (ev.event === 'on_chat_model_stream') {
-                    const chunk = ev.data.chunk as AIMessageChunk;
-                    newMessages[newMessages.length - 1] += chunk.content;
+                const node = ev.metadata.langgraph_node as string | undefined;
+                if (node && !node.startsWith('t_')) {
+                    // Stream the value out to listeners.
+                    if (ev.event === 'on_chat_model_stream') {
+                        const chunk = ev.data.chunk as AIMessageChunk;
+                        newMessages[newMessages.length - 1] += chunk.content;
 
-                    // Send the event out, so potentially a socket can send this message part to the UI.
-                    this._events.next(<ChatRoomMessageChunkEvent>{
-                        eventType: 'new-chat-message-chunk',
-                        chatRoomId: this.data._id,
-                        messageId: chunk.id!,
-                        chunk: chunk.text,
-                        speakerId: this._currentlyExecutingJob.agentId!,
-                        speakerName: this._agents.find(a => a.data._id.equals(this._currentlyExecutingJob!.agentId!))?.myName ?? ''
-                    });
+                        // Send the event out, so potentially a socket can send this message part to the UI.
+                        this._events.next(<ChatRoomMessageChunkEvent>{
+                            eventType: 'new-chat-message-chunk',
+                            chatRoomId: this.data._id,
+                            messageId: chunk.id!,
+                            chunk: chunk.text,
+                            speakerId: this._currentlyExecutingJob.agentId!,
+                            speakerName: this._agents.find(a => a.data._id.equals(this._currentlyExecutingJob!.agentId!))?.myName ?? ''
+                        });
 
-                } else if (ev.event === 'on_chat_model_start') {
-                    newMessages.push('');
+                    } else if (ev.event === 'on_chat_model_start') {
+                        newMessages.push('');
+                    }
+
+                    lastEvent = ev;
                 }
-
-                lastEvent = ev;
             }
 
             if (this.abortSignal?.aborted) {
@@ -249,7 +252,7 @@ export class ChatRoom implements IChatLifetimeContributor {
                     // This shouldn't happen, but just in case.
                     console.error(`Error caught when cancelling LLM stream.`, err);
                 }
-                
+
                 const newAiMessages = newMessages.map(m => {
                     const nm = new AIMessage(m);
                     nm.name = agent.myName ?? '';

@@ -56,9 +56,10 @@ function createPutMemoryTool(mongoStore: BaseStore) {
         name: 'store_or_update_memory_item',
         description: `Stores or updates a memory item in the specified namespace.`,
         schema: z.object({
-            namespace: z.array(z.string()).describe('The array of keys representing the namespace.'),
+            namespace: z.array(z.string()).describe('The array of keys representing the namespace.  This must be an array of strings, like ["key1", "key2", "key3"]'),
             key: z.string().describe('The name of the memory item to store or update.'),
-            value: z.record(z.any()).describe('The data to store for this memory item.')
+            // value: z.record(z.any()).describe('The data to store for this memory item.  This is a record set of values, like {"firstProp": 1, "secondProp": "two"}'),
+            value: z.object({}).passthrough().describe('The data to store for this memory item.  This is a record set of values, like {"firstProp": 1, "secondProp": "two"}'),
         })
     };
     return tool(

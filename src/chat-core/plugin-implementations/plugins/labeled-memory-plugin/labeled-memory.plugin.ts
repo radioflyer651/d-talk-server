@@ -7,7 +7,7 @@ import { LabeledMemoryPluginParams } from "../../../../model/shared-models/chat-
 import { MongoDbStore } from "../../../../services/lang-chain/mongo-store.service";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { getLabeledMemoryPluginGraph } from "./labeled-plugin-memory-plugin.graph";
-import { BaseMessage } from "@langchain/core/messages";
+import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { LabeledMemoryPluginState } from "./labeled-plugin-memory-plugin.state";
 import { MessagePositionTypes, PositionableMessage } from "../../../../model/shared-models/chat-core/positionable-message.model";
 
@@ -16,7 +16,7 @@ import { MessagePositionTypes, PositionableMessage } from "../../../../model/sha
  * Adds a system message listing labeled memories for the agent.
  */
 export class LabeledMemoryPlugin extends AgentPluginBase implements IChatLifetimeContributor {
-    agentUserManual?: string | undefined;
+    agentUserManual: undefined;
     readonly type = LABELED_MEMORY_PLUGIN_TYPE_ID;
 
     constructor(
@@ -75,7 +75,15 @@ export class LabeledMemoryPlugin extends AgentPluginBase implements IChatLifetim
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
         if (info.replyNumber === 0) {
             // Get memory messages to add.
-            const newMessages = await this.getMemories(info.callMessages);
+            let newMessages = await this.getMemories(info.callMessages);
+
+            newMessages = newMessages.map(m => {
+                if (m.getType() === 'ai') {
+                    return new SystemMessage(m.text);
+                }
+
+                return m;
+            });
 
             return newMessages.map(m => ({
                 location: MessagePositionTypes.OffsetFromEnd,

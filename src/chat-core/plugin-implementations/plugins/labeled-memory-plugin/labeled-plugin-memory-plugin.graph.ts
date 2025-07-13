@@ -6,18 +6,18 @@ import * as nodes from './labeled-plugin-memory-plugin.nodes';
 export function getLabeledMemoryPluginGraph() {
     const graph = new StateGraph(LabeledMemoryPluginState);
 
-    graph.addNode('initialize', nodes.initializeCall)
-        .addNode(`call-tools`, nodes.callTools)
-        .addNode(`summarize-results`, nodes.summarizeMemoryData)
-        .addNode('call-memory-model', nodes.performMemoryCall)
-        .addNode(`add-memory-instructions`, nodes.addMemoryInstructions)
+    graph.addNode('t_initialize', nodes.initializeCall)
+        .addNode(`t_call-tools`, nodes.callTools)
+        .addNode(`t_summarize-results`, nodes.summarizeMemoryData)
+        .addNode('t_call-memory-model', nodes.performMemoryCall)
+        .addNode(`t_add-memory-instructions`, nodes.addMemoryInstructions)
 
-        .addEdge(START, 'initialize')
-        .addEdge('initialize', `add-memory-instructions`)
-        .addEdge(`add-memory-instructions`, `call-memory-model`)
-        .addEdge(`call-tools`, `call-memory-model`)
-        .addConditionalEdges(`call-memory-model`, nodes.isMemoryOperationsCompleteDecider)
-        .addEdge(`summarize-results`, END);
+        .addEdge(START, 't_initialize')
+        .addEdge('t_initialize', `t_add-memory-instructions`)
+        .addEdge(`t_add-memory-instructions`, `t_call-memory-model`)
+        .addEdge(`t_call-tools`, `t_call-memory-model`)
+        .addConditionalEdges(`t_call-memory-model`, nodes.isMemoryOperationsCompleteDecider)
+        .addEdge(`t_summarize-results`, END);
 
     return graph.compile();
 }

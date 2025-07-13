@@ -10,6 +10,7 @@ The memory functions you use are implementations of the BaseStore from LangChain
 Memory is stored in namespaces.  Each namespace is defined by an array of strings (string[]).
 Each namespace has a set of values within it.
 Each value is a dictionary ({[key: string]: any})
+Be sure to use the search or list functions before deciding whether or not to retrieve anything for the call.
 `;
 
 /** Returns the message history (and new messages) needed for the memory plugin to retrieve data from the memory store. */
@@ -84,6 +85,8 @@ export async function summarizeMemoryData(state: typeof LabeledMemoryPluginState
     const result = await llm.invoke(state.messages);
     state.resultingMemoryMessages = [result];
 
+    console.log(result);
+
     // For now, just return the state as-is
     return state;
 }
@@ -94,12 +97,12 @@ export async function isMemoryOperationsCompleteDecider(state: typeof LabeledMem
 
     // Call the tools if we have tools to call.
     if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
-        return 'call-tools';
+        return 't_call-tools';
     }
 
     // We should summarize the results if we're retrieving memories.
     if (state.operationType === 'retrieve') {
-        return 'summarize-results';
+        return 't_summarize-results';
     }
 
     // We're storing memories.  There's nothing else to do here.
@@ -141,4 +144,6 @@ export async function callTools(state: typeof LabeledMemoryPluginState.State) {
 
     // Add the responses to the message list.
     state.messages.push(...results);
+
+    return state;
 }

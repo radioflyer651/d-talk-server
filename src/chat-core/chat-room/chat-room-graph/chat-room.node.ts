@@ -219,7 +219,7 @@ export async function callTools(state: typeof ChatState.State) {
         const toolResult = await tool.invoke(toolCall.args);
 
         // Return the tool message as a result.
-        const toolMessage = new ToolMessage(toolResult?.toString() ?? '', toolCall.id!);
+        const toolMessage = new ToolMessage(JSON.stringify(toolResult) ?? '', toolCall.id!);
         setMessageId(toolMessage);
 
         return toolMessage;

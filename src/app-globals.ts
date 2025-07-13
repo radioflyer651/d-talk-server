@@ -47,7 +47,6 @@ export let socketServer: SocketServer;
 export async function initializeServices(): Promise<void> {
     // Load the configuration.
     const config = await getAppConfig();
-    await initializePluginTypeResolvers(config);
 
     /** The mongo helper used in all DB Services. */
     dbHelper = new MongoHelper(config.mongo.connectionString, config.mongo.databaseName);
@@ -75,6 +74,7 @@ export async function initializeServices(): Promise<void> {
         projectDbService
     );
     modelResolver = new ModelServiceResolver(modelResolverServices);
+    await initializePluginTypeResolvers(config);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
     agentServiceFactory = new AgentServiceFactory(modelResolver, pluginResolver, agentDbService, agentInstanceDbService);
     jobHydratorService = new JobHydrator(chatRoomDbService, pluginResolver, chatJobDbService);

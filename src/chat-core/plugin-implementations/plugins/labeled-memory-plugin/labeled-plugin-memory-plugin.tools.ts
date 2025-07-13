@@ -1,9 +1,10 @@
-import { tool } from "@langchain/core/tools";
+import { StructuredToolInterface, tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { BindToolsInput } from "@langchain/core/language_models/chat_models";
 import { LabeledMemoryPluginParams } from "../../../../model/shared-models/chat-core/plugins/labeled-memory-plugin.params";
 import { nullToUndefined } from "../../../../utils/empty-and-null.utils";
 import { BaseStore } from "@langchain/langgraph";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
 
 
 
@@ -108,14 +109,14 @@ function createSearchMemoryItemsTool(mongoStore: BaseStore) {
 }
 
 /** Returns all of the tools needed for the LabeledMemoryPluginParams. */
-export function getMemoryTools(mongoStore: BaseStore, params: LabeledMemoryPluginParams) {
-    const result: BindToolsInput[] = [
+export function getMemoryTools(mongoStore: BaseStore, params: LabeledMemoryPluginParams, isForWriteOperations: boolean) {
+    const result: (ToolNode | StructuredToolInterface)[] = [
         createGetMemoryKeyTool(mongoStore),
         createListNamespacesMemoryTool(mongoStore, params),
         createSearchMemoryItemsTool(mongoStore),
     ];
 
-    if (params.canWrite) {
+    if (params.canWrite && isForWriteOperations) {
         result.push(...[
             createPutMemoryTool(mongoStore),
             createDeleteMemoryTool(mongoStore),

@@ -16,7 +16,7 @@ export class UserMessagesIgnoredPluginResolver implements IPluginTypeResolver<Us
         return result;
     }
 
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): UserMessagesIgnoredPlugin {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<UserMessagesIgnoredPlugin> {
         const result = new UserMessagesIgnoredPlugin(pluginInstance);
         result.attachedTo = attachedTo;
         return result;

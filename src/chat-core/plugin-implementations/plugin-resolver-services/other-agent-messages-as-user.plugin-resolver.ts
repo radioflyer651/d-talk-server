@@ -16,7 +16,7 @@ export class OtherAgentMessagesAsUserPluginResolver implements IPluginTypeResolv
         return result;
     }
 
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): OtherAgentMessagesAsUserPlugin {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<OtherAgentMessagesAsUserPlugin> {
         const result = new OtherAgentMessagesAsUserPlugin(pluginInstance);
         result.attachedTo = attachedTo;
         return result;

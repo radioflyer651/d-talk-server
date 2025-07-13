@@ -12,5 +12,5 @@ export interface IPluginTypeResolver<T_PLUGIN extends AgentPluginBase> {
     createNewPlugin(specification: PluginSpecification, attachedTo: PluginAttachmentTargetTypes): Promise<T_PLUGIN>;
 
     /** Given a specified plugin instance reference, returns an instance of the plugin with the provided state. */
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): T_PLUGIN;
+    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<T_PLUGIN>;
 }

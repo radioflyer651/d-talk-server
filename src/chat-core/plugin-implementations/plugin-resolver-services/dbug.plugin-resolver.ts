@@ -17,7 +17,7 @@ export class DebugPluginResolver implements IPluginTypeResolver<DebugPlugin> {
         return result;
     }
 
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): DebugPlugin {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<DebugPlugin> {
         const result = new DebugPlugin(pluginInstance);
         result.attachedTo = attachedTo;
         return result;

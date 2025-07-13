@@ -8,6 +8,7 @@ import { UserMessagesIgnoredPluginResolver } from "./chat-core/plugin-implementa
 import { LabelAgentSpeakersPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/label-agent-speakers-plugin-resolver";
 import { IgnoreSpecificAgentPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/ignore-specific-agent-plugin-resolver";
 import { WebSearchPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/web-search.plugin-resolver";
+import { LabeledMemoryPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/labeled-memory-plugin-resolver";
 import { IAppConfig } from "./model/app-config.model";
 
 
@@ -24,5 +25,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig) {
         new LabelAgentSpeakersPluginResolver(),
         new IgnoreSpecificAgentPluginResolver(),
         new WebSearchPluginResolver(config.tavilyConfiguration.apiKey),
+        new LabeledMemoryPluginResolver(),
     ]);
 }

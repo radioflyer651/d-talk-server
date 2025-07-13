@@ -16,7 +16,7 @@ export class RoomInfoPluginResolver implements IPluginTypeResolver<RoomInfoPlugi
         return result;
     }
 
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): RoomInfoPlugin {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<RoomInfoPlugin> {
         const result = new RoomInfoPlugin(pluginInstance);
         result.attachedTo = attachedTo;
         return result;

@@ -16,7 +16,7 @@ export class OtherAgentsInvisiblePluginResolver implements IPluginTypeResolver<O
         return result;
     }
 
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): OtherAgentsInvisiblePlugin {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<OtherAgentsInvisiblePlugin> {
         const result = new OtherAgentsInvisiblePlugin(pluginInstance);
         result.attachedTo = attachedTo;
         return result;

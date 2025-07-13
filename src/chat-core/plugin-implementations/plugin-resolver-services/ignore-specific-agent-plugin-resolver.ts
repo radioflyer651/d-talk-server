@@ -16,7 +16,7 @@ export class IgnoreSpecificAgentPluginResolver implements IPluginTypeResolver<Ig
         return result;
     }
 
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): IgnoreSpecificAgentPlugin {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<IgnoreSpecificAgentPlugin> {
         const result = new IgnoreSpecificAgentPlugin(pluginInstance);
         result.attachedTo = attachedTo;
         return result;

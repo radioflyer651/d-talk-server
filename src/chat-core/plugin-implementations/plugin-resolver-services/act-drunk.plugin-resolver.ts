@@ -16,7 +16,7 @@ export class ActDrunkPluginResolver implements IPluginTypeResolver<ActDrunkPlugi
         return result;
     }
 
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): ActDrunkPlugin {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes): Promise<ActDrunkPlugin> {
         const result = new ActDrunkPlugin(pluginInstance);
         result.attachedTo = attachedTo;
         return result;

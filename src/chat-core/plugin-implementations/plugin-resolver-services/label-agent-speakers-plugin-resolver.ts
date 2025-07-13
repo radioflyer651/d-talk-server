@@ -11,7 +11,7 @@ export class LabelAgentSpeakersPluginResolver implements IPluginTypeResolver<Lab
         return new LabelAgentSpeakersPlugin(attachedTo);
     }
 
-    hydratePlugin(instance: any, attachedTo: any): LabelAgentSpeakersPlugin {
+    async hydratePlugin(instance: any, attachedTo: any): Promise<LabelAgentSpeakersPlugin> {
         return new LabelAgentSpeakersPlugin(attachedTo);
     }
 }

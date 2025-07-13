@@ -20,7 +20,7 @@ export class WebSearchPluginResolver implements IPluginTypeResolver<WebSearchPlu
         return result;
     }
     
-    hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes) {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes) {
         const result = new WebSearchPlugin(pluginInstance, this.tavilyApiKey);
         result.attachedTo = attachedTo;
         return result;

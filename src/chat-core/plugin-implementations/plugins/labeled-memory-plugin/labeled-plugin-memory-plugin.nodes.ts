@@ -69,15 +69,15 @@ export async function performMemoryCall(state: typeof LabeledMemoryPluginState.S
 
     // Make the LLM call.
     const result = await llm.bindTools!(tools).invoke(state.messages);
-    if (result.tool_calls || result.tool_call_chunks) {
-        if (result.tool_calls) {
-            console.log(result.tool_calls.map(c => c.name).join('\n'));
-        } else {
-            console.log(result.tool_call_chunks?.map(c => c.name).join('\n'));
-        }
-    } else {
-        console.log(result.text);
-    }
+    // if (result.tool_calls || result.tool_call_chunks) {
+    //     if (result.tool_calls) {
+    //         console.log(result.tool_calls.map(c => c.name).join('\n'));
+    //     } else {
+    //         console.log(result.tool_call_chunks?.map(c => c.name).join('\n'));
+    //     }
+    // } else {
+    //     console.log(result.text);
+    // }
 
     state.messages.push(result);
 
@@ -95,7 +95,7 @@ export async function summarizeMemoryData(state: typeof LabeledMemoryPluginState
     const result = await llm.invoke(state.messages);
     state.resultingMemoryMessages = [result];
 
-    console.log(result.text);
+    // console.log(result.text);
 
     // For now, just return the state as-is
     return state;

@@ -49,7 +49,7 @@ export class LabeledMemoryPlugin extends AgentPluginBase implements IChatLifetim
 
         // Execute the graph.
         const graph = getLabeledMemoryPluginGraph();
-        const result = await graph.invoke(state, { recursionLimit: 10, streamMode: undefined });
+        const result = await graph.invoke(state, { recursionLimit: 15, streamMode: undefined });
 
         // Return the resulting messages.
         return result.resultingMemoryMessages;
@@ -67,7 +67,7 @@ export class LabeledMemoryPlugin extends AgentPluginBase implements IChatLifetim
 
         // Execute the graph.
         const graph = getLabeledMemoryPluginGraph();
-        const result = await graph.invoke(state, { recursionLimit: 10 });
+        const result = await graph.invoke(state, { recursionLimit: 15 });
 
         // There's nothing to do here - this is for storage.
     }

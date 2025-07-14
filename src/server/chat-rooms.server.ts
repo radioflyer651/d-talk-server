@@ -488,3 +488,35 @@ chatRoomsServer.put('/chat-room/:roomId/instructions', async (req, res) => {
     }
 });
 
+// Update the chatDocumentReferences property of a chat room
+chatRoomsServer.put('/chat-room/:roomId/document-permissions', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const chatRoomId = new ObjectId(req.params.roomId);
+        const { chatDocumentReferences } = req.body;
+        if (!Array.isArray(chatDocumentReferences)) {
+            res.status(400).json({ error: 'Missing or invalid field: chatDocumentReferences' });
+            return;
+        }
+        // Fetch the chat room
+        const chatRoom = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
+            res.status(404).json({ error: 'Chat room not found' });
+            return;
+        }
+        // Check user access (owner or participant)
+        if (!chatRoom.userId.equals(userId) && !(chatRoom.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+        await chatRoomDbService.updateChatRoomDocumentPermissions(chatRoomId, chatDocumentReferences);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update chat room document permissions' });
+    }
+});
+

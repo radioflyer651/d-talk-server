@@ -2,10 +2,11 @@ import { StoredMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
 import { PluginSpecification } from "./plugin-specification.model";
 import { PositionableMessage } from "./positionable-message.model";
+import { ChatDocumentLinker } from "./documents/chat-document-reference.model";
 
 
 /** This is a turn and a job that an agent must fulfill in a chat room during a round of chat interactions. */
-export interface ChatJobConfiguration {
+export interface ChatJobConfiguration extends ChatDocumentLinker {
     /** Gets or sets the ID of the job, for the database. */
     _id: ObjectId;
 

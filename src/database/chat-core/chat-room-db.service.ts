@@ -95,6 +95,16 @@ export class ChatRoomDbService extends DbService {
     }
 
     /** Update the conversation property of a chat room by its ObjectId. */
+    async updateChatRoomDocumentPermissions(roomId: ObjectId, chatDocumentReferences: ChatRoomData["chatDocumentReferences"]): Promise<number> {
+        return await this.dbHelper.updateDataItems<ChatRoomData>(
+            DbCollectionNames.ChatRooms,
+            { _id: roomId },
+            { chatDocumentReferences },
+            { updateOne: true }
+        );
+    }
+
+    /** Update the conversation property of a chat room by its ObjectId. */
     async updateChatRoomInstructions(roomId: ObjectId, roomInstructions: ChatRoomData["roomInstructions"]): Promise<number> {
         return await this.dbHelper.updateDataItems<ChatRoomData>(
             DbCollectionNames.ChatRooms,

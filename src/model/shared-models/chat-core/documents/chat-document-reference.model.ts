@@ -5,6 +5,9 @@ export interface ChatDocumentReference {
     /** Gets or sets the ID of the document this is for. */
     documentId: ObjectId,
 
+    /** If provided, then specifies an entire path of documents that the AI has access to. */
+    folderPath: string;
+
     /** The permissions that the referencing object has to the associated document. */
     permission: ChatDocumentPermissions;
 }

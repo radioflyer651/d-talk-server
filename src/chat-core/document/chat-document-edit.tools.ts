@@ -201,6 +201,56 @@ export function createDeleteDocumentCommentTool(info: DocumentFunctionInfo) {
     );
 }
 
+export function createInsertDocumentLinesTool(info: DocumentFunctionInfo) {
+    const document = info.document;
+    const data = info.document.data;
+
+    const schema = {
+        name: 'insert_document_lines_' + data._id.toString(),
+        description: `Inserts new lines into the document ${data.name} (id: ${data._id.toString()}) at a specified index.`,
+        schema: z.object({
+            startIndex: z.number().int(),
+            newLines: z.array(z.string())
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof schema.schema>) => {
+            document.insertLines(
+                { entityType: 'agent', id: info.agentId },
+                options.startIndex,
+                options.newLines
+            );
+            await info.onContentChanged();
+        },
+        schema
+    );
+}
+
+export function createAppendDocumentLinesTool(info: DocumentFunctionInfo) {
+    const document = info.document;
+    const data = info.document.data;
+
+    const schema = {
+        name: 'append_document_lines_' + data._id.toString(),
+        description: `Appends new lines to the end of the document ${data.name} (id: ${data._id.toString()}).`,
+        schema: z.object({
+            newLines: z.array(z.string())
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof schema.schema>) => {
+            document.appendLines(
+                { entityType: 'agent', id: info.agentId },
+                options.newLines
+            );
+            await info.onContentChanged();
+        },
+        schema
+    );
+}
+
 /** Returns the tools required to edit/modify document information. */
 export function createEditDocumentTools(info: DocumentFunctionInfo) {
     const perms = info.permissions || {};
@@ -210,6 +260,8 @@ export function createEditDocumentTools(info: DocumentFunctionInfo) {
         result.push(createEditDocumentContentTool(info));
         result.push(createDeleteDocumentLinesTool(info));
         result.push(createEditDocumentLinesTool(info));
+        result.push(createInsertDocumentLinesTool(info));
+        result.push(createAppendDocumentLinesTool(info));
     }
 
     if (perms.canChangeName) {
@@ -219,7 +271,7 @@ export function createEditDocumentTools(info: DocumentFunctionInfo) {
     if (perms.canUpdateDescription) {
         result.push(createEditDocumentDescriptionTool(info));
     }
-    
+
     if (perms.canUpdateComments) {
         result.push(createAddDocumentCommentTool(info));
         result.push(createEditDocumentCommentTool(info));

@@ -1,11 +1,12 @@
 import { ObjectId } from "mongodb";
 import { PositionableMessage } from "./positionable-message.model";
 import { StoredMessage } from "@langchain/core/messages";
+import { ChatDocumentLinker } from "./chat-document-reference.model";
 
 
 /** The "container" for an entire dataset, of related chat data.
  *   Projects belong to users. */
-export interface Project {
+export interface Project extends ChatDocumentLinker {
     /** The ID of this project. */
     _id: ObjectId;
 

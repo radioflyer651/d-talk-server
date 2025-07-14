@@ -9,3 +9,8 @@ export interface ChatDocumentReference {
     permission: ChatDocumentPermissions;
 }
 
+/** Represents a type that references a chat model and permissions for use in chat interactions. */
+export interface ChatDocumentLinker {
+    /** Set of referenced chat documents, with associated permissions for use with this object. */
+    chatDocumentReferences: ChatDocumentReference[];
+}

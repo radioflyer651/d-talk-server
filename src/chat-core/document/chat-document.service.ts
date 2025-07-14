@@ -82,7 +82,7 @@ export class ChatDocument {
     }
 
     /** Adds a new comment to the document. */
-    addComment(editorId: UpdateInfo, comment: { creator: ObjectId, content: string }) {
+    addComment(editorId: UpdateInfo, comment: { creator: ObjectId, content: string; }) {
         if (typeof comment.content !== 'string' || !comment.content.trim()) {
             throw new Error('Comment content must be a non-empty string.');
         }
@@ -115,6 +115,37 @@ export class ChatDocument {
             throw new Error('Comment index out of range.');
         }
         this.data.comments.splice(commentIndex, 1);
+        this.updateChangeInfo(editorId);
+    }
+
+    /** Inserts an array of new lines at a specified location in the content. */
+    insertLines(editorId: UpdateInfo, startIndex: number, newLines: string[]) {
+        if (!Array.isArray(newLines) || newLines.length === 0) {
+            throw new Error('newLines must be a non-empty array of strings.');
+        }
+        if (startIndex < 0 || startIndex > this.content.length) {
+            throw new Error('startIndex out of range.');
+        }
+        for (const line of newLines) {
+            if (typeof line !== 'string') {
+                throw new Error('All newLines must be strings.');
+            }
+        }
+        this.content.splice(startIndex, 0, ...newLines);
+        this.updateChangeInfo(editorId);
+    }
+
+    /** Appends an array of new lines to the end of the content. */
+    appendLines(editorId: UpdateInfo, newLines: string[]) {
+        if (!Array.isArray(newLines) || newLines.length === 0) {
+            throw new Error('newLines must be a non-empty array of strings.');
+        }
+        for (const line of newLines) {
+            if (typeof line !== 'string') {
+                throw new Error('All newLines must be strings.');
+            }
+        }
+        this.content.push(...newLines);
         this.updateChangeInfo(editorId);
     }
 }

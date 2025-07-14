@@ -4,8 +4,9 @@ import { AgentReference } from "./agent-reference.model";
 import { ChatJobInstance } from "./chat-job-instance.model";
 import { PluginInstanceReference } from "./plugin-instance-reference.model";
 import { PositionableMessage } from "./positionable-message.model";
+import { ChatDocumentLinker } from "./chat-document-reference.model";
 
-export interface ChatRoomData {
+export interface ChatRoomData extends ChatDocumentLinker {
     _id: ObjectId;
 
     /** The name of this chat room. */

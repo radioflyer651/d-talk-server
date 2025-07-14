@@ -1,3 +1,5 @@
+import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
+
 export const ROOM_INFO_PLUGIN_TYPE_ID = 'room-info-plugin';
 export const OTHER_AGENTS_INVISIBLE_PLUGIN = 'other-agents-invisible';
 export const DEBUG_PLUGIN = 'debug';
@@ -109,6 +111,17 @@ export const pluginInformation: PluginInfo[] = [
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,
-        defaultParameterCreator: () => ({})
+        defaultParameterCreator: () => (<LabeledMemoryPluginParams>{
+            memoryCollectionName: 'memories',
+            memoryKeyPrefix: [],
+            memorySetPurpose: 'To remember information about ...',
+            projectId: undefined as any, // This has to be filled in by the editor.
+            modelServiceParams: {
+                llmService: '',
+                serviceParams: undefined as any, // This has to be filled in by the editor.
+            },
+            keyMeanings: [],
+            canWrite: true,
+        })
     },
 ];

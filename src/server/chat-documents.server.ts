@@ -73,6 +73,10 @@ chatDocumentsServer.post('/document', async (req, res) => {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
+        // Set lastChangedBy to the user making the call
+        doc.lastChangedBy = { entityType: 'user', id: userId };
+        doc.createdDate = new Date();
+        doc.updatedDate = new Date();
         const created = await chatDocumentDbService.createDocument(doc);
         res.status(201).json(created);
     } catch (error) {

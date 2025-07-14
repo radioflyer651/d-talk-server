@@ -9,5 +9,6 @@ export enum DbCollectionNames {
     Plugins = 'plugins',
     ChatJobs = 'chat-jobs',
     UserSecrets = 'user-secrets',
-    AgentConfigurations = 'agent-configurations'
+    AgentConfigurations = 'agent-configurations',
+    ChatDocuments = 'chat-documents'
 }

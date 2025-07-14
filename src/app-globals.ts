@@ -17,6 +17,7 @@ import { initializePluginTypeResolvers, pluginTypeResolvers } from "./plugin-typ
 import { SocketServer } from "./server/socket.server";
 import { AgentInstanceDbService } from "./database/chat-core/agent-instance-db.service";
 import { ChatRoomHydratorService } from "./chat-core/chat-room/chat-room-hydrator.service";
+import { ChatDocumentDbService } from "./database/chat-core/chat-document-db.service";
 /** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
 
 /** The mongo helper used in all DB Services. */
@@ -30,6 +31,7 @@ export let agentDbService: AgentDbService;
 export let chatJobDbService: ChatJobDbService;
 export let chatRoomDbService: ChatRoomDbService;
 export let agentInstanceDbService: AgentInstanceDbService;
+export let chatDocumentDbService: ChatDocumentDbService;
 
 // Chat-Core services.
 export let agentServiceFactory: AgentServiceFactory;
@@ -60,6 +62,7 @@ export async function initializeServices(): Promise<void> {
     projectDbService = new ProjectDbService(dbHelper);
     agentDbService = new AgentDbService(dbHelper);
     agentInstanceDbService = new AgentInstanceDbService(dbHelper);
+    chatDocumentDbService = new ChatDocumentDbService(dbHelper);
 
     /* App Services. */
     authService = new AuthService(authDbService, loggingService);

@@ -37,6 +37,7 @@ export class ChatCoreService {
             identity: identityId,
             name: agentName,
             plugins: [],
+            chatDocumentReferences: [],
             projectId: chatRoom.projectId
         };
 

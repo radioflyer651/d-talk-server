@@ -45,6 +45,7 @@ projectRouter.post('/project', async (req, res) => {
             creatorId: userId,
             name,
             description: '',
+            chatDocumentReferences: [],
             projectKnowledge: []
         };
         const created = await projectDbService.upsertProject(newProject);

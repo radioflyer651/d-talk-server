@@ -59,6 +59,7 @@ export class AgentServiceFactory {
             identity: identity._id,
             permanentPlugins: [],
             plugins: [],
+            chatDocumentReferences: [],
             projectId: identity.projectId, // Ensure projectId is provided
         } as AgentInstanceConfiguration;
 

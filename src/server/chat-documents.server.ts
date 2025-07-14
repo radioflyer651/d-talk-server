@@ -2,7 +2,7 @@ import express from 'express';
 import { projectDbService, chatDocumentDbService } from '../app-globals';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-import { ChatDocumentData } from '../model/shared-models/chat-core/chat-document.model';
+import { IChatDocumentData } from '../model/shared-models/chat-core/documents/chat-document.model';
 
 export const chatDocumentsServer = express.Router();
 
@@ -64,7 +64,7 @@ chatDocumentsServer.post('/document', async (req, res) => {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const doc = req.body as ChatDocumentData;
+        const doc = req.body as IChatDocumentData;
         if (!doc || !doc.projectId) {
             res.status(400).json({ error: 'Missing required fields' });
             return;
@@ -92,7 +92,7 @@ chatDocumentsServer.put('/document', async (req, res) => {
             res.status(401).json({ error: 'Unauthorized' });
             return;
         }
-        const update = req.body as Partial<ChatDocumentData> & { _id?: string; };
+        const update = req.body as Partial<IChatDocumentData> & { _id?: string; };
         if (!update || !update._id) {
             res.status(400).json({ error: 'Missing required _id in body' });
             return;

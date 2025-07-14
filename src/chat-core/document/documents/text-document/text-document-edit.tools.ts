@@ -1,14 +1,15 @@
 import { z } from "zod";
-import { ChatDocument } from "./chat-document.service";
 import { StructuredToolInterface, tool } from "@langchain/core/tools";
 import { ObjectId } from "mongodb";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { ChatDocumentPermissions } from "../../model/shared-models/chat-core/chat-document-permissions.model";
+import { ChatDocumentPermissions } from "../../model/shared-models/chat-core/documents/chat-document-permissions.model";
+import { TextDocument } from "./text-document/text-document.service";
+
 
 const orderOfOpsNote = `IMPORTANT: If deleting lines and editing lines, do the deletions first, and then make a separate call later to update lines, since the line numbers will change after deletions.`;
 
 export interface DocumentFunctionInfo {
-    document: ChatDocument;
+    document: TextDocument;
     agentId: ObjectId;
     permissions: ChatDocumentPermissions;
     onContentChanged: () => Promise<void>;
@@ -252,7 +253,7 @@ export function createAppendDocumentLinesTool(info: DocumentFunctionInfo) {
 }
 
 /** Returns the tools required to edit/modify document information. */
-export function createEditDocumentTools(info: DocumentFunctionInfo) {
+export function createTextDocumentTools(info: DocumentFunctionInfo) {
     const perms = info.permissions || {};
     const result: (ToolNode | StructuredToolInterface)[] = [];
 

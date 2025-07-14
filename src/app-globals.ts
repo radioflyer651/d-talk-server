@@ -18,6 +18,8 @@ import { SocketServer } from "./server/socket.server";
 import { AgentInstanceDbService } from "./database/chat-core/agent-instance-db.service";
 import { ChatRoomHydratorService } from "./chat-core/chat-room/chat-room-hydrator.service";
 import { ChatDocumentDbService } from "./database/chat-core/chat-document-db.service";
+import { ChatDocumentResolutionService } from "./chat-core/document/document-resolution.service";
+import { documentTypeResolvers, initializeDocumentTypeResolvers } from "./document-type-resolvers";
 /** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
 
 /** The mongo helper used in all DB Services. */
@@ -37,6 +39,7 @@ export let chatDocumentDbService: ChatDocumentDbService;
 export let agentServiceFactory: AgentServiceFactory;
 export let modelResolver: ModelServiceResolver;
 export let pluginResolver: AppPluginResolver;
+export let documentResolver: ChatDocumentResolutionService;
 export let jobHydratorService: JobHydrator;
 export let chatRoomHydratorService: ChatRoomHydratorService;
 
@@ -78,7 +81,9 @@ export async function initializeServices(): Promise<void> {
     );
     modelResolver = new ModelServiceResolver(modelResolverServices);
     await initializePluginTypeResolvers(config);
+    await initializeDocumentTypeResolvers(config);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
+    documentResolver = new ChatDocumentResolutionService(documentTypeResolvers);
     agentServiceFactory = new AgentServiceFactory(modelResolver, pluginResolver, agentDbService, agentInstanceDbService);
     jobHydratorService = new JobHydrator(chatRoomDbService, pluginResolver, chatJobDbService);
     chatRoomHydratorService = new ChatRoomHydratorService(

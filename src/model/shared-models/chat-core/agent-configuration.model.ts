@@ -4,7 +4,7 @@ import { ModelServiceParams } from "./model-service-params.model";
 import { PositionableMessage } from "./positionable-message.model";
 import { StoredMessage } from "@langchain/core/messages";
 import { IPluginConfigurationAttachmentType } from "./plugin-configuration-attachement-types.model";
-import { ChatDocumentLinker } from "./chat-document-reference.model";
+import { ChatDocumentLinker } from "./documents/chat-document-reference.model";
 
 /** The configurable items that make up a chat agent. */
 export interface ChatAgentIdentityConfiguration extends IPluginConfigurationAttachmentType, ChatDocumentLinker {

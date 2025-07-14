@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import { PluginInstanceReference } from "./plugin-instance-reference.model";
-import { ChatDocumentLinker } from "./chat-document-reference.model";
+import { ChatDocumentLinker } from "./documents/chat-document-reference.model";
 
 
 /** Represents a specific instance of a chat agent, from a specific identity. */

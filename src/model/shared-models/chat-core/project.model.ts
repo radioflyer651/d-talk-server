@@ -1,7 +1,7 @@
 import { ObjectId } from "mongodb";
 import { PositionableMessage } from "./positionable-message.model";
 import { StoredMessage } from "@langchain/core/messages";
-import { ChatDocumentLinker } from "./chat-document-reference.model";
+import { ChatDocumentLinker } from "./documents/chat-document-reference.model";
 
 
 /** The "container" for an entire dataset, of related chat data.

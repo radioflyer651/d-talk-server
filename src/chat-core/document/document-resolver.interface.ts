@@ -3,7 +3,7 @@ import { NewDbItem } from "../../model/shared-models/db-operation-types.model";
 import { ChatDocument } from "./chat-document.service";
 
 
-export interface IDocumentResolver<T_DOCUMENT_TYPE extends ChatDocument = any, T_DOCUMENT_DATA extends IChatDocumentData = any, T_DOCUMENT_CONFIGURATION extends IChatDocumentCreationParams = IChatDocumentCreationParams> {
+export interface IDocumentResolver<T_DOCUMENT_TYPE extends ChatDocument = ChatDocument, T_DOCUMENT_DATA extends IChatDocumentData = IChatDocumentData, T_DOCUMENT_CONFIGURATION extends IChatDocumentCreationParams = IChatDocumentCreationParams> {
 
     /** Returns a boolean value indicating whether or not this service can resolve a specified document type. */
     canResolveType(documentType: string): boolean;

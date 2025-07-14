@@ -1,5 +1,5 @@
 import express from 'express';
-import { projectDbService, chatDocumentDbService } from '../app-globals';
+import { projectDbService, chatDocumentDbService, documentResolver } from '../app-globals';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
 import { IChatDocumentData } from '../model/shared-models/chat-core/documents/chat-document.model';
@@ -77,8 +77,8 @@ chatDocumentsServer.post('/document', async (req, res) => {
         doc.lastChangedBy = { entityType: 'user', id: userId };
         doc.createdDate = new Date();
         doc.updatedDate = new Date();
-        const created = await chatDocumentDbService.createDocument(doc);
-        res.status(201).json(created);
+        const newDoc = await documentResolver.createNewDocument(doc);
+        res.status(201).json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to create document' });
     }

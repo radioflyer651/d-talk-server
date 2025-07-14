@@ -83,7 +83,7 @@ export async function initializeServices(): Promise<void> {
     await initializePluginTypeResolvers(config);
     await initializeDocumentTypeResolvers(config);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
-    documentResolver = new ChatDocumentResolutionService(documentTypeResolvers);
+    documentResolver = new ChatDocumentResolutionService(documentTypeResolvers, chatDocumentDbService);
     agentServiceFactory = new AgentServiceFactory(modelResolver, pluginResolver, agentDbService, agentInstanceDbService);
     jobHydratorService = new JobHydrator(chatRoomDbService, pluginResolver, chatJobDbService);
     chatRoomHydratorService = new ChatRoomHydratorService(

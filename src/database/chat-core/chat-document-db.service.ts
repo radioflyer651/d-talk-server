@@ -3,6 +3,7 @@ import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { IChatDocumentData } from "../../model/shared-models/chat-core/documents/chat-document.model";
+import { NewDbItem } from "../../model/shared-models/db-operation-types.model";
 
 export class ChatDocumentDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
@@ -10,9 +11,9 @@ export class ChatDocumentDbService extends DbService {
     }
 
     /** Create a new chat document. */
-    async createDocument(doc: IChatDocumentData): Promise<IChatDocumentData> {
-        await this.dbHelper.upsertDataItem<IChatDocumentData>(DbCollectionNames.ChatDocuments, doc);
-        return doc;
+    async createDocument(doc: NewDbItem<IChatDocumentData>): Promise<IChatDocumentData> {
+        const result = await this.dbHelper.upsertDataItem<IChatDocumentData>(DbCollectionNames.ChatDocuments, doc);
+        return result;
     }
 
     /** Get a chat document by its ObjectId. */

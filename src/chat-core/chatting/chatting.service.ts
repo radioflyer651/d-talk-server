@@ -1,5 +1,4 @@
 import { ObjectId } from "mongodb";
-import { ChatRoom } from "../chat-room/chat-room.service";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
 import { AgentServiceFactory } from "../agent-factory.service";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
@@ -91,6 +90,9 @@ export class ChattingService {
 
         // Cleanup our subscription.
         eventsCleanup$.next();
+
+        // Finish up with the chatroom.
+        chatRoom.dispose();
 
         // Return the messages.
         return newMessages;

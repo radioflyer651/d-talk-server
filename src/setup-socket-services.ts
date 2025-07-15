@@ -1,10 +1,12 @@
-import { chatRoomDbService, agentServiceFactory, pluginResolver, jobHydratorService, agentDbService, authDbService, agentInstanceDbService, chatRoomHydratorService } from "./app-globals";
+import { chatRoomDbService, agentServiceFactory, pluginResolver, jobHydratorService, agentDbService, authDbService, agentInstanceDbService, chatRoomHydratorService, chatDocumentDbService, projectDbService } from "./app-globals";
 import { ChattingService } from "./chat-core/chatting/chatting.service";
 import { ChatRoomSocketServer } from "./server/socket-services/chat-room.socket-service";
+import { TextDocumentSocketService } from "./server/socket-services/text-document.socket-service";
 import { SocketServer } from "./server/socket.server";
 
 // Placeholder for future socket services.
 export let chatRoomSocketServer: ChatRoomSocketServer;
+export let textDocumentSocketServer: TextDocumentSocketService;
 export let chattingService: ChattingService;
 
 /** Sets up all socket servers/services that are based on the socketServer. */
@@ -23,8 +25,14 @@ export async function setupSocketServices(socketServer: SocketServer): Promise<v
         pluginResolver,
         jobHydratorService,
         agentDbService);
-    chatRoomSocketServer.initialize();
+    await chatRoomSocketServer.initialize();
 
+    textDocumentSocketServer = new TextDocumentSocketService(
+        socketServer,
+        chatDocumentDbService,
+        projectDbService,
+    );
+    await textDocumentSocketServer.initialize();
 
     chattingService = new ChattingService(
         agentServiceFactory,

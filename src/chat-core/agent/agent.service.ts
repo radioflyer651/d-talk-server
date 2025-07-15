@@ -9,8 +9,9 @@ import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-c
 import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
 import { ChatRoom } from "../chat-room/chat-room.service";
 import { sanitizeMessageName } from "../../utils/sanitize-message-name.utils";
+import { IDisposable } from "../disposable.interface";
 
-export class Agent implements IChatLifetimeContributor {
+export class Agent implements IChatLifetimeContributor, IDisposable {
     // The configuration for this agent instance
     readonly data: AgentInstanceConfiguration;
     // The chat model used by this agent
@@ -29,6 +30,10 @@ export class Agent implements IChatLifetimeContributor {
         this.chatModel = chatModel;
         this.plugins = plugins;
         this.identity = identity;
+    }
+
+    dispose() {
+        // Do nothing.
     }
 
     /** Returns the name of this agent, using either the name in the configuration, or

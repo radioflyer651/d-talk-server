@@ -58,7 +58,7 @@ export class StoredMessageWrapper {
 
     get id() {
         const speaker = getSpeakerFromStoredMessage(this.message);
-        return this.message.data.id || speaker?.speakerId || '';
+        return this.message.data.id || this.message.data.additional_kwargs?.['id'] || '';
     }
 
     get agentId() {
@@ -72,6 +72,8 @@ export class StoredMessageWrapper {
             };
         }
         const speaker = getSpeakerFromStoredMessage(this.message);
-        speaker!.speakerId = value;
+        if (speaker) {
+            speaker.speakerId = value;
+        }
     }
 }

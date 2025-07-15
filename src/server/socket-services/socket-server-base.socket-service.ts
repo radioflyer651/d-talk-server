@@ -28,10 +28,6 @@ export abstract class SocketServiceBase {
         this._disposing$.complete();
     }
 
-    // #region Messaging To Client
-
-    //#endregion
-
     /** Calls a specified callback, catching any errors, and reporting them back to the calling socket if one occurs. */
     protected callWithErrorReporting(socket: Socket, callback: () => void | Promise<void>): void | Promise<void> {
         try {

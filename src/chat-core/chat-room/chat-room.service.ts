@@ -20,12 +20,13 @@ import { PositionableMessage } from "../../model/shared-models/chat-core/positio
 import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
 import { Project } from "../../model/shared-models/chat-core/project.model";
 import { ChatDocument } from "../document/chat-document.service";
+import { IDisposable } from "../disposable.interface";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
 /** Provides basic interactive functionality for sending a message, from a user, to a chat room
  *   and getting an LLM response.  */
-export class ChatRoom implements IChatLifetimeContributor {
+export class ChatRoom implements IChatLifetimeContributor, IDisposable {
     constructor(
         readonly data: ChatRoomData,
         readonly chatRoomDbService: ChatRoomDbService,
@@ -37,6 +38,19 @@ export class ChatRoom implements IChatLifetimeContributor {
 
     /** Events that occur during the chat. */
     readonly events = this._events.asObservable();
+
+    dispose() {
+        this._events.complete();
+
+        // Create a set of disposables, and dispose of them all.
+        [
+            ...this.agents,
+            ...this.chatJobs,
+            ...this.documents,
+        ].forEach(d => {
+            d.dispose();
+        });
+    }
 
     get isBusy(): boolean {
         return this.data.isBusy;

@@ -328,6 +328,11 @@ export class SocketServer {
         this.socketServer.in(roomName).emit(eventName, ...args);
     }
 
+    /** Emits an event to a "room", which is like a group. */
+    emitEventToRoomExceptTo(roomName: string, eventName: string, excludeSocket: Socket, ...args: any[]): void {
+        excludeSocket.broadcast.in(roomName).emit(eventName, ...args);
+    }
+
     /** Instructs a socket to join a specified "room". */
     joinRoom(socket: Socket, roomName: string): void {
         // This is just for abstraction.

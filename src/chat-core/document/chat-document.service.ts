@@ -6,15 +6,19 @@ import { type ChatRoom } from "../chat-room/chat-room.service";
 import { type ChatJob } from "../chat-room/chat-job.service";
 import { type Agent } from "../agent/agent.service";
 import { ChatDocumentLinker } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
+import { IDisposable } from "../disposable.interface";
 
 
-export abstract class ChatDocument {
+export abstract class ChatDocument implements IDisposable {
     constructor(
         readonly data: IChatDocumentData,
         readonly documentDbService: ChatDocumentDbService,
     ) {
 
     }
+
+    /** Cleanup method. */
+    abstract dispose(): void;
 
     /** The permissions for this document, combined for all references (room, agent, etc). */
     permissions: ChatDocumentPermissions = {};

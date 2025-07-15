@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
-import { projectDbService } from "../app-globals";
+import { chatDocumentDbService, projectDbService } from "../app-globals";
 import { chatRoomDbService } from "../app-globals";
+import { IChatDocumentData } from "../model/shared-models/chat-core/documents/chat-document.model";
 
 /**
  * Returns true if the user is the creator of the project.
@@ -41,6 +42,23 @@ export async function userHasAccessToChatRoom(userId: ObjectId, roomId: ObjectId
 
     // User is the creator of the owning project
     return await isUserProjectCreator(userId, room.projectId);
+}
+
+/** Returns a boolean value indicating whether or not a specified user has access to edit a specified document. */
+export async function userHasAccessToDocument(userId: ObjectId, documentIdOrData: ObjectId | IChatDocumentData): Promise<boolean> {
+    let documentData: IChatDocumentData;
+    if (documentIdOrData instanceof ObjectId) {
+        let dataCheck = await chatDocumentDbService.getDocumentById(documentIdOrData);
+        if (!dataCheck) {
+            throw new Error(`Document ${documentIdOrData.toString()} does not exist.`);
+        }
+
+        documentData = dataCheck;
+    } else {
+        documentData = documentIdOrData;
+    }
+
+    return await isUserProjectCreator(userId, documentData.projectId);
 }
 
 /**

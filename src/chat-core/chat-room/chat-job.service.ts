@@ -6,14 +6,19 @@ import { PositionableMessage } from "../../model/shared-models/chat-core/positio
 import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
 import { IChatLifetimeContributor, ChatCallInfo } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
+import { IDisposable } from "../disposable.interface";
 
 
-export class ChatJob implements IChatLifetimeContributor {
+export class ChatJob implements IChatLifetimeContributor, IDisposable {
     constructor(
         readonly data: ChatJobConfiguration,
         readonly instanceData: ChatJobInstance,
     ) {
 
+    }
+
+    dispose() {
+        // Do nothing.
     }
 
     get myName() {

@@ -13,9 +13,11 @@ import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { MessagePositionTypes, PositionableMessage } from "../../../../model/shared-models/chat-core/positionable-message.model";
 import { createTextDocumentTools } from "./text-document-edit.tools";
 import { ChatDocumentPermissions } from "../../../../model/shared-models/chat-core/documents/chat-document-permissions.model";
+import { IDisposable } from "../../../disposable.interface";
+import { Subject } from "rxjs";
 
 
-export class TextDocument extends ChatDocument {
+export class TextDocument extends ChatDocument implements IDisposable {
     constructor(
         data: TextDocumentData,
         documentDbService: ChatDocumentDbService,
@@ -23,6 +25,13 @@ export class TextDocument extends ChatDocument {
         super(data, documentDbService);
         this.splitLines();
     }
+
+    dispose() {
+        this._contentChanged$.complete();
+    }
+
+    protected readonly _contentChanged$ = new Subject<TextDocument>();
+    readonly contentChanged$ = this._contentChanged$.asObservable();
 
     declare data: TextDocumentData;
 
@@ -33,8 +42,10 @@ export class TextDocument extends ChatDocument {
         this.content = this.data.content.split('\n');
     }
 
-    protected updateDataContent() {
+    /** Updates the database data, and emits a notification that the content has changed. */
+    protected updateDataContentAndEmitChange() {
         this.data.content = this.content.join('\n');
+        this._contentChanged$.next(this);
     }
 
     /** Stores the data back to the database. */
@@ -71,7 +82,7 @@ export class TextDocument extends ChatDocument {
         this.content[lineNumber] = newContent;
 
         this.updateChangeInfo(editorId);
-        this.updateDataContent();
+        this.updateDataContentAndEmitChange();
     }
 
     /** Deletes a specified number of lines from the document. */
@@ -91,7 +102,7 @@ export class TextDocument extends ChatDocument {
         });
 
         this.updateChangeInfo(editorId);
-        this.updateDataContent();
+        this.updateDataContentAndEmitChange();
     }
 
     /** Updates the entire content of the document. */
@@ -99,7 +110,7 @@ export class TextDocument extends ChatDocument {
         this.data.content = newContent;
         this.content = newContent.split('\n');
         this.updateChangeInfo(editorId);
-        this.updateDataContent();
+        this.updateDataContentAndEmitChange();
     }
 
     /** Updates the name of the document. */
@@ -175,7 +186,7 @@ export class TextDocument extends ChatDocument {
 
         this.content.splice(startIndex, 0, ...newLines);
         this.updateChangeInfo(editorId);
-        this.updateDataContent();
+        this.updateDataContentAndEmitChange();
     }
 
     /** Appends an array of new lines to the end of the content. */
@@ -190,7 +201,7 @@ export class TextDocument extends ChatDocument {
         }
         this.content.push(...newLines);
         this.updateChangeInfo(editorId);
-        this.updateDataContent();
+        this.updateDataContentAndEmitChange();
     }
 }
 

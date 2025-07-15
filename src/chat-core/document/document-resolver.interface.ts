@@ -1,3 +1,4 @@
+import { ChatDocumentDbService } from "../../database/chat-core/chat-document-db.service";
 import { IChatDocumentCreationParams, IChatDocumentData } from "../../model/shared-models/chat-core/documents/chat-document.model";
 import { NewDbItem } from "../../model/shared-models/db-operation-types.model";
 import { ChatDocument } from "./chat-document.service";
@@ -13,9 +14,9 @@ export interface IDocumentResolver<T_DOCUMENT_TYPE extends ChatDocument = ChatDo
     createNewDocumentData(configuration: T_DOCUMENT_CONFIGURATION): Promise<NewDbItem<T_DOCUMENT_DATA>>;
 
     /** Returns a new instance of the flavor of document type this service handles. */
-    createNewDocument(document: T_DOCUMENT_DATA): Promise<T_DOCUMENT_TYPE>;
+    createNewDocument(document: T_DOCUMENT_DATA, documentDbService: ChatDocumentDbService): Promise<T_DOCUMENT_TYPE>;
 
     /** Given a specified document data of the type this service handles, returns a new instance of that document type. */
-    hydrateDocument(document: T_DOCUMENT_DATA): Promise<T_DOCUMENT_TYPE>;
+    hydrateDocument(document: T_DOCUMENT_DATA, documentDbService: ChatDocumentDbService): Promise<T_DOCUMENT_TYPE>;
 
 }

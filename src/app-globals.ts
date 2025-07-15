@@ -94,6 +94,7 @@ export async function initializeServices(): Promise<void> {
         agentDbService,
         agentInstanceDbService,
         projectDbService,
+        documentResolver,
     );
 
 

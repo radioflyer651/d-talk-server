@@ -2,13 +2,15 @@ import { ObjectId } from "mongodb";
 import { UpdateInfo } from "../../../../model/shared-models/chat-core/update-info.model";
 import { ChatDocument } from "../../chat-document.service";
 import { TextDocumentData } from "../../../../model/shared-models/chat-core/documents/document-types/text-document.model";
+import { ChatDocumentDbService } from "../../../../database/chat-core/chat-document-db.service";
 
 
 export class TextDocument extends ChatDocument {
     constructor(
         data: TextDocumentData,
+        documentDbService: ChatDocumentDbService,
     ) {
-        super(data);
+        super(data, documentDbService);
         this.content = data.content.split('\n');
     }
 

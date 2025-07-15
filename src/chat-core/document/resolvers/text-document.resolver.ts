@@ -1,3 +1,4 @@
+import { ChatDocumentDbService } from "../../../database/chat-core/chat-document-db.service";
 import { IChatDocumentCreationParams, IChatDocumentData } from "../../../model/shared-models/chat-core/documents/chat-document.model";
 import { TEXT_DOCUMENT_TYPE } from "../../../model/shared-models/chat-core/documents/document-type.constants";
 import { TextDocumentData } from "../../../model/shared-models/chat-core/documents/document-types/text-document.model";
@@ -25,12 +26,12 @@ export class TextDocumentResolver implements IDocumentResolver<TextDocument, Tex
         return data;
     }
 
-    async createNewDocument(document: TextDocumentData): Promise<TextDocument> {
-        return await this.hydrateDocument(document);
+    async createNewDocument(document: TextDocumentData, documentDbService: ChatDocumentDbService): Promise<TextDocument> {
+        return await this.hydrateDocument(document, documentDbService);
     }
 
-    async hydrateDocument(document: TextDocumentData): Promise<TextDocument> {
-        return new TextDocument(document);
+    async hydrateDocument(document: TextDocumentData, documentDbService: ChatDocumentDbService): Promise<TextDocument> {
+        return new TextDocument(document, documentDbService);
     }
 
 }

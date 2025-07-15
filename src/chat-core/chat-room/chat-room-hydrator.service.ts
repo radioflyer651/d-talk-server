@@ -8,6 +8,7 @@ import { getDistinctObjectIds } from "../../utils/get-distinct-object-ids.utils"
 import { AgentServiceFactory } from "../agent-factory.service";
 import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
 import { Agent } from "../agent/agent.service";
+import { ChatDocumentResolutionService } from "../document/document-resolution.service";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { IChatRoomHydratorService } from "./chat-room-hydrator.interface";
 import { ChatRoom } from "./chat-room.service";
@@ -22,6 +23,7 @@ export class ChatRoomHydratorService implements IChatRoomHydratorService {
         readonly agentDbService: AgentDbService,
         readonly agentInstanceDbService: AgentInstanceDbService,
         readonly projectDbService: ProjectDbService,
+        readonly documentResolverService: ChatDocumentResolutionService,
     ) {
     }
 

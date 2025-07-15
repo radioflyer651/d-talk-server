@@ -19,6 +19,7 @@ import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.soc
 import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
 import { Project } from "../../model/shared-models/chat-core/project.model";
+import { ChatDocument } from "../document/chat-document.service";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
@@ -90,6 +91,13 @@ export class ChatRoom implements IChatLifetimeContributor {
     }
     set project(value: Project) {
         this._project = value;
+    }
+    private _documents: ChatDocument[] = [];
+    get documents(): ChatDocument[] {
+        return this._documents;
+    }
+    set documents(value: ChatDocument[]) {
+        this._documents = value;
     }
 
     abortSignal?: AbortSignal;
@@ -185,13 +193,17 @@ export class ChatRoom implements IChatLifetimeContributor {
                 p.chatJob = job;
             });
 
+            const documentContributorsP = this.documents?.map(d => d.getLifetimeContributors(this, job, agent)) ?? [];
+            const documentContributors = (await Promise.all(documentContributorsP)).reduce((p, c) => [...p, ...c], []);
+
             // Create the lifetime contributors for this chat interaction.
             const contributors: IChatLifetimeContributor[] = [
                 agent,
                 job,
                 this,
                 ...plugins,
-                ...this.externalLifetimeServices
+                ...this.externalLifetimeServices,
+                ...documentContributors,
             ];
 
             contributors.sort((c1, c2) => {

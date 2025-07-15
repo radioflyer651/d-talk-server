@@ -4,11 +4,12 @@ import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service
 import { ProjectDbService } from "../../database/chat-core/project-db.service";
 import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
 import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data.model";
+import { ChatDocumentLinker } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
 import { getDistinctObjectIds } from "../../utils/get-distinct-object-ids.utils";
 import { AgentServiceFactory } from "../agent-factory.service";
 import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
 import { Agent } from "../agent/agent.service";
-import { ChatDocumentResolutionService } from "../document/document-resolution.service";
+import { IChatDocumentResolutionService } from "../document/document-resolution.interface";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { IChatRoomHydratorService } from "./chat-room-hydrator.interface";
 import { ChatRoom } from "./chat-room.service";
@@ -23,7 +24,7 @@ export class ChatRoomHydratorService implements IChatRoomHydratorService {
         readonly agentDbService: AgentDbService,
         readonly agentInstanceDbService: AgentInstanceDbService,
         readonly projectDbService: ProjectDbService,
-        readonly documentResolverService: ChatDocumentResolutionService,
+        readonly documentResolverService: IChatDocumentResolutionService,
     ) {
     }
 
@@ -38,8 +39,10 @@ export class ChatRoomHydratorService implements IChatRoomHydratorService {
         await this.hydrateAgents(chatRoom);
         await this.hydrateChatJobs(chatRoom);
 
-        // Set the project on the chatRoom.
         const project = await projectP;
+        await this.hydrateDocuments(chatRoom);
+
+        // Set the project on the chatRoom.
         if (!project) {
             throw new Error(`No project was found with the ID of ${chatRoomData.projectId}, on the chat room: ${chatRoomData._id}.`);
         }
@@ -117,5 +120,18 @@ export class ChatRoomHydratorService implements IChatRoomHydratorService {
 
         // The chat job instances may have been altered, so we need to save the references, just to be sure.
         await this.chatRoomDbService.updateChatRoom(chatRoom.data._id, { jobs: chatRoom.data.jobs });
+    }
+
+    private async hydrateDocuments(chatRoom: ChatRoom) {
+        // Get the documents for all elements of this chat room.
+        const linkItems: ChatDocumentLinker[] = [
+            chatRoom.data,
+            ...chatRoom.agents.map(a => a.data),
+            ...chatRoom.chatJobs.map(j => j.data)
+        ];
+        const documents = await this.documentResolverService.getDocumentsForLinkedObjects(linkItems);
+
+        // Set them on the chat room.
+        chatRoom.documents = documents;
     }
 }

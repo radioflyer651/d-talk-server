@@ -3,6 +3,15 @@ import { UpdateInfo } from "../../../../model/shared-models/chat-core/update-inf
 import { ChatDocument } from "../../chat-document.service";
 import { TextDocumentData } from "../../../../model/shared-models/chat-core/documents/document-types/text-document.model";
 import { ChatDocumentDbService } from "../../../../database/chat-core/chat-document-db.service";
+import { Agent } from "../../../agent/agent.service";
+import { ChatCallInfo, IChatLifetimeContributor } from "../../../chat-lifetime-contributor.interface";
+import { ChatJob } from "../../../chat-room/chat-job.service";
+import { ChatRoom } from "../../../chat-room/chat-room.service";
+import { StructuredToolInterface } from "@langchain/core/tools";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { BaseMessage, SystemMessage } from "@langchain/core/messages";
+import { MessagePositionTypes, PositionableMessage } from "../../../../model/shared-models/chat-core/positionable-message.model";
+import { createTextDocumentTools } from "./text-document-edit.tools";
 
 
 export class TextDocument extends ChatDocument {
@@ -18,6 +27,20 @@ export class TextDocument extends ChatDocument {
 
     /** The content of the document split into individual lines for easy editing. */
     content: string[];
+
+    async getLifetimeContributors(chatRoom: ChatRoom, chatJob: ChatJob, chatAgent: Agent): Promise<IChatLifetimeContributor[]> {
+        // Get the permissions.
+        const permissions = this.determinePermissions(chatRoom, chatJob, chatAgent);
+
+        const tools = createTextDocumentTools({
+            agentId: chatAgent.identity._id,
+            document: this,
+            onContentChanged: async () => { },
+            permissions: permissions,
+        });
+
+        return [new TextDocumentLifetimeContributor(this, tools)];
+    }
 
     updateChangeInfo(updatedBy: { entityType: 'user' | 'agent', id: ObjectId; }) {
         this.data.lastChangedBy = updatedBy;
@@ -156,3 +179,28 @@ export class TextDocument extends ChatDocument {
     }
 }
 
+export class TextDocumentLifetimeContributor implements IChatLifetimeContributor {
+    constructor(readonly document: TextDocument, readonly tools: (ToolNode | StructuredToolInterface)[]) {
+
+    }
+
+    async getTools(): Promise<(ToolNode | StructuredToolInterface)[]> {
+        return this.tools;
+    }
+
+    async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
+        if (info.replyNumber === 0) {
+            return [
+                {
+                    location: MessagePositionTypes.AfterInstructions,
+                    message: new SystemMessage(`
+You have access to the document ${this.document.data.name} (ID: ${this.document.data._id.toString()}).  You have tools allowing you to work with it.
+Below is the entire document:\n${JSON.stringify(this.document.data)}
+                    `)
+                }
+            ];
+        }
+
+        return [];
+    }
+}

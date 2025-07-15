@@ -73,4 +73,12 @@ export class ChatDocumentDbService extends DbService {
             { findOne: false }
         );
     }
+
+    /** Get multiple chat documents by their ObjectIds. */
+    async getDocumentsByIds(documentIds: ObjectId[]): Promise<IChatDocumentData[]> {
+        return await this.dbHelper.findDataItem<IChatDocumentData, { _id: { $in: ObjectId[] } }>(
+            DbCollectionNames.ChatDocuments,
+            { _id: { $in: documentIds } }
+        ) as IChatDocumentData[];
+    }
 }

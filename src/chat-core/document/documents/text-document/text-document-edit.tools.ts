@@ -2,8 +2,9 @@ import { z } from "zod";
 import { StructuredToolInterface, tool } from "@langchain/core/tools";
 import { ObjectId } from "mongodb";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { ChatDocumentPermissions } from "../../model/shared-models/chat-core/documents/chat-document-permissions.model";
-import { TextDocument } from "./text-document/text-document.service";
+import { ChatDocumentPermissions } from "../../../../model/shared-models/chat-core/documents/chat-document-permissions.model";
+import { type TextDocument } from "./text-document.service";
+
 
 
 const orderOfOpsNote = `IMPORTANT: If deleting lines and editing lines, do the deletions first, and then make a separate call later to update lines, since the line numbers will change after deletions.`;

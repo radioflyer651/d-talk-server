@@ -28,7 +28,7 @@ export abstract class ChatDocument {
         const allItems: ChatDocumentLinker[] = [chatRoom.data, chatJob.data, chatAgent.identity, chatAgent.data];
 
         // Find the references related to this document.
-        const references = allItems.map(x => x.chatDocumentReferences
+        const references = allItems.map(x => (x.chatDocumentReferences ?? [])
             .filter(r => r.documentId.equals(this.data._id)))
             .reduce((p, c) => [...p, ...c], []);
 

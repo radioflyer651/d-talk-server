@@ -20,13 +20,26 @@ export class TextDocument extends ChatDocument {
         documentDbService: ChatDocumentDbService,
     ) {
         super(data, documentDbService);
-        this.content = data.content.split('\n');
+        this.splitLines();
     }
 
     declare data: TextDocumentData;
 
     /** The content of the document split into individual lines for easy editing. */
-    content: string[];
+    content!: string[];
+
+    protected splitLines() {
+        this.content = this.data.content.split('\n');
+    }
+
+    protected updateDataContent() {
+        this.data.content = this.content.join('\n');
+    }
+
+    /** Stores the data back to the database. */
+    async commitToDb() {
+        await this.documentDbService.updateDocument(this.data._id, this.data);
+    }
 
     async getLifetimeContributors(chatRoom: ChatRoom, chatJob: ChatJob, chatAgent: Agent): Promise<IChatLifetimeContributor[]> {
         // Get the permissions.
@@ -65,6 +78,7 @@ export class TextDocument extends ChatDocument {
         this.content[lineNumber] = newContent;
 
         this.updateChangeInfo(editorId);
+        this.updateDataContent();
     }
 
     /** Deletes a specified number of lines from the document. */
@@ -84,12 +98,15 @@ export class TextDocument extends ChatDocument {
         });
 
         this.updateChangeInfo(editorId);
+        this.updateDataContent();
     }
 
     /** Updates the entire content of the document. */
     updateContent(editorId: UpdateInfo, newContent: string) {
         this.data.content = newContent;
+        this.content = newContent.split('\n');
         this.updateChangeInfo(editorId);
+        this.updateDataContent();
     }
 
     /** Updates the name of the document. */
@@ -152,16 +169,20 @@ export class TextDocument extends ChatDocument {
         if (!Array.isArray(newLines) || newLines.length === 0) {
             throw new Error('newLines must be a non-empty array of strings.');
         }
+
         if (startIndex < 0 || startIndex > this.content.length) {
             throw new Error('startIndex out of range.');
         }
+
         for (const line of newLines) {
             if (typeof line !== 'string') {
                 throw new Error('All newLines must be strings.');
             }
         }
+
         this.content.splice(startIndex, 0, ...newLines);
         this.updateChangeInfo(editorId);
+        this.updateDataContent();
     }
 
     /** Appends an array of new lines to the end of the content. */
@@ -176,6 +197,7 @@ export class TextDocument extends ChatDocument {
         }
         this.content.push(...newLines);
         this.updateChangeInfo(editorId);
+        this.updateDataContent();
     }
 }
 

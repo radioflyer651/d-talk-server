@@ -216,7 +216,12 @@ export async function callTools(state: typeof ChatState.State) {
         }
 
         // Execute the tool.
-        const toolResult = await tool.invoke(toolCall.args);
+        let toolResult: any;
+        try {
+            toolResult = await tool.invoke(toolCall.args);
+        } catch (err) {
+            toolResult = new Error(`Error executing ${toolCall.name}: ID: ${toolCall.id}.  ${err?.toString() ?? 'undefined'}`);
+        }
 
         // Return the tool message as a result.
         const toolMessage = new ToolMessage(JSON.stringify(toolResult) ?? '', toolCall.id!);

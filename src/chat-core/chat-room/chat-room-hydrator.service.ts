@@ -127,6 +127,7 @@ export class ChatRoomHydratorService implements IChatRoomHydratorService {
         const linkItems: ChatDocumentLinker[] = [
             chatRoom.data,
             ...chatRoom.agents.map(a => a.data),
+            ...chatRoom.agents.map(a => a.identity),
             ...chatRoom.chatJobs.map(j => j.data)
         ];
         const documents = await this.documentResolverService.getDocumentsForLinkedObjects(linkItems);

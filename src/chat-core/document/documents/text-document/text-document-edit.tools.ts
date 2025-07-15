@@ -33,10 +33,11 @@ export function createEditDocumentLinesTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof editDocumentSchema.schema>) => {
+            console.log('createEditDocumentLinesTool called');
             options.lines.forEach(l => {
                 document.editLine({ entityType: 'agent', id: info.agentId }, l.lineNumber, l.newContent);
             });
-
+            await document.commitToDb();
             info.onContentChanged();
         },
         editDocumentSchema
@@ -57,7 +58,9 @@ export function createDeleteDocumentLinesTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof deleteLineSchema.schema>) => {
+            console.log('createDeleteDocumentLinesTool called');
             document.deleteLines({ entityType: 'agent', id: info.agentId }, options.lines);
+            await document.commitToDb();
             info.onContentChanged();
         },
         deleteLineSchema
@@ -79,7 +82,9 @@ export function createEditDocumentContentTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof deleteLineSchema.schema>) => {
+            console.log('createEditDocumentContentTool called');
             document.updateContent({ entityType: 'agent', id: info.agentId }, options.newContent);
+            await document.commitToDb();
             info.onContentChanged();
         },
         deleteLineSchema
@@ -100,7 +105,9 @@ export function createEditDocumentNameTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof schema.schema>) => {
+            console.log('createEditDocumentNameTool called');
             document.updateName({ entityType: 'agent', id: info.agentId }, options.newName);
+            await document.commitToDb();
             info.onContentChanged();
         },
         schema
@@ -121,7 +128,9 @@ export function createEditDocumentDescriptionTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof schema.schema>) => {
+            console.log('createEditDocumentDescriptionTool called');
             document.updateDescription({ entityType: 'agent', id: info.agentId }, options.newDescription);
+            await document.commitToDb();
             info.onContentChanged();
         },
         schema
@@ -143,10 +152,12 @@ export function createAddDocumentCommentTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof schema.schema>) => {
+            console.log('createAddDocumentCommentTool called');
             document.addComment(
                 { entityType: 'agent', id: info.agentId },
                 { creator: new ObjectId(options.creator), content: options.content }
             );
+            await document.commitToDb();
             info.onContentChanged();
         },
         schema
@@ -168,11 +179,13 @@ export function createEditDocumentCommentTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof schema.schema>) => {
+            console.log('createEditDocumentCommentTool called');
             document.editComment(
                 { entityType: 'agent', id: info.agentId },
                 options.commentIndex,
                 options.newContent
             );
+            await document.commitToDb();
             info.onContentChanged();
         },
         schema
@@ -193,10 +206,12 @@ export function createDeleteDocumentCommentTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof schema.schema>) => {
+            console.log('createDeleteDocumentCommentTool called');
             document.deleteComment(
                 { entityType: 'agent', id: info.agentId },
                 options.commentIndex
             );
+            await document.commitToDb();
             info.onContentChanged();
         },
         schema
@@ -218,11 +233,13 @@ export function createInsertDocumentLinesTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof schema.schema>) => {
+            console.log('createInsertDocumentLinesTool called');
             document.insertLines(
                 { entityType: 'agent', id: info.agentId },
                 options.startIndex,
                 options.newLines
             );
+            await document.commitToDb();
             await info.onContentChanged();
         },
         schema
@@ -243,10 +260,12 @@ export function createAppendDocumentLinesTool(info: DocumentFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof schema.schema>) => {
+            console.log('createAppendDocumentLinesTool called');
             document.appendLines(
                 { entityType: 'agent', id: info.agentId },
                 options.newLines
             );
+            await document.commitToDb();
             await info.onContentChanged();
         },
         schema

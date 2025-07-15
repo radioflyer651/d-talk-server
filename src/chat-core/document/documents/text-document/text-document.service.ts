@@ -251,7 +251,11 @@ export class TextDocumentLifetimeContributor implements IChatLifetimeContributor
                 {
                     location: MessagePositionTypes.AfterInstructions,
                     message: new SystemMessage(this.getInstructions(), { textDocumentId: this.documentId })
-                }
+                },
+                {
+                    location: MessagePositionTypes.AfterInstructions,
+                    message: new SystemMessage(`Regarding the document ${this.documentId}, understand the following instructions and information:\n${this.document.data.description}`)
+                },
             ];
         }
 

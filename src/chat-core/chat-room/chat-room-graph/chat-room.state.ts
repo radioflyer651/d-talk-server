@@ -23,7 +23,9 @@ export const ChatState = Annotation.Root({
     /** All tools that are available to be called for an agent. */
     tools: Annotation<(ToolNode | StructuredToolInterface)[]>,
     /** A set of messages that were added to the chat history during this graph execution. */
-    newMessages: Annotation<BaseMessage[]>
+    newMessages: Annotation<BaseMessage[]>,
+    /** Boolean value indicating whether or not to log node actions to the console, as they happen. */
+    logStepsToConsole: Annotation<boolean>,
 });
 
 export const ChatCallState = Annotation.Root({
@@ -34,4 +36,6 @@ export const ChatCallState = Annotation.Root({
     lifetimeContributors: Annotation<IChatLifetimeContributor[]>,
     /** The chat model that LLM calls will be made with. */
     chatModel: Annotation<BaseChatModel>,
+    /** Boolean value indicating whether or not to log node actions to the console, as they happen. */
+    logStepsToConsole: Annotation<boolean>,
 });

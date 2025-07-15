@@ -218,6 +218,7 @@ export class ChatRoom implements IChatLifetimeContributor {
                 chatModel: agent.chatModel,
                 lifetimeContributors: contributors,
                 messageHistory: history,
+                logStepsToConsole: false,
             };
 
             // Create the graph instance.
@@ -291,6 +292,7 @@ export class ChatRoom implements IChatLifetimeContributor {
                 if (lastMessage) {
                     this.messages = lastMessage.messageHistory;
                 } else {
+                    this.logError({ message: `Expected messages to be returned from call graph, but got none.` });
                     throw new Error(`Expected messages to be returned from call graph, but got none.`);
                 }
             }
@@ -324,7 +326,6 @@ export class ChatRoom implements IChatLifetimeContributor {
         return hydratePositionableMessages(allMessages);
     }
 
-
     /** Updates the data property on this chat room, synchronizing it with the chat room data. */
     public updateDataForStorage(): void {
         this.data.conversation = mapChatMessagesToStoredMessages(this.messages);
@@ -351,18 +352,19 @@ export class ChatRoom implements IChatLifetimeContributor {
     private _currentlyExecutingJob: ChatJob | undefined;
 
     async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
-        // Get the final message.
-        const finalMessage = newMessages[newMessages.length - 1];
+        // Emit all new messages.
+        newMessages.forEach(m => {
+            // Get the last message.
+            this._events.next(<ChatRoomMessageEvent>{
+                agentId: this._currentlyExecutingJob!.agentId,
+                agentType: 'agent',
+                chatRoomId: this.data._id,
+                dateTime: new Date(),
+                eventType: 'new-chat-message',
+                message: m,
+                messageId: m.id!,
+            });
 
-        // Get the last message.
-        this._events.next(<ChatRoomMessageEvent>{
-            agentId: this._currentlyExecutingJob!.agentId,
-            agentType: 'agent',
-            chatRoomId: this.data._id,
-            dateTime: new Date(),
-            eventType: 'new-chat-message',
-            message: finalMessage,
-            messageId: finalMessage.id!,
         });
     }
 }

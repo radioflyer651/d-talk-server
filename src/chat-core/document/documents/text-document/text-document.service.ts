@@ -12,6 +12,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { MessagePositionTypes, PositionableMessage } from "../../../../model/shared-models/chat-core/positionable-message.model";
 import { createTextDocumentTools } from "./text-document-edit.tools";
+import { ChatDocumentPermissions } from "../../../../model/shared-models/chat-core/documents/chat-document-permissions.model";
 
 
 export class TextDocument extends ChatDocument {
@@ -44,15 +45,7 @@ export class TextDocument extends ChatDocument {
     async getLifetimeContributors(chatRoom: ChatRoom, chatJob: ChatJob, chatAgent: Agent): Promise<IChatLifetimeContributor[]> {
         // Get the permissions.
         const permissions = this.determinePermissions(chatRoom, chatJob, chatAgent);
-
-        const tools = createTextDocumentTools({
-            agentId: chatAgent.identity._id,
-            document: this,
-            onContentChanged: async () => { },
-            permissions: permissions,
-        });
-
-        return [new TextDocumentLifetimeContributor(this, tools)];
+        return [new TextDocumentLifetimeContributor(this, permissions, chatAgent.data._id)];
     }
 
     updateChangeInfo(updatedBy: { entityType: 'user' | 'agent', id: ObjectId; }) {
@@ -202,12 +195,54 @@ export class TextDocument extends ChatDocument {
 }
 
 export class TextDocumentLifetimeContributor implements IChatLifetimeContributor {
-    constructor(readonly document: TextDocument, readonly tools: (ToolNode | StructuredToolInterface)[]) {
-
+    constructor(readonly document: TextDocument,
+        readonly permissions: ChatDocumentPermissions,
+        agentId: ObjectId,
+    ) {
+        this.tools = createTextDocumentTools({
+            agentId: agentId,
+            document: this.document,
+            onContentChanged: async () => {
+                this.isDataChanged = true;
+            },
+            permissions: permissions,
+        });
     }
+
+    private isDataChanged: boolean = false;
+
+    readonly tools: (ToolNode | StructuredToolInterface)[];
 
     async getTools(): Promise<(ToolNode | StructuredToolInterface)[]> {
         return this.tools;
+    }
+
+    private getInstructions(isUpdated: boolean = false) {
+        const updateText = isUpdated
+            ? `This is the updated message content since your last change.\n`
+            : '';
+        return `You have access to the document ${this.document.data.name} (ID: ${this.document.data._id.toString()}).  You have tools allowing you to work with it.` +
+            updateText +
+            `Below is the entire document:\n${JSON.stringify(this.document.data)}`;
+    }
+
+    /** Returns the ID of the document this was created by. */
+    get documentId(): string {
+        return this.document.data._id.toString();
+    }
+
+    /** Removes messages created by this contributor from a specified set of BaseMessages. */
+    private removeOwnMessages(messages: BaseMessage[]) {
+        // Find the target messages, and their indexes.  Then reverse the order, so we can delete them one-by-one.
+        const messageIdList = messages
+            .map((m, i) => ({ index: i, message: m, isMine: m.additional_kwargs?.textDocumentId === this.documentId }))
+            .filter(m => m.isMine)
+            .reverse();
+
+        // Remove the ones we don't need.
+        messageIdList.forEach(m => {
+            messages.splice(m.index, 1);
+        });
     }
 
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
@@ -215,14 +250,27 @@ export class TextDocumentLifetimeContributor implements IChatLifetimeContributor
             return [
                 {
                     location: MessagePositionTypes.AfterInstructions,
-                    message: new SystemMessage(`
-You have access to the document ${this.document.data.name} (ID: ${this.document.data._id.toString()}).  You have tools allowing you to work with it.
-Below is the entire document:\n${JSON.stringify(this.document.data)}
-                    `)
+                    message: new SystemMessage(this.getInstructions(), { textDocumentId: this.documentId })
                 }
             ];
         }
 
         return [];
+    }
+
+    async peekToolCallMessages(messageHistory: BaseMessage[], callMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
+        // Exit if nothing's changed.
+        if (!this.isDataChanged) {
+            return;
+        }
+
+        // Reset the flag in case another tool call is made.
+        this.isDataChanged = false;
+
+        // Remove the previous messages.
+        this.removeOwnMessages(callMessages);
+
+        // Insert our updated instructions.
+        callMessages.push(new SystemMessage(this.getInstructions()));
     }
 }

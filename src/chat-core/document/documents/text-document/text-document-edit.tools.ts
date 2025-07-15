@@ -7,7 +7,8 @@ import { type TextDocument } from "./text-document.service";
 
 
 
-const orderOfOpsNote = `IMPORTANT: If deleting lines and editing lines, do the deletions first, and then make a separate call later to update lines, since the line numbers will change after deletions.`;
+const commonNotes = `IMPORTANT: If deleting lines and editing lines, do the deletions first, and then make a separate call later to update lines, since the line numbers will change after deletions.\n` +
+    `After edits occur, the return message will include the updated document information, and the old document information will be removed.`;
 
 export interface DocumentFunctionInfo {
     document: TextDocument;
@@ -22,7 +23,7 @@ export function createEditDocumentLinesTool(info: DocumentFunctionInfo) {
 
     const editDocumentSchema = {
         name: 'edit_document_lines_' + data._id.toString(),
-        description: `Edits lines on the document ${data.name} (id: ${data._id.toString()})\n${orderOfOpsNote}`,
+        description: `Edits lines on the document ${data.name} (id: ${data._id.toString()})\n${commonNotes}`,
         schema: z.object({
             lines: z.array(z.object({
                 lineNumber: z.number().int(),
@@ -50,7 +51,7 @@ export function createDeleteDocumentLinesTool(info: DocumentFunctionInfo) {
 
     const deleteLineSchema = {
         name: 'delete_document_lines_' + data._id.toString(),
-        description: `Edits lines on the document ${data.name} (id: ${data._id.toString()})\n${orderOfOpsNote}`,
+        description: `Edits lines on the document ${data.name} (id: ${data._id.toString()})\n${commonNotes}`,
         schema: z.object({
             lines: z.array(z.number().int())
         })
@@ -74,7 +75,7 @@ export function createEditDocumentContentTool(info: DocumentFunctionInfo) {
 
     const deleteLineSchema = {
         name: 'edit_document_full_content' + data._id.toString(),
-        description: `Replaces the entire content of the document ${data.name} (id: ${data._id.toString()})\n${orderOfOpsNote}`,
+        description: `Replaces the entire content of the document ${data.name} (id: ${data._id.toString()})\n${commonNotes}`,
         schema: z.object({
             newContent: z.string()
         })

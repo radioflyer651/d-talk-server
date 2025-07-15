@@ -56,16 +56,18 @@ export class Agent implements IChatLifetimeContributor {
     }
 
     async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
-        // Get the last message, and add our name to it.
-        const lastMessage = newMessages[newMessages.length - 1];
-
-        if (!lastMessage) {
+        if (newMessages.length < 1) {
             return;
         }
 
+        // Get a name that will work with the rules of the naming on messages.
         const name = sanitizeMessageName(this.myName);
-        lastMessage.name = name;
-        setSpeakerOnMessage(lastMessage, { speakerType: 'agent', speakerId: this.data._id.toString(), name: name });
+
+        // Add this agent's name to all of the new messages.
+        newMessages.forEach(message => {
+            message.name = name;
+            setSpeakerOnMessage(message, { speakerType: 'agent', speakerId: this.data._id.toString(), name: name });
+        });
     }
 
     async peekToolCallMessages(messageHistory: BaseMessage[], messageCalls: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {

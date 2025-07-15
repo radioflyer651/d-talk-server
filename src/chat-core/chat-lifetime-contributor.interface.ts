@@ -49,7 +49,7 @@ export interface IChatLifetimeContributor {
     handleReply?(reply: AIMessage): Promise<undefined | PositionableMessage<BaseMessage>[]>;
 
     /** Called after any tools are executed, and passes the message histories. */
-    peekToolCallMessages?(messageHistory: BaseMessage[], messageCalls: BaseMessage[], newMessages: BaseMessage[]): Promise<void>;
+    peekToolCallMessages?(messageHistory: BaseMessage[], callMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void>;
 
     /**
      * Called at the end of the chat session, allowing the contributor to finalize or clean up resources.

@@ -41,7 +41,8 @@ export async function startChatCall(state: typeof ChatCallState.State): Promise<
         tools: [], // This will be filled in later.
         makeReplyCall: false,
         replyCount: 0,
-        newMessages: []
+        newMessages: [],
+        logStepsToConsole: state.logStepsToConsole,
     };
 }
 
@@ -49,6 +50,9 @@ export async function startChatCall(state: typeof ChatCallState.State): Promise<
  * Calls the initialize method on all lifetime contributors that implement it.
  */
 export async function initializeLifetime(state: typeof ChatState.State) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] initialLifetime`, state);
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'forward');
 
     // Gather all initialize promises from contributors that implement the method
@@ -59,6 +63,9 @@ export async function initializeLifetime(state: typeof ChatState.State) {
     // Wait for all contributors to finish initialization
     await Promise.all(initializePromises);
 
+    if (state.logStepsToConsole) {
+        console.log(`[end] initialLifetime`, state);
+    }
     return state;
 }
 
@@ -66,6 +73,9 @@ export async function initializeLifetime(state: typeof ChatState.State) {
  * Calls the preChat method on all lifetime contributors that implement it, allowing them to process callMessages before chat starts.
  */
 export async function preChat(state: typeof ChatState.State) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] preChat`, state);
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'forward');
 
     // Let each contributor process callMessages before chat starts
@@ -76,6 +86,10 @@ export async function preChat(state: typeof ChatState.State) {
     // Wait for all preChat hooks to complete
     await Promise.all(preChatPromises);
 
+    if (state.logStepsToConsole) {
+        console.log(`[end] preChat`, state);
+    }
+
     return state;
 }
 
@@ -83,6 +97,9 @@ export async function preChat(state: typeof ChatState.State) {
  * Allows each lifetime contributor to modify the callMessages before the chat call is made.
  */
 export async function modifyCallMessages(state: typeof ChatState.State) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] modifyCallMessages`, state);
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'forward');
 
     let callMessages = state.callMessages;
@@ -95,6 +112,10 @@ export async function modifyCallMessages(state: typeof ChatState.State) {
 
     state.callMessages = callMessages;
 
+    if (state.logStepsToConsole) {
+        console.log(`[end] modifyCallMessages`, state);
+    }
+
     return state;
 }
 
@@ -102,6 +123,9 @@ export async function modifyCallMessages(state: typeof ChatState.State) {
  * Collects pre-chat messages from all contributors that implement addPreChatMessages and prepends them to callMessages.
  */
 export async function addPreChatMessages(state: typeof ChatState.State) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] addPreChatMessages`, state);
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'forward');
 
     const chatCallInfo: ChatCallInfo = { replyNumber: state.replyCount, callMessages: state.callMessages, messageHistory: state.messageHistory };
@@ -117,10 +141,17 @@ export async function addPreChatMessages(state: typeof ChatState.State) {
 
     // Prepend pre-chat messages to the callMessages
     state.callMessages = insertPositionableMessages(preChatMessages, state.callMessages);
+
+    if (state.logStepsToConsole) {
+        console.log(`[end] addPreChatMessages`, state);
+    }
     return state;
 }
 
 export async function inspectChatCallMessages(state: typeof ChatState.State) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] inspectChatCallMessages`, state);
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'reverse');
 
     // Let all contributors finalize or clean up after the chat is complete
@@ -131,6 +162,10 @@ export async function inspectChatCallMessages(state: typeof ChatState.State) {
     // Wait for all chatComplete hooks to finish
     await Promise.all(promises);
 
+    if (state.logStepsToConsole) {
+        console.log(`[end] inspectChatCallMessages`, state);
+    }
+
     // Return the final state
     return state;
 }
@@ -139,6 +174,9 @@ export async function inspectChatCallMessages(state: typeof ChatState.State) {
  * Handles the reply from the chat call by letting contributors process the reply and insert any new messages if needed.
  */
 export async function handleReply(state: typeof ChatState.State, reply: any) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] handleReply`, state, reply);
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'reverse');
 
     // Let each contributor handle the reply if they implement handleReply
@@ -164,6 +202,10 @@ export async function handleReply(state: typeof ChatState.State, reply: any) {
         state.makeReplyCall = true;
     }
 
+    if (state.logStepsToConsole) {
+        console.log(`[end] handleReply`, state, reply);
+    }
+
     return state;
 }
 
@@ -171,6 +213,9 @@ export async function handleReply(state: typeof ChatState.State, reply: any) {
  * Calls chatComplete on all contributors that implement it, allowing them to finalize or clean up after the chat is complete.
  */
 export async function chatComplete(state: typeof ChatState.State) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] chatComplete`, state);
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'reverse');
 
     // Let all contributors finalize or clean up after the chat is complete
@@ -181,22 +226,36 @@ export async function chatComplete(state: typeof ChatState.State) {
     // Wait for all chatComplete hooks to finish
     await Promise.all(promises);
 
+    if (state.logStepsToConsole) {
+        console.log(`[end] chatComplete`, state);
+    }
+
     // Return the final state
     return state;
 }
 
 /** Adds the tools from the lifetimeContributors, to the state, so they can be defined and called. */
 export async function getTools(state: typeof ChatState.State) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] getTools`, state);
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'forward');
 
     const toolPromises = contributors.filter(c => !!c.getTools).map(c => c.getTools!());
     const toolList = (await Promise.all(toolPromises)).filter(x => !!x).reduce((p, c) => [...p, ...c], []);
     state.tools = toolList;
+
+    if (state.logStepsToConsole) {
+        console.log(`[end] getTools`, state);
+    }
     return state;
 }
 
 /** Calls the tools from a chat call response. */
 export async function callTools(state: typeof ChatState.State) {
+    if (state.logStepsToConsole) {
+        console.log(`[start] callTools`, state);
+    }
     // Get the tool call.
     const toolMessage = state.messageHistory[state.messageHistory.length - 1] as AIMessage;
 
@@ -236,16 +295,28 @@ export async function callTools(state: typeof ChatState.State) {
     state.messageHistory.push(...results);
     state.newMessages.push(...results);
 
+    if (state.logStepsToConsole) {
+        console.log(`[end] callTools`, state);
+    }
+
+    return state;
 }
 
 /** Calls the peekToolCallMessages on each lifetime contributor, allowing it to react to the new tool messages before they're passed back to the LLM.. */
 export async function peekToolCallMessages(state: typeof ChatState.State) {
+    if(state.logStepsToConsole){
+        console.log(`[start] peekToolCallMessages`, state)
+    }
     const contributors = getSortedContributors(state.lifetimeContributors, 'reverse');
 
     for (const contributor of contributors) {
         if (typeof contributor.peekToolCallMessages === 'function') {
             await contributor.peekToolCallMessages(state.messageHistory, state.callMessages, state.newMessages);
         }
+    }
+
+    if(state.logStepsToConsole){
+        console.log(`[end] peekToolCallMessages`, state)
     }
     return state;
 }
@@ -254,6 +325,9 @@ export async function peekToolCallMessages(state: typeof ChatState.State) {
  * The main chat call node. This is where the actual chat logic (e.g., LLM call) would be implemented.
  */
 export async function chatCall(state: typeof ChatState.State) {
+    if(state.logStepsToConsole){
+        console.log(`[start] chatCall`, state)
+    }
     // Reset makeReplyCall since this is a new chat call
     state.makeReplyCall = false;
 
@@ -276,6 +350,10 @@ export async function chatCall(state: typeof ChatState.State) {
     state.callMessages.push(result);
     state.messageHistory.push(result);
     state.newMessages.push(result);
+
+    if(state.logStepsToConsole){
+        console.log(`[end] chatCall`, state)
+    }
 
     // For now, just return the state as-is
     return state;

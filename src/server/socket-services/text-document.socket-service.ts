@@ -59,6 +59,7 @@ export class TextDocumentSocketService extends SocketServiceBase {
                             throw new Error(`Document not a text document.`);
                         }
                         const textDocument = document as TextDocumentData;
+                        textDocument.content = args.newContent;
 
                         await this.documentDbService.updateDocument(document._id, {
                             //@ts-ignore We know that this derived document type has content.
@@ -73,14 +74,14 @@ export class TextDocumentSocketService extends SocketServiceBase {
                 const { event, document } = ev;
 
                 // Inform subscribers of the update.
-                this.socketServer.emitEventToRoomExceptTo(TEXT_DOCUMENT_CONTENT_CHANGE, getTextDocumentRoomName(document._id), ev.event.socket, event.eventName, ...event.data);
+                this.socketServer.emitEventToRoomExceptTo(TEXT_DOCUMENT_CONTENT_CHANGE, getTextDocumentRoomName(document._id), ev.event.socket, ...event.data);
             });
     }
 
     /** Sends updates about text document content to the front end. */
     async sendChangeToDocument(documentId: ObjectId, textDocument: TextDocumentData): Promise<void> {
         // Inform subscribers of the update.
-        this.socketServer.emitEventToRoom(TEXT_DOCUMENT_CONTENT_CHANGE, getTextDocumentRoomName(documentId), textDocument.content);
+        this.socketServer.emitEventToRoom(TEXT_DOCUMENT_CONTENT_CHANGE, getTextDocumentRoomName(documentId), <TextDocumentContentChangeMessage> { documentId: documentId, newContent: textDocument.content });
     }
 
     /** Hooks up event handlers to a specified text document. */

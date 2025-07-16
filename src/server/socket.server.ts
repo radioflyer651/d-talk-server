@@ -324,12 +324,12 @@ export class SocketServer {
     }
 
     /** Emits an event to a "room", which is like a group. */
-    emitEventToRoom(roomName: string, eventName: string, ...args: any[]): void {
+    emitEventToRoom(eventName: string, roomName: string, ...args: any[]): void {
         this.socketServer.in(roomName).emit(eventName, ...args);
     }
 
     /** Emits an event to a "room", which is like a group. */
-    emitEventToRoomExceptTo(roomName: string, eventName: string, excludeSocket: Socket, ...args: any[]): void {
+    emitEventToRoomExceptTo(eventName: string, roomName: string, excludeSocket: Socket, ...args: any[]): void {
         excludeSocket.broadcast.in(roomName).emit(eventName, ...args);
     }
 

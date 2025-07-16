@@ -10,7 +10,8 @@ import { TextDocument } from "../documents/text-document/text-document.service";
 
 export class TextDocumentResolver implements IDocumentResolver<TextDocument, TextDocumentData> {
     constructor(
-        readonly textDocumentSocketService: TextDocumentSocketService,
+        // This needs to be moved, and not part of the resolver.
+        public textDocumentSocketService: TextDocumentSocketService,
     ) {
 
     }

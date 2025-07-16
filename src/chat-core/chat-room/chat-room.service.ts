@@ -342,7 +342,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
 
     /** Updates the data property on this chat room, synchronizing it with the chat room data. */
     public updateDataForStorage(): void {
-        this.data.conversation = mapChatMessagesToStoredMessages(this.messages);
+        this.data.conversation = mapChatMessagesToStoredMessages(this.messages ?? []);
     }
 
     /** Saves the state of the chat room. */

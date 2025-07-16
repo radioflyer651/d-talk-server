@@ -3,6 +3,7 @@ import { LabeledMemoryPluginState } from "./labeled-plugin-memory-plugin.state";
 import { LabeledMemoryPluginParams } from "../../../../model/shared-models/chat-core/plugins/labeled-memory-plugin.params";
 import { getMemoryTools } from "./labeled-plugin-memory-plugin.tools";
 import { END } from "@langchain/langgraph";
+import { cleanToolMessagesForChat } from "../../../utilities/clean-tool-messages-for-chat.utils";
 
 const memoryStoreInstructions =
     `
@@ -48,11 +49,14 @@ export async function initializeCall(state: typeof LabeledMemoryPluginState.Stat
 }
 
 export async function addMemoryInstructions(state: typeof LabeledMemoryPluginState.State) {
+    // Create a copy of the message history.
+    const messageHistory = cleanToolMessagesForChat(state.originalChatHistory);
+
     // Get the right message history.
     if (state.operationType === 'retrieve') {
-        state.messages = getRetrievalInstructions(state.memoryParams, state.originalChatHistory);
+        state.messages = getRetrievalInstructions(state.memoryParams, messageHistory);
     } else if (state.operationType === 'store') {
-        state.messages = getStorageInstructions(state.memoryParams, state.originalChatHistory);
+        state.messages = getStorageInstructions(state.memoryParams, messageHistory);
     } else {
         throw new Error(`Memory operation type not implemented: ${state.operationType}`);
     }

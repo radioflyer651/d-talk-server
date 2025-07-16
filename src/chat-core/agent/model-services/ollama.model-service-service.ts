@@ -12,8 +12,9 @@ export class OllamaAiAgentService extends ModelServiceBase {
         // Create the parameters for the model creation.
         const ollamaParams: ChatOllamaInput = {
             maxRetries: 5,
+            think: false,
             ...params
-        };
+        } as any;
 
         // Create and return the model.
         return new ChatOllama(ollamaParams);

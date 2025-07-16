@@ -4,6 +4,7 @@ import { insertPositionableMessages } from "../../utilities/insert-positionable-
 import { setMessageId } from "../../utilities/set-message-id.util";
 import { ChatCallState, ChatState } from "./chat-room.state";
 import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
+import { cleanToolMessagesForChat } from "../../utilities/clean-tool-messages-for-chat.utils";
 
 /** Returns a sorted version of the lifetime contributor list. */
 function getSortedContributors(contributors: IChatLifetimeContributor[], direction: 'forward' | 'reverse'): IChatLifetimeContributor[] {
@@ -304,8 +305,8 @@ export async function callTools(state: typeof ChatState.State) {
 
 /** Calls the peekToolCallMessages on each lifetime contributor, allowing it to react to the new tool messages before they're passed back to the LLM.. */
 export async function peekToolCallMessages(state: typeof ChatState.State) {
-    if(state.logStepsToConsole){
-        console.log(`[start] peekToolCallMessages`, state)
+    if (state.logStepsToConsole) {
+        console.log(`[start] peekToolCallMessages`, state);
     }
     const contributors = getSortedContributors(state.lifetimeContributors, 'reverse');
 
@@ -315,8 +316,8 @@ export async function peekToolCallMessages(state: typeof ChatState.State) {
         }
     }
 
-    if(state.logStepsToConsole){
-        console.log(`[end] peekToolCallMessages`, state)
+    if (state.logStepsToConsole) {
+        console.log(`[end] peekToolCallMessages`, state);
     }
     return state;
 }
@@ -325,8 +326,8 @@ export async function peekToolCallMessages(state: typeof ChatState.State) {
  * The main chat call node. This is where the actual chat logic (e.g., LLM call) would be implemented.
  */
 export async function chatCall(state: typeof ChatState.State) {
-    if(state.logStepsToConsole){
-        console.log(`[start] chatCall`, state)
+    if (state.logStepsToConsole) {
+        console.log(`[start] chatCall`, state);
     }
     // Reset makeReplyCall since this is a new chat call
     state.makeReplyCall = false;
@@ -336,12 +337,14 @@ export async function chatCall(state: typeof ChatState.State) {
     // Get the LLM.  Handle the addition to the tools, if we can.
     let llm = state.chatModel;
 
+    const callMessages = cleanToolMessagesForChat(state.callMessages);
+
     // Make the LLM call.
     let result: AIMessageChunk;
     if (llm.bindTools && tools.length > 0) {
-        result = await llm.bindTools(tools).invoke(state.callMessages);
+        result = await llm.bindTools(tools).invoke(callMessages);
     } else {
-        result = await llm.invoke(state.callMessages);
+        result = await llm.invoke(callMessages);
     }
 
     setMessageId(result);
@@ -351,11 +354,10 @@ export async function chatCall(state: typeof ChatState.State) {
     state.messageHistory.push(result);
     state.newMessages.push(result);
 
-    if(state.logStepsToConsole){
-        console.log(`[end] chatCall`, state)
+    if (state.logStepsToConsole) {
+        console.log(`[end] chatCall`, state);
     }
 
     // For now, just return the state as-is
     return state;
 }
-

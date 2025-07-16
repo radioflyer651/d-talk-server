@@ -1,5 +1,6 @@
 import { chatRoomDbService, agentServiceFactory, pluginResolver, jobHydratorService, agentDbService, authDbService, agentInstanceDbService, chatRoomHydratorService, chatDocumentDbService, projectDbService } from "./app-globals";
 import { ChattingService } from "./chat-core/chatting/chatting.service";
+import { textDocumentResolver } from "./document-type-resolvers";
 import { ChatRoomSocketServer } from "./server/socket-services/chat-room.socket-service";
 import { TextDocumentSocketService } from "./server/socket-services/text-document.socket-service";
 import { SocketServer } from "./server/socket.server";
@@ -33,6 +34,8 @@ export async function setupSocketServices(socketServer: SocketServer): Promise<v
         projectDbService,
     );
     await textDocumentSocketServer.initialize();
+    // This shouldn't have to be here... It's shameful.
+    textDocumentResolver.textDocumentSocketService = textDocumentSocketServer;
 
     chattingService = new ChattingService(
         agentServiceFactory,

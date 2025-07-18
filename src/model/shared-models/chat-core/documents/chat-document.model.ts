@@ -33,4 +33,4 @@ export interface IChatDocumentData {
 
 }
 
-export type IChatDocumentCreationParams = Pick<IChatDocumentData, 'name' | 'type' | 'folderLocation' | 'projectId' | 'lastChangedBy'>;
+export type IChatDocumentCreationParams = Pick<IChatDocumentData, 'name' | 'type' | 'folderLocation' | 'folderLocation' | 'description' | 'projectId' | 'lastChangedBy'>;

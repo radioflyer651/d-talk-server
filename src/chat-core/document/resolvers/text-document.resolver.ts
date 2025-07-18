@@ -27,7 +27,6 @@ export class TextDocumentResolver implements IDocumentResolver<TextDocument, Tex
             comments: [],
             updatedDate: new Date(),
             createdDate: new Date(),
-            description: '',
         };
 
         return data;

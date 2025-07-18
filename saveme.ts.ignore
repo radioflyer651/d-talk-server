@@ -1,0 +1,15 @@
+import { CustomChatFormatting } from "./src/model/shared-models/chat-core/model-service-params.model";
+
+let chatFormatting: CustomChatFormatting;
+
+chatFormatting = {
+    aiMarkers: { openDelimiter: '<|start_header_id|>assistant<|end_header_text|>\n\n', closeDelimiter: '<|eot_id|>' },
+    systemMarkers: { openDelimiter: '<|start_header_id|>system<|end_header_text|>\n\n', closeDelimiter: '<|eot_id|>' },
+    userMarkers: { openDelimiter: '<|start_header_id|>user<|end_header_text|>\n\n', closeDelimiter: '<|eot_id|>' },
+};
+
+chatFormatting = {
+    aiMarkers: { openDelimiter: '<|assistant|>\n\n', closeDelimiter: '</s>' },
+    systemMarkers: { openDelimiter: '<|system|>\n\n', closeDelimiter: '</s>' },
+    userMarkers: { openDelimiter: '<|user|>\n\n', closeDelimiter: '</s>' },
+};

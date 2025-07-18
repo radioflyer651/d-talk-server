@@ -10,5 +10,6 @@ export enum DbCollectionNames {
     ChatJobs = 'chat-jobs',
     UserSecrets = 'user-secrets',
     AgentConfigurations = 'agent-configurations',
-    ChatDocuments = 'chat-documents'
+    ChatDocuments = 'chat-documents',
+    OllamaModelConfigurations = 'ollama-model-configurations'
 }

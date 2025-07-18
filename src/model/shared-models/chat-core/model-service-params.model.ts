@@ -6,8 +6,6 @@ export interface ModelServiceParams<T extends object = object> {
     /** The parameters to provide to the chat service upon creation.
      *   Since each service is different, this value will differ. */
     serviceParams: T;
-
-    chatFormatting?: CustomChatFormatting;
 }
 
 export interface ChatMarkers {

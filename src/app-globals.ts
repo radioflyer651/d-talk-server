@@ -12,7 +12,6 @@ import { AgentServiceFactory } from "./chat-core/agent-factory.service";
 import { ModelServiceResolver } from "./chat-core/agent/model-services/model-service-resolver";
 import { AppPluginResolver } from "./chat-core/agent-plugin/app-plugin-resolver.service";
 import { JobHydrator } from "./chat-core/chat-room/chat-job.hydrator.service";
-import { modelResolverServices } from "./model-service-instances";
 import { initializePluginTypeResolvers, pluginTypeResolvers } from "./plugin-type-resolvers";
 import { SocketServer } from "./server/socket.server";
 import { AgentInstanceDbService } from "./database/chat-core/agent-instance-db.service";
@@ -20,6 +19,9 @@ import { ChatRoomHydratorService } from "./chat-core/chat-room/chat-room-hydrato
 import { ChatDocumentDbService } from "./database/chat-core/chat-document-db.service";
 import { ChatDocumentResolutionService } from "./chat-core/document/document-resolution.service";
 import { documentTypeResolvers, initializeDocumentTypeResolvers } from "./document-type-resolvers";
+import { OllamaModelConfigurationDbService as OllamaModelConfigDbService } from "./database/chat-core/ollama-configurations-db.service";
+import { OllamaAiAgentService } from "./chat-core/agent/model-services/ollama.model-service-service";
+import { OpenAiAgentService } from "./chat-core/agent/model-services/open-model-service";
 /** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
 
 /** The mongo helper used in all DB Services. */
@@ -34,6 +36,7 @@ export let chatJobDbService: ChatJobDbService;
 export let chatRoomDbService: ChatRoomDbService;
 export let agentInstanceDbService: AgentInstanceDbService;
 export let chatDocumentDbService: ChatDocumentDbService;
+export let ollamaModelConfigDbService: OllamaModelConfigDbService;
 
 // Chat-Core services.
 export let agentServiceFactory: AgentServiceFactory;
@@ -66,6 +69,7 @@ export async function initializeServices(): Promise<void> {
     agentDbService = new AgentDbService(dbHelper);
     agentInstanceDbService = new AgentInstanceDbService(dbHelper);
     chatDocumentDbService = new ChatDocumentDbService(dbHelper);
+    ollamaModelConfigDbService = new OllamaModelConfigDbService(dbHelper);
 
     /* App Services. */
     authService = new AuthService(authDbService, loggingService);
@@ -79,7 +83,10 @@ export async function initializeServices(): Promise<void> {
         chatJobDbService,
         projectDbService
     );
-    modelResolver = new ModelServiceResolver(modelResolverServices);
+    modelResolver = new ModelServiceResolver([
+        new OllamaAiAgentService(ollamaModelConfigDbService),
+        new OpenAiAgentService(),
+    ]);
     await initializePluginTypeResolvers(config);
     await initializeDocumentTypeResolvers(config);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);

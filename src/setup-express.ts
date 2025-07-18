@@ -17,6 +17,7 @@ import { chatRoomsServer } from './server/chat-rooms.server';
 import { agentInstanceServer } from './server/agent-instances.server';
 import { chattingServer } from './server/chatting.server';
 import { chatDocumentsServer } from './server/chat-documents.server';
+import { ollamaModelConfigServer } from './server/ollama-model-config.server';
 
 /** Initializes all routes and middleware for an express app. */
 export async function initializeExpressApp() {
@@ -102,6 +103,7 @@ export async function initializeExpressApp() {
   app.use(agentInstanceServer);
   app.use(chattingServer);
   app.use(chatDocumentsServer);
+  app.use(ollamaModelConfigServer);
 
   app.use((req, res) => {
     res.status(404).send('Not Found');

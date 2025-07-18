@@ -67,7 +67,7 @@ export class LabeledMemoryPlugin extends AgentPluginBase implements IChatLifetim
 
         // Execute the graph.
         const graph = getLabeledMemoryPluginGraph();
-        const result = await graph.invoke(state, { recursionLimit: 15 });
+        const result = await graph.invoke(state, { recursionLimit: 80 });
 
         // There's nothing to do here - this is for storage.
     }

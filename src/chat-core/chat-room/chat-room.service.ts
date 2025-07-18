@@ -15,7 +15,6 @@ import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
 import { Agent } from "../agent/agent.service";
 import { StreamEvent } from "@langchain/core/tracers/log_stream";
-import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
 import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
 import { Project } from "../../model/shared-models/chat-core/project.model";
@@ -207,8 +206,13 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
                 p.chatJob = job;
             });
 
+            // Get the documents.
             const documentContributorsP = this.documents?.map(d => d.getLifetimeContributors(this, job, agent)) ?? [];
-            const documentContributors = (await Promise.all(documentContributorsP)).reduce((p, c) => [...p, ...c], []);
+            let documentContributors = (await Promise.all(documentContributorsP)).reduce((p, c) => [...p, ...c], []);
+
+            // Any document that has no permissions should be removed.
+            documentContributors = documentContributors.filter(d => Object.values(d).some(v => v === true));
+
 
             // Create the lifetime contributors for this chat interaction.
             const contributors: IChatLifetimeContributor[] = [

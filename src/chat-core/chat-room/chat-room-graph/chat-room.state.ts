@@ -4,6 +4,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { DynamicTool, StructuredToolInterface } from "@langchain/core/tools";
 import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { CustomChatFormatting } from "../../../model/shared-models/chat-core/model-service-params.model";
 
 
 export const ChatState = Annotation.Root({
@@ -26,6 +27,8 @@ export const ChatState = Annotation.Root({
     newMessages: Annotation<BaseMessage[]>,
     /** Boolean value indicating whether or not to log node actions to the console, as they happen. */
     logStepsToConsole: Annotation<boolean>,
+
+    chatFormatting: Annotation<CustomChatFormatting | undefined>,
 });
 
 export const ChatCallState = Annotation.Root({
@@ -38,4 +41,6 @@ export const ChatCallState = Annotation.Root({
     chatModel: Annotation<BaseChatModel>,
     /** Boolean value indicating whether or not to log node actions to the console, as they happen. */
     logStepsToConsole: Annotation<boolean>,
+
+    chatFormatting: Annotation<CustomChatFormatting | undefined>,
 });

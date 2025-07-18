@@ -233,6 +233,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
                 lifetimeContributors: contributors,
                 messageHistory: history,
                 logStepsToConsole: false,
+                chatFormatting: agent.chatFormatting,
             };
 
             // Create the graph instance.

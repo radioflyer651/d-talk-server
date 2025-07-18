@@ -10,6 +10,7 @@ import { hydratePositionableMessages } from "../../utils/positionable-message-hy
 import { ChatRoom } from "../chat-room/chat-room.service";
 import { sanitizeMessageName } from "../../utils/sanitize-message-name.utils";
 import { IDisposable } from "../disposable.interface";
+import { CustomChatFormatting } from "../../model/shared-models/chat-core/model-service-params.model";
 
 export class Agent implements IChatLifetimeContributor, IDisposable {
     // The configuration for this agent instance
@@ -24,6 +25,7 @@ export class Agent implements IChatLifetimeContributor, IDisposable {
         /** The configuration related to this agent instance. */
         identity: ChatAgentIdentityConfiguration,
         chatModel: BaseChatModel,
+        readonly chatFormatting: CustomChatFormatting | undefined,
         plugins: AgentPluginBase[] = []
     ) {
         this.data = config;

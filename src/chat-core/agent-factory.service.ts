@@ -29,10 +29,12 @@ export class AgentServiceFactory {
         }
 
         // Get the model for this configuration.
+        const chatFormattingP = this.modelResolver.getModelFormatting(identity.modelInfo);
         const model = await this.modelResolver.getModel(identity.modelInfo);
+        const chatFormatting = await chatFormattingP;
 
         // Create the agent.
-        const agent = new Agent(configuration, identity, model);
+        const agent = new Agent(configuration, identity, model, chatFormatting);
 
         // Hydrate the plugins for this agent.
         configuration.plugins = configuration.plugins ?? [];
@@ -51,7 +53,9 @@ export class AgentServiceFactory {
     /** Initializes and returns a new agent, giving a specified identity. */
     async createAgent(identity: ChatAgentIdentityConfiguration): Promise<Agent> {
         // Get the model.
+        const chatFormattingP = this.modelResolver.getModelFormatting(identity.modelInfo);
         const model = await this.modelResolver.getModel(identity.modelInfo);
+        const chatFormatting = await chatFormattingP;
 
         // Create the configuration for the agent.
         const configuration = {
@@ -64,7 +68,7 @@ export class AgentServiceFactory {
         } as AgentInstanceConfiguration;
 
         // Create the agent.
-        const agent = new Agent(configuration, identity, model);
+        const agent = new Agent(configuration, identity, model, chatFormatting);
 
         // Hydrate the plugins for this agent.
         const hydratedPlugins = await this.pluginResolver.hydrateAllPlugins(identity.plugins, configuration.plugins, agent, true);

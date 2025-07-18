@@ -5,6 +5,7 @@ import { setMessageId } from "../../utilities/set-message-id.util";
 import { ChatCallState, ChatState } from "./chat-room.state";
 import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 import { cleanToolMessagesForChat } from "../../utilities/clean-tool-messages-for-chat.utils";
+import { formatChatMessages } from "../../../utils/format-chat-messages.utils";
 
 /** Returns a sorted version of the lifetime contributor list. */
 function getSortedContributors(contributors: IChatLifetimeContributor[], direction: 'forward' | 'reverse'): IChatLifetimeContributor[] {
@@ -44,6 +45,7 @@ export async function startChatCall(state: typeof ChatCallState.State): Promise<
         replyCount: 0,
         newMessages: [],
         logStepsToConsole: state.logStepsToConsole,
+        chatFormatting: state.chatFormatting,
     };
 }
 
@@ -341,11 +343,17 @@ export async function chatCall(state: typeof ChatState.State) {
 
     // Make the LLM call.
     let result: AIMessageChunk;
-    if (llm.bindTools && tools.length > 0) {
-        result = await llm.bindTools(tools).invoke(callMessages);
+    if (state.chatFormatting) {
+        const textMessages = formatChatMessages(callMessages, state.chatFormatting);
+        result = await llm.invoke(textMessages);
     } else {
-        result = await llm.invoke(callMessages);
+        if (llm.bindTools && tools.length > 0) {
+            result = await llm.bindTools(tools).invoke(callMessages);
+        } else {
+            result = await llm.invoke(callMessages);
+        }
     }
+
 
     setMessageId(result);
 

@@ -2,15 +2,16 @@ import { BaseChatModelParams, BaseChatModel } from "@langchain/core/language_mod
 import { ModelServiceBase } from "./model-service-base.service";
 import { ChatOpenAI, ChatOpenAIFields } from "@langchain/openai";
 import { OpenAiModelParams, OpenAiModelServiceParams } from "../../../model/shared-models/chat-core/chat-model-params/open-ai/openai.model-params";
+import { ModelServiceParams } from "../../../model/shared-models/chat-core/model-service-params.model";
 
 
 export class OpenAiAgentService extends ModelServiceBase {
     /** The identifier for this service. */
     readonly serviceType: OpenAiModelParams['llmService'] = 'open-ai';
 
-    protected async getChatModelBase(params: OpenAiModelServiceParams): Promise<BaseChatModel> {
+    protected async getChatModelBase(params: ModelServiceParams<OpenAiModelServiceParams>): Promise<BaseChatModel> {
         const openAiParams: ChatOpenAIFields = {
-            model: params.model
+            model: params.serviceParams.model
         };
 
         return new ChatOpenAI(openAiParams);

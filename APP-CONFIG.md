@@ -42,9 +42,9 @@ The application configuration centralizes all environment-specific and sensitive
     "http://localhost:4200"
   ],
   "serverConfig": {
-    "port": 3000
+    "port": 1062
   },
-  "chatSocketIoEndpoint": "ws://localhost:3000/",
+  "chatSocketIoEndpoint": "ws://localhost:1062/",
   "chatSocketIoPath": "/chat-io",
   "tavilyConfiguration": {
     "apiKey": "<your-tavily-api-key>"

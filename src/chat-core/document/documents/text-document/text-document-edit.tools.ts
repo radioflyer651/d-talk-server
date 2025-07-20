@@ -7,8 +7,8 @@ import { type TextDocument } from "./text-document.service";
 
 
 
-const commonNotes = `IMPORTANT: If deleting lines and editing lines, do the deletions first, and then make a separate call later to update lines, since the line numbers will change after deletions.\n` +
-    `After edits occur, the return message will include the updated document information, and the old document information will be removed.`;
+const commonNotes = `IMPORTANT: If deleting lines and editing lines, ALWAYS do the deletions FIRST, and then make a separate call later to update lines, since the line numbers will change after deletions.\n` +
+    `After edits occur, the future message histories will reflect the newest version of the document, removing old versions from the chat history.`;
 
 export interface DocumentFunctionInfo {
     document: TextDocument;

@@ -2,7 +2,7 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-import { chatCoreService, chatRoomDbService, projectDbService } from '../app-globals';
+import { chatCoreService, chatRoomDbService, chatRoomHydratorService, projectDbService } from '../app-globals';
 import { ChatRoomData } from '../model/shared-models/chat-core/chat-room-data.model';
 import { isUserOwnerOfChatRoom } from '../utils/user-access.utils';
 
@@ -439,17 +439,24 @@ chatRoomsServer.delete('/chat-room/:roomId/conversation/message/:messageId', asy
         const chatRoomId = new ObjectId(req.params.roomId);
         const messageId = req.params.messageId;
         // Fetch the chat room
-        const chatRoom = await chatRoomDbService.getChatRoomById(chatRoomId);
-        if (!chatRoom) {
+        const chatRoomData = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoomData) {
             res.status(404).json({ error: 'Chat room not found' });
             return;
         }
         // Check user access (owner or participant)
-        if (!chatRoom.userId.equals(userId) && !(chatRoom.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
+        if (!chatRoomData.userId.equals(userId) && !(chatRoomData.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
-        await chatRoomDbService.deleteChatMessageFromConversation(chatRoomId, messageId);
+
+        // Create the service.
+        const chatRoom = await chatRoomHydratorService.hydrateChatRoom(chatRoomData);
+        if (!chatRoom) {
+            throw new Error(`No chat room was able to be created for id ${chatRoomId.toString()}`);
+        }
+        // Delete the message.
+        await chatRoom.deleteMessage(messageId);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete chat message' });

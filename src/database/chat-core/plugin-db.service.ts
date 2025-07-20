@@ -6,33 +6,35 @@ import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
 
+
+/** This service supports plugins that have their own context, which they need to store information for. */
 export class PluginDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
         super(dbHelper);
     }
 
     // --- PluginSpecification CRUD ---
-    async upsertPluginSpecification(spec: UpsertDbItem<PluginSpecification & { _id: ObjectId }>): Promise<PluginSpecification & { _id: ObjectId }> {
-        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.Plugins, spec) as PluginSpecification & { _id: ObjectId };
+    async upsertPluginSpecification(spec: UpsertDbItem<PluginSpecification & { _id: ObjectId; }>): Promise<PluginSpecification & { _id: ObjectId; }> {
+        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.Plugins, spec) as PluginSpecification & { _id: ObjectId; };
     }
 
-    async getPluginSpecificationById(id: ObjectId): Promise<(PluginSpecification & { _id: ObjectId }) | undefined> {
-        return await this.dbHelper.findDataItem<PluginSpecification & { _id: ObjectId }, { _id: ObjectId; }>(
+    async getPluginSpecificationById(id: ObjectId): Promise<(PluginSpecification & { _id: ObjectId; }) | undefined> {
+        return await this.dbHelper.findDataItem<PluginSpecification & { _id: ObjectId; }, { _id: ObjectId; }>(
             DbCollectionNames.Plugins,
             { _id: id },
             { findOne: true }
-        ) as (PluginSpecification & { _id: ObjectId }) | undefined;
+        ) as (PluginSpecification & { _id: ObjectId; }) | undefined;
     }
 
-    async getPluginSpecificationsByType(pluginType: string): Promise<(PluginSpecification & { _id: ObjectId })[]> {
-        return await this.dbHelper.findDataItem<PluginSpecification & { _id: ObjectId }, { pluginType: string; }>(
+    async getPluginSpecificationsByType(pluginType: string): Promise<(PluginSpecification & { _id: ObjectId; })[]> {
+        return await this.dbHelper.findDataItem<PluginSpecification & { _id: ObjectId; }, { pluginType: string; }>(
             DbCollectionNames.Plugins,
             { pluginType }
-        ) as (PluginSpecification & { _id: ObjectId })[];
+        ) as (PluginSpecification & { _id: ObjectId; })[];
     }
 
     async updatePluginSpecification(id: ObjectId, update: Partial<PluginSpecification>): Promise<number> {
-        return await this.dbHelper.updateDataItems<PluginSpecification & { _id: ObjectId }>(
+        return await this.dbHelper.updateDataItems<PluginSpecification & { _id: ObjectId; }>(
             DbCollectionNames.Plugins,
             { _id: id },
             update,
@@ -41,7 +43,7 @@ export class PluginDbService extends DbService {
     }
 
     async deletePluginSpecification(id: ObjectId): Promise<number> {
-        return await this.dbHelper.deleteDataItems<PluginSpecification & { _id: ObjectId }, { _id: ObjectId; }>(
+        return await this.dbHelper.deleteDataItems<PluginSpecification & { _id: ObjectId; }, { _id: ObjectId; }>(
             DbCollectionNames.Plugins,
             { _id: id },
             { deleteMany: false }
@@ -49,27 +51,27 @@ export class PluginDbService extends DbService {
     }
 
     // --- PluginInstanceReference CRUD ---
-    async upsertPluginInstanceReference(ref: UpsertDbItem<PluginInstanceReference & { _id: ObjectId }>): Promise<PluginInstanceReference & { _id: ObjectId }> {
-        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.Plugins, ref) as PluginInstanceReference & { _id: ObjectId };
+    async upsertPluginInstanceReference(ref: UpsertDbItem<PluginInstanceReference & { _id: ObjectId; }>): Promise<PluginInstanceReference & { _id: ObjectId; }> {
+        return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.Plugins, ref) as PluginInstanceReference & { _id: ObjectId; };
     }
 
-    async getPluginInstanceReferenceById(id: ObjectId): Promise<(PluginInstanceReference & { _id: ObjectId }) | undefined> {
-        return await this.dbHelper.findDataItem<PluginInstanceReference & { _id: ObjectId }, { _id: ObjectId; }>(
+    async getPluginInstanceReferenceById(id: ObjectId): Promise<(PluginInstanceReference & { _id: ObjectId; }) | undefined> {
+        return await this.dbHelper.findDataItem<PluginInstanceReference & { _id: ObjectId; }, { _id: ObjectId; }>(
             DbCollectionNames.Plugins,
             { _id: id },
             { findOne: true }
-        ) as (PluginInstanceReference & { _id: ObjectId }) | undefined;
+        ) as (PluginInstanceReference & { _id: ObjectId; }) | undefined;
     }
 
-    async getPluginInstanceReferencesByType(pluginType: string): Promise<(PluginInstanceReference & { _id: ObjectId })[]> {
-        return await this.dbHelper.findDataItem<PluginInstanceReference & { _id: ObjectId }, { pluginType: string; }>(
+    async getPluginInstanceReferencesByType(pluginType: string): Promise<(PluginInstanceReference & { _id: ObjectId; })[]> {
+        return await this.dbHelper.findDataItem<PluginInstanceReference & { _id: ObjectId; }, { pluginType: string; }>(
             DbCollectionNames.Plugins,
             { pluginType }
-        ) as (PluginInstanceReference & { _id: ObjectId })[];
+        ) as (PluginInstanceReference & { _id: ObjectId; })[];
     }
 
     async updatePluginInstanceReference(id: ObjectId, update: Partial<PluginInstanceReference>): Promise<number> {
-        return await this.dbHelper.updateDataItems<PluginInstanceReference & { _id: ObjectId }>(
+        return await this.dbHelper.updateDataItems<PluginInstanceReference & { _id: ObjectId; }>(
             DbCollectionNames.Plugins,
             { _id: id },
             update,
@@ -78,7 +80,7 @@ export class PluginDbService extends DbService {
     }
 
     async deletePluginInstanceReference(id: ObjectId): Promise<number> {
-        return await this.dbHelper.deleteDataItems<PluginInstanceReference & { _id: ObjectId }, { _id: ObjectId; }>(
+        return await this.dbHelper.deleteDataItems<PluginInstanceReference & { _id: ObjectId; }, { _id: ObjectId; }>(
             DbCollectionNames.Plugins,
             { _id: id },
             { deleteMany: false }

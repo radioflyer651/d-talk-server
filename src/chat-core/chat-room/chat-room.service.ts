@@ -20,6 +20,7 @@ import { hydratePositionableMessages } from "../../utils/positionable-message-hy
 import { Project } from "../../model/shared-models/chat-core/project.model";
 import { ChatDocument } from "../document/chat-document.service";
 import { IDisposable } from "../disposable.interface";
+import { ObjectId } from "mongodb";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
@@ -125,6 +126,29 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
         this._externalLifetimeServices = value;
     }
 
+    async deleteMessage(messageId: string): Promise<void> {
+        // Get the message index.
+        const messageIndex = this.messages.findIndex(m => m.id === messageId || m.additional_kwargs?.id === messageId);
+
+        // If not found, then do nothing.
+        if (messageIndex < 0) {
+            return;
+        }
+
+        // Get an object that can help us find the related messages.
+        const traverser = new MessageTraversalState(this.messages, messageIndex);
+
+        // Get the index of the first and last related message to this message.
+        const firstMessage = traverser.getFirstRelatedMessage();
+        const lastMessage = traverser.getLastRelatedMessage();
+
+        // Delete these messages.
+        this.messages.splice(firstMessage.messageIndex, lastMessage.messageIndex - firstMessage.messageIndex + 1);
+
+        // Save the messages to the DB.
+        await this.saveConversation();
+    }
+
     /** Called when a message is received from a user in this chat room. */
     async receiveUserMessage(message: string, user: User): Promise<void> {
         try {
@@ -208,11 +232,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
 
             // Get the documents.
             const documentContributorsP = this.documents?.map(d => d.getLifetimeContributors(this, job, agent)) ?? [];
-            let documentContributors = (await Promise.all(documentContributorsP)).reduce((p, c) => [...p, ...c], []);
-
-            // Any document that has no permissions should be removed.
-            documentContributors = documentContributors.filter(d => Object.values(d).some(v => v === true));
-
+            const documentContributors = (await Promise.all(documentContributorsP)).reduce((p, c) => [...p, ...c], []);
 
             // Create the lifetime contributors for this chat interaction.
             const contributors: IChatLifetimeContributor[] = [
@@ -350,7 +370,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
         if (!this.messages) {
             throw new Error(`No messages to set.`);
         }
-        
+
         this.data.conversation = mapChatMessagesToStoredMessages(this.messages!);
     }
 
@@ -389,5 +409,128 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
             });
 
         });
+    }
+}
+
+class MessageTraversalState {
+    constructor(
+        readonly messages: BaseMessage[],
+        readonly messageIndex: number,
+    ) {
+        this.message = messages[messageIndex];
+    }
+
+    readonly message: BaseMessage;
+
+    get previousMessage(): BaseMessage | undefined {
+        if (this.messageIndex < 1) {
+            return undefined;
+        }
+
+        return this.messages[this.messageIndex - 1];
+    }
+
+    get messageType() {
+        return this.message.getType();
+    }
+
+    get hasToolCalls() {
+        return ((this.message as any).tool_calls?.length ?? 0 > 0);
+    }
+
+    get requiresTraversalBack(): boolean {
+        const messageType = this.message.getType();
+        const previousState = this.getPreviousMessageTraversal();
+
+        // If there's no previous message, then we simply can't traverse backwards.  We're at the end.
+        if (!previousState) {
+            return false;
+        }
+
+        if (messageType === 'tool') {
+            // Technically, this should always be true, but who knows...
+            return previousState.messageType === 'ai' || previousState.messageType === 'tool';
+        }
+
+        if (messageType === 'ai') {
+            return previousState.messageType === 'tool' || previousState.hasToolCalls;
+        }
+
+        return false;
+    }
+
+    get requiresTraversalForward(): boolean {
+        const messageType = this.message.getType();
+        const nextState = this.getNextMessageTraversal();
+
+        // If there's no next message, then we simply can't traverse forwards.  We're at the end.
+        if (!nextState) {
+            return false;
+        }
+
+        // If the next message is a tool, then we don't care how it got there.  We'll delete it.
+        if (nextState.messageType === 'tool') {
+            return true;
+        }
+
+        if (messageType === 'tool') {
+            return nextState.messageType === 'ai';
+        }
+
+        if (messageType === 'ai') {
+            // Well... we've already checked the next message for 'tool', and returned, so that's not an option.
+            //  If the next message isn't a tool...  We'll assume we're done regardless of the circumstances.
+            return false;
+        }
+
+        // If this is any other kind of message (system or human), then...
+        //  There's probably nothing else to do.  Tools are all taken care of.
+        return false;
+
+    }
+
+    /** Finds the MessageTraversalState of the message with the lowest index related to this message. */
+    getFirstRelatedMessage(): MessageTraversalState {
+        // Check if we're done.  If we're done, then we're done!
+        if (!this.requiresTraversalBack) {
+            return this;
+        }
+
+        // We're not done.  We KNOW the previous message exists (because of the previous check),
+        //  so let THAT ONE figure out who our mommy is.
+        const previousState = this.getPreviousMessageTraversal();
+        return previousState!.getFirstRelatedMessage();
+    }
+
+    /** Finds the MessageTraversalState of the message with the highest index related to this message. */
+    getLastRelatedMessage(): MessageTraversalState {
+        if (!this.requiresTraversalForward) {
+            return this;
+        }
+
+        // We're not done.  We KNOW the next message exists (because of the previous check),
+        //  so let THAT ONE figure out who our daddy is.
+        const nextState = this.getNextMessageTraversal();
+        return nextState!.getLastRelatedMessage();
+    }
+
+    getPreviousMessageTraversal(): MessageTraversalState | undefined {
+        const previousMessage = this.previousMessage;
+
+        if (!previousMessage) {
+            return undefined;
+        }
+
+        return new MessageTraversalState(this.messages, this.messageIndex - 1);
+    }
+
+    getNextMessageTraversal(): MessageTraversalState | undefined {
+        const nextMessage = this.messages[this.messageIndex + 1];
+
+        if (!nextMessage) {
+            return undefined;
+        }
+
+        return new MessageTraversalState(this.messages, this.messageIndex + 1);
     }
 }

@@ -56,7 +56,13 @@ export class TextDocument extends ChatDocument implements IDisposable {
     async getLifetimeContributors(chatRoom: ChatRoom, chatJob: ChatJob, chatAgent: Agent): Promise<IChatLifetimeContributor[]> {
         // Get the permissions.
         const permissions = this.determinePermissions(chatRoom, chatJob, chatAgent);
-        return [new TextDocumentLifetimeContributor(this, permissions, chatAgent.data._id)];
+        // Only include this one if it has at least SOME permissions.
+        const permissionVals = Object.values(permissions);
+        if (permissionVals.some(v => v === true)) {
+            return [new TextDocumentLifetimeContributor(this, permissions, chatAgent.data._id)];
+        } else {
+            return [];
+        }
     }
 
     updateChangeInfo(updatedBy: { entityType: 'user' | 'agent', id: ObjectId; }) {

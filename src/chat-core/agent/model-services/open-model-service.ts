@@ -1,9 +1,8 @@
-import { BaseChatModelParams, BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ModelServiceBase } from "./model-service-base.service";
 import { ChatOpenAI, ChatOpenAIFields } from "@langchain/openai";
 import { OpenAiModelParams, OpenAiModelServiceParams } from "../../../model/shared-models/chat-core/chat-model-params/open-ai/openai.model-params";
 import { ModelServiceParams } from "../../../model/shared-models/chat-core/model-service-params.model";
-import { getConfig } from "@langchain/langgraph";
 import { getAppConfig } from "../../../config";
 
 

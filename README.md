@@ -4,7 +4,21 @@ Why the name?  Because I'm dumb - I created a "dungeon chat" app once for dungeo
 
 ## Get It Started:
 
+### App Configuration
 See the APP-CONFIG.md file for details about the configuration.  You need to provide your own app-config.json file for the application to work.  
+
+### Ollama
+If you wish to use Ollama, you'll need to download and install it, plus the models you want to run locally.  Ollama's specific operations are outside the scope of this documentation, and you should use Ollama's and LangChain's documentation for appropriate details.
+
+Once you have Ollama installed with some models, you'll have to set it up in the app.
+1. Be sure your login is as an Admin.  The only way to do this currently is to edit your user record in the database by adding/setting the `isAdmin` flag on your user record to `true`.
+2. Log out and log back in. (If you were previously logged in.)
+3. You should now have an `Ollama Configurations` option in the menu.  Go there.
+4. Provide a setup for each local model you wish to use.  Use the same model names as you would find by calling the `ollama ps` command in your prompt.
+  - This is the only REAL important thing, which will make your model available to pick in agent configurations.
+5. If you use the Start/End markers, your chat conversations will be converted to text, and apply the formatting to your chat history before sending it to Ollama.  **This will disable any tool features.**  Even though, Ollama/LangChain is supposed to take care of this detail, I've found that the results coming from the LLM are typically incorrect without them.
+  - NOTE: These markers vary based on the LLM models.  Consult their documentation to find the actual markers needed here.
+  - NOTE 2: When using markers, along with the details above, this application will always start the next chat with an open "assistant" marker, which seems to be required for most models ran locally.
 
 ## Features
 

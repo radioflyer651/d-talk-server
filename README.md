@@ -2,6 +2,10 @@
 # DTalk2
 Why the name?  Because I'm dumb - I created a "dungeon chat" app once for dungeons and dragons.  It turned into a general chat app.  This is its successor.  Was the answer worth the question? :)
 
+## Get It Started:
+
+See the APP-CONFIG.md file for details about the configuration.  You need to provide your own app-config.json file for the application to work.  
+
 ## Features
 
 ### Chat Projects

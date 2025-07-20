@@ -1,7 +1,7 @@
 import { IPluginTypeResolver } from "../../agent-plugin/i-plugin-type-resolver";
 import { LabeledMemoryPlugin } from "../plugins/labeled-memory-plugin/labeled-memory.plugin";
 import { LABELED_MEMORY_PLUGIN_TYPE_ID } from "../../../model/shared-models/chat-core/plugins/plugin-type-constants.data";
-import { PluginAttachmentTargetTypes } from "../../agent-plugin/agent-plugin-base.service";
+import { PluginAttachmentTarget } from "../../agent-plugin/agent-plugin-base.service";
 import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
 import { MongoHelper } from "../../../mongo-helper";
@@ -36,7 +36,7 @@ export class LabeledMemoryPluginResolver implements IPluginTypeResolver<LabeledM
         return await this.chatModelResolver.getModel(spec.modelServiceParams);
     }
 
-    async createNewPlugin(specification: PluginSpecification<LabeledMemoryPluginParams>, attachedTo: PluginAttachmentTargetTypes): Promise<LabeledMemoryPlugin> {
+    async createNewPlugin(specification: PluginSpecification<LabeledMemoryPluginParams>, attachedTo: PluginAttachmentTarget): Promise<LabeledMemoryPlugin> {
         const config = specification.configuration;
 
         this.validateParams(config);
@@ -52,7 +52,7 @@ export class LabeledMemoryPluginResolver implements IPluginTypeResolver<LabeledM
         return result;
     }
 
-    async hydratePlugin(instance: PluginInstanceReference<LabeledMemoryPluginParams>, attachedTo: PluginAttachmentTargetTypes): Promise<LabeledMemoryPlugin> {
+    async hydratePlugin(instance: PluginInstanceReference<LabeledMemoryPluginParams>, attachedTo: PluginAttachmentTarget): Promise<LabeledMemoryPlugin> {
         const config = instance.pluginSpecification.configuration;
 
         this.validateParams(config);

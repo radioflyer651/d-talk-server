@@ -1,0 +1,151 @@
+import { AgentPluginBase, PluginAttachmentTarget } from "../../agent-plugin/agent-plugin-base.service";
+import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
+import { CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID } from "../../../model/shared-models/chat-core/plugins/plugin-type-constants.data";
+import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";
+import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
+import { CreateTextDocumentsPluginParams } from "../../../model/shared-models/chat-core/plugins/create-text-documents-plugin.params";
+import { z } from "zod";
+import { StructuredToolInterface, tool } from "@langchain/core/tools";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { ObjectId } from "mongodb";
+import { ChatDocumentDbService } from "../../../database/chat-core/chat-document-db.service";
+import { TextDocumentData } from "../../../model/shared-models/chat-core/documents/document-types/text-document.model";
+import { NewDbItem } from "../../../model/shared-models/db-operation-types.model";
+import { Agent } from "../../agent/agent.service";
+import { IDocumentProvider, isDocumentProvider } from "../../document/document-provider.interface";
+import { ChatDocumentReference } from "../../../model/shared-models/chat-core/documents/chat-document-reference.model";
+
+export class CreateTextDocumentsPlugin extends AgentPluginBase implements IChatLifetimeContributor {
+    constructor(
+        params: PluginInstanceReference<CreateTextDocumentsPluginParams> | PluginSpecification<CreateTextDocumentsPluginParams>,
+        readonly documentsDbService: ChatDocumentDbService,
+    ) {
+        super(params);
+    }
+
+    agentUserManual?: string | undefined;
+    readonly type = CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID;
+
+    async getTools(): Promise<(ToolNode | StructuredToolInterface)[]> {
+        // Only IDocumentProviders are allowed to be attached to.
+        if (!isDocumentProvider(this.attachedTo)) {
+            throw new Error('attachedTo must be an IDocumentProvider.');
+        }
+        return createTools(this.specification!.configuration, this.agent, this.attachedTo! as IDocumentProvider, this.chatRoom.project._id, this.documentsDbService);
+    }
+}
+
+
+function createTools(params: CreateTextDocumentsPluginParams, agent: Agent, documentProvider: IDocumentProvider, projectId: ObjectId, documentsDbService: ChatDocumentDbService) {
+    const commonInstructions = `
+Creates a new text document, which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.rootFolder}. 
+After the document is created, you can edit the document through another tool call.
+When creating new document, be sure to include detailed descriptions, indicating what the content of the document is for, and when to edit it.
+Do not attempt to provide links to new documents.  They won't work.
+Keep document names short, and use spaces.  These are not file names.
+Folder path formats are 'folder1/folder2/folder3'.
+${params.instructions}
+`;
+
+    const createDocumentSchema = {
+        name: 'create_text_document',
+        describe: commonInstructions,
+        schema: z.object({
+            fileName: z.string().describe(`The name of the file you're creating.`),
+            description: z.string().describe(`This is a description of what this file is, and what it's for.  If the description also has instructions, those instructions are provided to any LLM agent using the file as a system message as well.`),
+            content: z.string().describe(`The content of the document.`),
+        })
+    };
+    const createDocumentTool = tool(
+        async (options: z.infer<typeof createDocumentSchema.schema>) => {
+            // Create the document.
+            const newTextDocument = <NewDbItem<TextDocumentData>>{
+                name: options.fileName,
+                type: 'text',
+                content: options.content,
+                comments: [],
+                description: options.description,
+                folderLocation: params.rootFolder,
+                projectId: projectId,
+                lastChangedBy: { entityType: 'agent', id: agent.identity._id },
+                createdDate: new Date(),
+                updatedDate: new Date,
+            };
+
+            // Add it to the database.
+            const dbDocument = await documentsDbService.createDocument(newTextDocument);
+
+            // Add the reference to the document, to the owner.
+            documentProvider.addDocumentReference(<ChatDocumentReference[]>[
+                {
+                    documentId: dbDocument._id,
+                    folderPath: dbDocument.folderLocation,
+                    permission: {
+                        canChangeName: true,
+                        canEdit: true,
+                        canRead: true,
+                        canUpdateComments: true,
+                        canUpdateDescription: true,
+                    }
+                }
+            ]);
+        },
+        createDocumentSchema
+    );
+
+    //-----------------------------------------------------------------------------------------------
+
+    const createDocumentInFolderSchema = {
+        name: 'create_text_document',
+        describe: commonInstructions,
+        schema: z.object({
+            fileName: z.string().describe(`The name of the file you're creating.`),
+            subFolder: z.string().describe(`The sub folder of ${params.rootFolder}, IF ANY, to add the document to.  If placing it in the current root, then leave this an empty string.`),
+            description: z.string().describe(`This is a description of what this file is, and what it's for.  If the description also has instructions, those instructions are provided to any LLM agent using the file as a system message as well.`),
+            content: z.string().describe(`The content of the document.`),
+        })
+    };
+    const createDocumentInFolderTool = tool(
+        async (options: z.infer<typeof createDocumentInFolderSchema.schema>) => {
+            // Create the document.
+            const newTextDocument = <NewDbItem<TextDocumentData>>{
+                name: options.fileName,
+                type: 'text',
+                content: options.content,
+                comments: [],
+                description: options.description,
+                folderLocation: params.rootFolder,
+                projectId: projectId,
+                lastChangedBy: { entityType: 'agent', id: agent.identity._id },
+                createdDate: new Date(),
+                updatedDate: new Date,
+            };
+
+            // Add it to the database.
+            const dbDocument = await documentsDbService.createDocument(newTextDocument);
+
+            // Add the reference to the document, to the owner.
+            documentProvider.addDocumentReference(<ChatDocumentReference[]>[
+                {
+                    documentId: dbDocument._id,
+                    folderPath: dbDocument.folderLocation,
+                    permission: {
+                        canChangeName: true,
+                        canEdit: true,
+                        canRead: true,
+                        canUpdateComments: true,
+                        canUpdateDescription: true,
+                    }
+                }
+            ]);
+        },
+        createDocumentInFolderSchema
+    );
+
+    // Based on the settings, return the appropriate tool.
+    if (params.canCreateSubfolders) {
+        return [createDocumentInFolderTool];
+    } else {
+        return [createDocumentTool];
+    }
+}

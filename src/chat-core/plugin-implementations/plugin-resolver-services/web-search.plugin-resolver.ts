@@ -3,7 +3,7 @@ import { WebSearchPlugin } from "../plugins/web-search.plugin";
 import { WEB_SEARCH_PLUGIN_TYPE_ID } from "../../../model/shared-models/chat-core/plugins/plugin-type-constants.data";
 import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
-import { PluginAttachmentTargetTypes } from "../../agent-plugin/agent-plugin-base.service";
+import { PluginAttachmentTarget } from "../../agent-plugin/agent-plugin-base.service";
 
 export class WebSearchPluginResolver implements IPluginTypeResolver<WebSearchPlugin> {
     constructor(private tavilyApiKey: string) {
@@ -14,13 +14,13 @@ export class WebSearchPluginResolver implements IPluginTypeResolver<WebSearchPlu
         return typeName === WEB_SEARCH_PLUGIN_TYPE_ID;
     }
     
-    async createNewPlugin(specification: PluginSpecification, attachedTo: PluginAttachmentTargetTypes) {
+    async createNewPlugin(specification: PluginSpecification, attachedTo: PluginAttachmentTarget) {
         const result = new WebSearchPlugin(specification, this.tavilyApiKey);
         result.attachedTo = attachedTo;
         return result;
     }
     
-    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes) {
+    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTarget) {
         const result = new WebSearchPlugin(pluginInstance, this.tavilyApiKey);
         result.attachedTo = attachedTo;
         return result;

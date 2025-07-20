@@ -1,5 +1,5 @@
 import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
-import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
+import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
@@ -11,8 +11,10 @@ import { ChatRoom } from "../chat-room/chat-room.service";
 import { sanitizeMessageName } from "../../utils/sanitize-message-name.utils";
 import { IDisposable } from "../disposable.interface";
 import { CustomChatFormatting } from "../../model/shared-models/chat-core/model-service-params.model";
+import { IDocumentProvider } from "../document/document-provider.interface";
+import { ChatDocumentReference } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
 
-export class Agent implements IChatLifetimeContributor, IDisposable {
+export class Agent implements IChatLifetimeContributor, IDisposable, PluginAttachmentTarget, IDocumentProvider {
     // The configuration for this agent instance
     readonly data: AgentInstanceConfiguration;
     // The chat model used by this agent
@@ -36,6 +38,16 @@ export class Agent implements IChatLifetimeContributor, IDisposable {
 
     dispose() {
         // Do nothing.
+    }
+
+    /** Gets all documents from the provider's document list. */
+    async getDocumentReferences(): Promise<ChatDocumentReference[]> {
+        return this.identity.chatDocumentReferences;
+    }
+
+    /** Adds a new document to the document list. */
+    async addDocumentReference(newReferences: ChatDocumentReference[]): Promise<void> {
+        this.identity.chatDocumentReferences.push(...newReferences);
     }
 
     /** Returns the name of this agent, using either the name in the configuration, or

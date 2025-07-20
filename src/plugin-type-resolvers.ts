@@ -10,12 +10,16 @@ import { IgnoreSpecificAgentPluginResolver } from "./chat-core/plugin-implementa
 import { WebSearchPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/web-search.plugin-resolver";
 import { LabeledMemoryPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/labeled-memory-plugin-resolver";
 import { IAppConfig } from "./model/app-config.model";
-import { dbHelper, modelResolver } from "./app-globals";
+import { CreateTextDocumentsPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/create-text-documents-plugin-resolver";
+import { MongoHelper } from "./mongo-helper";
+import { ChatDocumentDbService } from "./database/chat-core/chat-document-db.service";
+import { AgentDbService } from "./database/chat-core/agent-db.service";
+import { ModelServiceResolver } from "./chat-core/agent/model-services/model-service-resolver";
 
 
 export let pluginTypeResolvers: IPluginTypeResolver<any>[] = [];
 
-export async function initializePluginTypeResolvers(config: IAppConfig) {
+export async function initializePluginTypeResolvers(config: IAppConfig, modelResolver: ModelServiceResolver, dbHelper: MongoHelper, chatDocumentDbService: ChatDocumentDbService) {
     pluginTypeResolvers.push(...[
         new RoomInfoPluginResolver(),
         new ActDrunkPluginResolver(),
@@ -27,5 +31,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig) {
         new IgnoreSpecificAgentPluginResolver(),
         new WebSearchPluginResolver(config.tavilyConfiguration.apiKey),
         new LabeledMemoryPluginResolver(dbHelper, modelResolver),
+        new CreateTextDocumentsPluginResolver(chatDocumentDbService),
     ]);
 }

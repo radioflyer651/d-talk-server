@@ -12,6 +12,7 @@ import { Agent } from "../agent/agent.service";
 import { IChatDocumentResolutionService } from "../document/document-resolution.interface";
 import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { IChatRoomHydratorService } from "./chat-room-hydrator.interface";
+import { IChatRoomSaverService } from "./chat-room-saver-service.interface";
 import { ChatRoom } from "./chat-room.service";
 
 
@@ -25,6 +26,7 @@ export class ChatRoomHydratorService implements IChatRoomHydratorService {
         readonly agentInstanceDbService: AgentInstanceDbService,
         readonly projectDbService: ProjectDbService,
         readonly documentResolverService: IChatDocumentResolutionService,
+        readonly chatRoomSaverService: IChatRoomSaverService,
     ) {
     }
 
@@ -33,7 +35,7 @@ export class ChatRoomHydratorService implements IChatRoomHydratorService {
         const projectP = this.projectDbService.getProjectById(chatRoomData.projectId);
 
         // Create the new chat room.
-        const chatRoom = new ChatRoom(chatRoomData, this.chatRoomDbService);
+        const chatRoom = new ChatRoom(chatRoomData, this.chatRoomSaverService);
 
         // Hydrate the appropriate properties.
         await this.hydrateAgents(chatRoom);

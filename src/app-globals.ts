@@ -22,6 +22,8 @@ import { documentTypeResolvers, initializeDocumentTypeResolvers } from "./docume
 import { OllamaModelConfigurationDbService as OllamaModelConfigDbService } from "./database/chat-core/ollama-configurations-db.service";
 import { OllamaAiAgentService } from "./chat-core/agent/model-services/ollama.model-service-service";
 import { OpenAiAgentService } from "./chat-core/agent/model-services/open-model-service";
+import { IChatRoomSaverService } from "./chat-core/chat-room/chat-room-saver-service.interface";
+import { ChatRoomSaverService } from "./chat-core/chat-room/chat-room-saver.service";
 /** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
 
 /** The mongo helper used in all DB Services. */
@@ -39,6 +41,7 @@ export let chatDocumentDbService: ChatDocumentDbService;
 export let ollamaModelConfigDbService: OllamaModelConfigDbService;
 
 // Chat-Core services.
+export let chatRoomSaver: IChatRoomSaverService;
 export let agentServiceFactory: AgentServiceFactory;
 export let modelResolver: ModelServiceResolver;
 export let pluginResolver: AppPluginResolver;
@@ -76,6 +79,7 @@ export async function initializeServices(): Promise<void> {
     socketServer = new SocketServer(loggingService);
 
     // Chat-Core
+    chatRoomSaver = new ChatRoomSaverService(chatRoomDbService, chatJobDbService, agentDbService, projectDbService);
     chatCoreService = new ChatCoreService(
         agentDbService,
         agentInstanceDbService,
@@ -88,7 +92,7 @@ export async function initializeServices(): Promise<void> {
         new OllamaAiAgentService(ollamaModelConfigDbService),
         new OpenAiAgentService(),
     ]);
-    await initializePluginTypeResolvers(config);
+    await initializePluginTypeResolvers(config, modelResolver, dbHelper, chatDocumentDbService);
     await initializeDocumentTypeResolvers(config);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
     documentResolver = new ChatDocumentResolutionService(documentTypeResolvers, chatDocumentDbService);
@@ -103,6 +107,7 @@ export async function initializeServices(): Promise<void> {
         agentInstanceDbService,
         projectDbService,
         documentResolver,
+        chatRoomSaver,
     );
 
 

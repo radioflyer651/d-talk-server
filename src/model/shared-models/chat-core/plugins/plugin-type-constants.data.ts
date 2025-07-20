@@ -1,3 +1,4 @@
+import { CreateTextDocumentsPluginParams } from "./create-text-documents-plugin.params";
 import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
 
 export const ROOM_INFO_PLUGIN_TYPE_ID = 'room-info-plugin';
@@ -11,6 +12,7 @@ export const LABEL_AGENT_SPEAKERS_PLUGIN_TYPE_ID = 'label-agent-speakers';
 export const IGNORE_SPECIFIC_AGENT_PLUGIN_TYPE_ID = 'ignore-specific-agent';
 export const WEB_SEARCH_PLUGIN_TYPE_ID = 'web-search-plugin';
 export const LABELED_MEMORY_PLUGIN_TYPE_ID = 'labeled-memory-plugin';
+export const CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID = 'create-text-documents-plugin';
 
 export interface PluginInfo {
     pluginType: string;
@@ -35,7 +37,7 @@ export const pluginInformation: PluginInfo[] = [
     },
     {
         pluginType: ACT_DRUNK,
-        displayName: 'Agent Acts Drunk',
+        displayName: 'Act Drunk',
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,
@@ -44,7 +46,7 @@ export const pluginInformation: PluginInfo[] = [
     },
     {
         pluginType: OTHER_AGENTS_INVISIBLE_PLUGIN,
-        displayName: 'Other Agents Are Invisible',
+        displayName: 'Other Agents Invisible',
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,
@@ -53,7 +55,7 @@ export const pluginInformation: PluginInfo[] = [
     },
     {
         pluginType: OTHER_AGENT_MESSAGES_AS_USER,
-        displayName: 'Convert Other Agent Messages To User Messages',
+        displayName: 'Convert Agents To Users',
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,
@@ -62,7 +64,7 @@ export const pluginInformation: PluginInfo[] = [
     },
     {
         pluginType: DEBUG_PLUGIN,
-        displayName: 'Allows arbitrary debugging of agents in the chat process.',
+        displayName: 'Debug Messages',
         attachesToAgent: true,
         attachesToChatRoom: false,
         attachesToJob: true,
@@ -123,5 +125,18 @@ export const pluginInformation: PluginInfo[] = [
             keyMeanings: [],
             canWrite: true,
         })
+    },
+    {
+        pluginType: CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID,
+        displayName: 'Create Text Documents',
+        description: 'Allows agents to create text documents as part of the chat process.',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => <CreateTextDocumentsPluginParams>{
+            canCreateSubfolders: true,
+            instructions: '',
+            rootFolder: '',
+        }
     },
 ];

@@ -1,12 +1,11 @@
 import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { Subject } from "rxjs";
-import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
 import { ChatRoomBusyStateEvent } from "../../model/shared-models/chat-core/chat-room-busy-state.model";
 import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data.model";
 import { IChatRoomEvent } from "../../model/shared-models/chat-core/chat-room-event.model";
 import { ChatRoomMessageChunkEvent, ChatRoomMessageEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
 import { User } from "../../model/shared-models/user.model";
-import { AgentPluginBase } from "../agent-plugin/agent-plugin-base.service";
+import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
 import { setSpeakerOnMessage } from "../utilities/speaker.utils";
@@ -20,16 +19,18 @@ import { hydratePositionableMessages } from "../../utils/positionable-message-hy
 import { Project } from "../../model/shared-models/chat-core/project.model";
 import { ChatDocument } from "../document/chat-document.service";
 import { IDisposable } from "../disposable.interface";
-import { ObjectId } from "mongodb";
+import { IDocumentProvider } from "../document/document-provider.interface";
+import { ChatDocumentReference } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
+import { IChatRoomSaverService } from "./chat-room-saver-service.interface";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
 /** Provides basic interactive functionality for sending a message, from a user, to a chat room
  *   and getting an LLM response.  */
-export class ChatRoom implements IChatLifetimeContributor, IDisposable {
+export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAttachmentTarget, IDocumentProvider {
     constructor(
         readonly data: ChatRoomData,
-        readonly chatRoomDbService: ChatRoomDbService,
+        readonly chatRoomSaverService: IChatRoomSaverService,
     ) {
         this.messages = mapStoredMessagesToChatMessages(this.data.conversation ?? []);
     }
@@ -54,6 +55,16 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
 
     get isBusy(): boolean {
         return this.data.isBusy;
+    }
+
+    /** Gets all documents from the provider's document list. */
+    async getDocumentReferences(): Promise<ChatDocumentReference[]> {
+        return this.data.chatDocumentReferences;
+    }
+
+    /** Adds a new document to the document list. */
+    async addDocumentReference(newReferences: ChatDocumentReference[]): Promise<void> {
+        this.data.chatDocumentReferences.push(...newReferences);
     }
 
     private async setBusyState(newState: boolean): Promise<void> {
@@ -195,8 +206,9 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
             await this.executeTurnForJob(j);
         }
 
-        // Save the chat history.
-        await this.saveConversation();
+        // Save any changes that might have occurred for this room, including chat history.
+        //  NOTE: Chat history is already saved on each turn for the job (too).
+        await this.chatRoomSaverService.updateChatRoom(this);
     }
 
     protected async executeTurnForJob(job: ChatJob) {
@@ -336,7 +348,12 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
                 }
             }
 
-            await this.saveConversation();
+            // Save all components of this call.  (This might be overkill, and change detection might be a better approach in the future.)
+            const agentUpdateP = this.chatRoomSaverService.updateChatAgent(agent);
+            const jobUpdateP = this.chatRoomSaverService.updateChatJob(job);
+            this.updateDataForStorage();
+            const conversationUpdateP = this.chatRoomSaverService.updateChatRoomConversation(this);
+            await Promise.all([agentUpdateP, jobUpdateP, conversationUpdateP]);
 
         } catch (err) {
             this.logError({
@@ -377,18 +394,21 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable {
     /** Saves the state of the chat room. */
     protected async saveConversation(): Promise<void> {
         this.updateDataForStorage();
-        await this.chatRoomDbService.updateChatRoomConversation(this.data._id, this.data.conversation);
+        await this.chatRoomSaverService.updateChatRoomConversation(this);
     }
 
     async saveChatRoom(): Promise<void> {
         this.updateDataForStorage();
-        await this.chatRoomDbService.updateChatRoom(this.data._id, this.data);
+        await this.chatRoomSaverService.updateChatRoom(this);
     }
 
     /** Logs an error to the database, for this chat room. */
     protected async logError(error: object) {
         console.error(error);
-        await this.chatRoomDbService.addChatRoomLog(this.data._id, error);
+        await this.chatRoomSaverService.addChatRoomLog(this.data._id, {
+            type: 'error',
+            error
+        });
     }
 
     /** The current chat job that's being processed, if any. */

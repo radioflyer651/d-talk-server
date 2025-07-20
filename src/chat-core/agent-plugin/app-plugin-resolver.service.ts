@@ -1,4 +1,4 @@
-import { AgentPluginBase, PluginAttachmentTargetTypes } from "./agent-plugin-base.service";
+import { AgentPluginBase, PluginAttachmentTarget } from "./agent-plugin-base.service";
 import { IPluginResolver } from "./plugin-resolver.interface";
 import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
@@ -21,7 +21,7 @@ export class AppPluginResolver implements IPluginResolver {
         return resolver;
     }
 
-    async getPluginInstance(pluginContext: PluginInstanceReference, attachedTo: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<AgentPluginBase | undefined> {
+    async getPluginInstance(pluginContext: PluginInstanceReference, attachedTo: PluginAttachmentTarget, attachToAttachmentTarget: boolean): Promise<AgentPluginBase | undefined> {
         const resolver = this.getResolver(pluginContext.pluginSpecification.pluginType);
 
         // Get the plugins.
@@ -36,7 +36,7 @@ export class AppPluginResolver implements IPluginResolver {
         return plugins;
     }
 
-    async getPluginInstances(pluginReferences: PluginInstanceReference[], attachedTo: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<AgentPluginBase[]> {
+    async getPluginInstances(pluginReferences: PluginInstanceReference[], attachedTo: PluginAttachmentTarget, attachToAttachmentTarget: boolean): Promise<AgentPluginBase[]> {
         const result = await (await Promise.all(pluginReferences.map(p => this.getPluginInstance(p, attachedTo, false)))).filter(x => !!x);
 
         // Add these to the attachment target.
@@ -53,7 +53,7 @@ export class AppPluginResolver implements IPluginResolver {
         return result as AgentPluginBase[];
     }
 
-    async createPluginInstance(pluginReference: PluginSpecification, attachmentTarget: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<AgentPluginBase> {
+    async createPluginInstance(pluginReference: PluginSpecification, attachmentTarget: PluginAttachmentTarget, attachToAttachmentTarget: boolean): Promise<AgentPluginBase> {
         const resolver = this.getResolver(pluginReference.pluginType);
 
         // Return the instance of this.
@@ -68,7 +68,7 @@ export class AppPluginResolver implements IPluginResolver {
 
     /** Totally hydrates all plugins in a specified set of plugin specifications and instances.  If a plugin is not initialized yet, it will be, and will be added to the pluginInstances parameter.
      *   If indicated, the plugins will be added to the attachmentTarget's plugin list. */
-    async hydrateAllPlugins(pluginReferences: PluginSpecification[], pluginInstances: PluginInstanceReference[], attachmentTarget: PluginAttachmentTargetTypes, attachToAttachmentTarget: boolean): Promise<{ newPlugins: AgentPluginBase[], existingPlugins: AgentPluginBase[]; pluginsRemoved: boolean; }> {
+    async hydrateAllPlugins(pluginReferences: PluginSpecification[], pluginInstances: PluginInstanceReference[], attachmentTarget: PluginAttachmentTarget, attachToAttachmentTarget: boolean): Promise<{ newPlugins: AgentPluginBase[], existingPlugins: AgentPluginBase[]; pluginsRemoved: boolean; }> {
         // Find any plugin that hasn't been implemented yet.
         const missingPlugins = pluginReferences.filter(r => !pluginInstances.some(p => p.pluginSpecification.id.equals(r.id)));
 

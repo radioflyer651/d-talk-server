@@ -44,6 +44,16 @@ export class ChatDocumentDbService extends DbService {
         );
     }
 
+
+    /** Delete a chat job by its ObjectId. */
+    async deleteDocumentsByProjectId(projectId: ObjectId): Promise<number> {
+        return await this.dbHelper.deleteDataItems<IChatDocumentData>(
+            DbCollectionNames.ChatDocuments,
+            { projectId: projectId },
+            { deleteMany: false }
+        );
+    }
+
     /** List all chat documents for a given project. */
     async getDocumentsByProject(projectId: ObjectId): Promise<IChatDocumentData[]> {
         return await this.dbHelper.findDataItem<IChatDocumentData, { projectId: ObjectId; }>(
@@ -76,7 +86,7 @@ export class ChatDocumentDbService extends DbService {
 
     /** Get multiple chat documents by their ObjectIds. */
     async getDocumentsByIds(documentIds: ObjectId[]): Promise<IChatDocumentData[]> {
-        return await this.dbHelper.findDataItem<IChatDocumentData, { _id: { $in: ObjectId[] } }>(
+        return await this.dbHelper.findDataItem<IChatDocumentData, { _id: { $in: ObjectId[]; }; }>(
             DbCollectionNames.ChatDocuments,
             { _id: { $in: documentIds } }
         ) as IChatDocumentData[];

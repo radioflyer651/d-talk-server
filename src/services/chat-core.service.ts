@@ -6,6 +6,7 @@ import { ObjectId } from 'mongodb';
 import { NewDbItem } from "../model/shared-models/db-operation-types.model";
 import { AgentInstanceConfiguration } from "../model/shared-models/chat-core/agent-instance-configuration.model";
 import { AgentInstanceDbService } from '../database/chat-core/agent-instance-db.service';
+import { ChatDocumentDbService } from "../database/chat-core/chat-document-db.service";
 
 
 /** Handles non-pure data operations for Chat operations. */
@@ -16,6 +17,7 @@ export class ChatCoreService {
         readonly chatRoomDbService: ChatRoomDbService,
         readonly chatJobDbService: ChatJobDbService,
         readonly projectDbService: ProjectDbService,
+        readonly documentDbService: ChatDocumentDbService,
     ) { }
 
     /**
@@ -237,5 +239,25 @@ export class ChatCoreService {
 
         // Save the jobs back to the chat room.
         this.chatRoomDbService.updateChatRoom(chatRoomId, { jobs: room.jobs });
+    }
+
+    /** Deletes a specified chat room, and all associated resources, from the system. */
+    async deleteProject(projectId: ObjectId): Promise<void> {
+        // Get the chat room.
+        const project = await this.projectDbService.getProjectById(projectId);
+
+        // Validate
+        if (!project) {
+            throw new Error(`Project with ID ${projectId?.toString()} does not exist.`);
+        }
+
+        // Delete all of the parts of the project.
+        const agentsP = this.agentDbService.deleteAgentIdentitiesByProjectId(projectId);
+        const jobsP = this.chatJobDbService.deleteChatJobsByProjectId(projectId);
+        const projectP = this.chatRoomDbService.deleteChatRoomsByProjectId(projectId);
+        const documentsP = this.documentDbService.deleteDocumentsByProjectId(projectId);
+
+        // Wait for them to complete.
+        await Promise.all([agentsP, jobsP, projectP, documentsP]);
     }
 }

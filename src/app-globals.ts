@@ -81,7 +81,8 @@ export async function initializeServices(): Promise<void> {
         agentInstanceDbService,
         chatRoomDbService,
         chatJobDbService,
-        projectDbService
+        projectDbService,
+        chatDocumentDbService,
     );
     modelResolver = new ModelServiceResolver([
         new OllamaAiAgentService(ollamaModelConfigDbService),

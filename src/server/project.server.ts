@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-import { projectDbService } from '../app-globals';
+import { chatCoreService, projectDbService } from '../app-globals';
 import { ObjectId } from 'mongodb';
 import { Project } from '../model/shared-models/chat-core/project.model';
 import { NewDbItem } from '../model/shared-models/db-operation-types.model';
@@ -136,13 +136,8 @@ projectRouter.delete('/project/:id', async (req, res) => {
         const projectId = new ObjectId(req.params.id);
 
         // Delete the project in the database
-        const result = await projectDbService.deleteProject(projectId);
-        if (result > 0) {
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Project not found or not deleted' });
-        }
-
+        await chatCoreService.deleteProject(projectId);
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete project' });
     }

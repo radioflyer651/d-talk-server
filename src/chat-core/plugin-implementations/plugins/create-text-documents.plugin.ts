@@ -14,6 +14,7 @@ import { NewDbItem } from "../../../model/shared-models/db-operation-types.model
 import { Agent } from "../../agent/agent.service";
 import { IDocumentProvider, isDocumentProvider } from "../../document/document-provider.interface";
 import { ChatDocumentReference } from "../../../model/shared-models/chat-core/documents/chat-document-reference.model";
+import { generalDocumentInstructions } from "../../document/general-document-instructions.constants";
 
 export class CreateTextDocumentsPlugin extends AgentPluginBase implements IChatLifetimeContributor {
     constructor(
@@ -40,14 +41,15 @@ export class CreateTextDocumentsPlugin extends AgentPluginBase implements IChatL
 
 function getCommonInstructions(params: CreateTextDocumentsPluginParams): string {
     return `
-    Creates a new text document, which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.rootFolder}. 
-    After the document is created, you can edit the document through another tool call.
-    When creating new document, be sure to include detailed descriptions, indicating what the content of the document is for, and when to edit it.
-    Do not attempt to provide links to new documents.  They won't work.
-    Keep document names short, and use spaces.  These are not file names.
-    Folder path formats are 'folder1/folder2/folder3'.
-    ${params.instructions}
-    `;
+Creates a new text document, which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.rootFolder}. 
+After the document is created, you can edit the document through another tool call.
+When creating new document, be sure to include detailed descriptions, indicating what the content of the document is for, and when to edit it.
+Do not attempt to provide links to new documents.  They won't work.
+Keep document names short, and use spaces.  These are not file names.
+Folder path formats are 'folder1/folder2/folder3'.
+${generalDocumentInstructions}
+${params.instructions}
+`;
 }
 
 function getCreateRegularDocumentsTools(params: CreateTextDocumentsPluginParams, pluginId: ObjectId, agent: Agent, documentProvider: IDocumentProvider, projectId: ObjectId, documentsDbService: ChatDocumentDbService) {

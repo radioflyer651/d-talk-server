@@ -4,11 +4,13 @@ import { ObjectId } from "mongodb";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { ChatDocumentPermissions } from "../../../../model/shared-models/chat-core/documents/chat-document-permissions.model";
 import { type TextDocument } from "./text-document.service";
+import { generalDocumentInstructions } from "../../general-document-instructions.constants";
 
 
 
 const commonNotes = `IMPORTANT: If deleting lines and editing lines, ALWAYS do the deletions FIRST, and then make a separate call later to update lines, since the line numbers will change after deletions.\n` +
-    `After edits occur, the future message histories will reflect the newest version of the document, removing old versions from the chat history.`;
+    `After edits occur, the future message histories will reflect the newest version of the document, removing old versions from the chat history.\n` +
+    generalDocumentInstructions;
 
 export interface DocumentFunctionInfo {
     document: TextDocument;

@@ -2,7 +2,7 @@ import { MongoHelper } from "../../mongo-helper";
 import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
-import { IChatDocumentData } from "../../model/shared-models/chat-core/documents/chat-document.model";
+import { IChatDocumentData, IChatDocumentListItem } from "../../model/shared-models/chat-core/documents/chat-document.model";
 import { NewDbItem } from "../../model/shared-models/db-operation-types.model";
 
 export class ChatDocumentDbService extends DbService {
@@ -91,4 +91,58 @@ export class ChatDocumentDbService extends DbService {
             { _id: { $in: documentIds } }
         ) as IChatDocumentData[];
     }
+
+    /**
+     * Returns an array of IChatDocumentListItem for all documents in a project whose folderLocation starts with the given prefix.
+     * @param projectId The project to search within.
+     * @param folderPrefix The prefix for the folderLocation (e.g., "folder1/folder2").
+     */
+    async getDocumentListItemsByFolderPrefix(
+        projectId: ObjectId,
+        folderPrefix: string
+    ): Promise<IChatDocumentListItem[]> {
+        // Ensure the prefix ends with a slash for subfolder matching
+        const prefix = folderPrefix.endsWith('/') ? folderPrefix.substring(0, folderPrefix.length - 2) : folderPrefix;
+        const projection = {
+            _id: 1 as 1,
+            name: 1 as 1,
+            type: 1 as 1,
+            folderLocation: 1 as 1,
+            description: 1 as 1,
+            projectId: 1 as 1
+        };
+        return await this.dbHelper.findDataItemWithProjection<
+            IChatDocumentData,
+            typeof projection,
+            any
+        >(
+            DbCollectionNames.ChatDocuments,
+            {
+                projectId,
+                $or: [
+                    { folderLocation: folderPrefix },
+                    { folderLocation: { $regex: `^${prefix}` } }
+                ]
+            } as any,
+            projection,
+            { findOne: false }
+        ) as IChatDocumentListItem[];
+    }
+
+    /**
+     * Returns an array of IChatDocumentData for all documents in a project with the specified name.
+     * @param projectId The project to search within.
+     * @param name The name of the document(s) to find.
+     */
+    async getDocumentsByName(
+        projectId: ObjectId,
+        name: string
+    ): Promise<IChatDocumentData[]> {
+        return await this.dbHelper.findDataItem<IChatDocumentData, { projectId: ObjectId; name: string }>(
+            DbCollectionNames.ChatDocuments,
+            { projectId, name },
+            { findOne: false }
+        ) as IChatDocumentData[];
+    }
+
 }

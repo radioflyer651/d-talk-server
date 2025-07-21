@@ -31,25 +31,30 @@ export class CreateTextDocumentsPlugin extends AgentPluginBase implements IChatL
         if (!isDocumentProvider(this.attachedTo)) {
             throw new Error('attachedTo must be an IDocumentProvider.');
         }
-        return createTools(this.specification!.configuration, this.agent, this.attachedTo! as IDocumentProvider, this.chatRoom.project._id, this.documentsDbService);
+
+        console.log(`Getting tools (Create Text Document Plugin)`, this.specification?.configuration, this.specification!.id, this.agent, this.chatRoom.project._id);
+        return createTools(this.specification!.configuration, this.specification!.id, this.agent, this.attachedTo! as IDocumentProvider, this.chatRoom.project._id, this.documentsDbService);
     }
 }
 
 
-function createTools(params: CreateTextDocumentsPluginParams, agent: Agent, documentProvider: IDocumentProvider, projectId: ObjectId, documentsDbService: ChatDocumentDbService) {
-    const commonInstructions = `
-Creates a new text document, which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.rootFolder}. 
-After the document is created, you can edit the document through another tool call.
-When creating new document, be sure to include detailed descriptions, indicating what the content of the document is for, and when to edit it.
-Do not attempt to provide links to new documents.  They won't work.
-Keep document names short, and use spaces.  These are not file names.
-Folder path formats are 'folder1/folder2/folder3'.
-${params.instructions}
-`;
+function getCommonInstructions(params: CreateTextDocumentsPluginParams): string {
+    return `
+    Creates a new text document, which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.rootFolder}. 
+    After the document is created, you can edit the document through another tool call.
+    When creating new document, be sure to include detailed descriptions, indicating what the content of the document is for, and when to edit it.
+    Do not attempt to provide links to new documents.  They won't work.
+    Keep document names short, and use spaces.  These are not file names.
+    Folder path formats are 'folder1/folder2/folder3'.
+    ${params.instructions}
+    `;
+}
+
+function getCreateRegularDocumentsTools(params: CreateTextDocumentsPluginParams, pluginId: ObjectId, agent: Agent, documentProvider: IDocumentProvider, projectId: ObjectId, documentsDbService: ChatDocumentDbService) {
 
     const createDocumentSchema = {
-        name: 'create_text_document',
-        describe: commonInstructions,
+        name: `create_text_document_${pluginId.toString()}`,
+        describe: getCommonInstructions(params),
         schema: z.object({
             fileName: z.string().describe(`The name of the file you're creating.`),
             description: z.string().describe(`This is a description of what this file is, and what it's for.  If the description also has instructions, those instructions are provided to any LLM agent using the file as a system message as well.`),
@@ -93,11 +98,13 @@ ${params.instructions}
         createDocumentSchema
     );
 
-    //-----------------------------------------------------------------------------------------------
+    return createDocumentTool;
+}
 
+function getCreateDocumentsAndFoldersTools(params: CreateTextDocumentsPluginParams, pluginId: ObjectId, agent: Agent, documentProvider: IDocumentProvider, projectId: ObjectId, documentsDbService: ChatDocumentDbService) {
     const createDocumentInFolderSchema = {
-        name: 'create_text_document',
-        describe: commonInstructions,
+        name: `create_text_document_${pluginId.toString()}`,
+        describe: getCommonInstructions(params),
         schema: z.object({
             fileName: z.string().describe(`The name of the file you're creating.`),
             subFolder: z.string().describe(`The sub folder of ${params.rootFolder}, IF ANY, to add the document to.  If placing it in the current root, then leave this an empty string.`),
@@ -105,6 +112,32 @@ ${params.instructions}
             content: z.string().describe(`The content of the document.`),
         })
     };
+
+    function combineFolders(root: string, subFolder: string): string {
+        // Ensures there are no leading/trailing slashes or whitespace.
+        function conditionPathPart(val: string) {
+            val = val.trim();
+
+            if (val.endsWith('/')) {
+                val = val.substring(0, val.length - 2);
+            }
+
+            if (val.startsWith('/')) {
+                val = val.substring(1);
+            }
+
+            return val;
+        }
+
+        // Condition the two parts.
+        root = conditionPathPart(root);
+        subFolder = conditionPathPart(subFolder);
+
+        // Return the two combined with a slash.  In case either was blank,
+        //  we need to "condition" them, so there are no leading/trailing slashes.
+        return conditionPathPart(root + '/' + subFolder);
+    }
+
     const createDocumentInFolderTool = tool(
         async (options: z.infer<typeof createDocumentInFolderSchema.schema>) => {
             // Create the document.
@@ -114,7 +147,7 @@ ${params.instructions}
                 content: options.content,
                 comments: [],
                 description: options.description,
-                folderLocation: params.rootFolder,
+                folderLocation: combineFolders(params.rootFolder, options.subFolder),
                 projectId: projectId,
                 lastChangedBy: { entityType: 'agent', id: agent.identity._id },
                 createdDate: new Date(),
@@ -142,10 +175,57 @@ ${params.instructions}
         createDocumentInFolderSchema
     );
 
-    // Based on the settings, return the appropriate tool.
+    return createDocumentInFolderTool;
+}
+
+function createListDocumentTools(params: CreateTextDocumentsPluginParams, pluginId: ObjectId, projectId: ObjectId, documentsDbService: ChatDocumentDbService) {
+    const listDocumentsToolSchema = {
+        name: `list_folder_documents_${pluginId.toString()}`,
+        describe: `Returns a list of documents for the folder ${params.rootFolder} with most information excluding their content.`,
+        scheme: z.object({})
+    };
+
+    const listDocumentsTool = tool(
+        async (options: z.infer<typeof listDocumentsToolSchema.scheme>) => {
+            return documentsDbService.getDocumentListItemsByFolderPrefix(projectId, params.rootFolder);
+        },
+        listDocumentsToolSchema
+    );
+
+    const getDocumentsByIdSchema = {
+        name: `get_documents_by_id_${pluginId.toString()}`,
+        describe: `Returns a set of documents by their IDs.`,
+        schema: z.object({
+            documentIds: z.array(z.string()).describe(`The string version of the document's ID.  The tool will convert these to actual ObjectIds for you.`)
+        })
+    };
+
+    const getDocumentsByIdTool = tool(
+        async (options: z.infer<typeof getDocumentsByIdSchema.schema>) => {
+            const ids = options.documentIds.map(id => new ObjectId(id));
+            return await documentsDbService.getDocumentsByIds(ids);
+        },
+        getDocumentsByIdSchema
+    );
+
+    return [listDocumentsTool, getDocumentsByIdTool];
+}
+
+function createTools(params: CreateTextDocumentsPluginParams, pluginId: ObjectId, agent: Agent, documentProvider: IDocumentProvider, projectId: ObjectId, documentsDbService: ChatDocumentDbService) {
+    if (!pluginId) {
+        throw new Error(`pluginId cannot be unset.`);
+    }
+
     if (params.canCreateSubfolders) {
-        return [createDocumentInFolderTool];
+        return [
+            getCreateDocumentsAndFoldersTools(params, pluginId, agent, documentProvider, projectId, documentsDbService),
+            ...createListDocumentTools(params, pluginId, projectId, documentsDbService)
+        ];
     } else {
-        return [createDocumentTool];
+        return [
+            getCreateRegularDocumentsTools(params, pluginId, agent, documentProvider, projectId, documentsDbService),
+            ...createListDocumentTools(params, pluginId, projectId, documentsDbService)
+        ];
     }
 }
+

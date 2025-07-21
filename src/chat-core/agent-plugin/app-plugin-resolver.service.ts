@@ -87,6 +87,13 @@ export class AppPluginResolver implements IPluginResolver {
             pluginInstances.splice(index, 1);
         });
 
+        // !HACK: Copy the configurations to the instances.  This is probably a bad idea, but will get things working for the moment.
+        // TODO: Fix this hack so instance either have their own (editable) configurations, or that they always USE the original configuration.
+        pluginInstances.forEach(r => {
+            const specification = pluginReferences.find(s => s.id.equals(r.pluginSpecification.id))!;
+            r.pluginSpecification = specification;
+        });
+
         // Hydrate the existing plugins.
         let existingPluginsPromise: Promise<AgentPluginBase[]> = Promise.resolve([]);
         if (pluginInstances.length > 0) {

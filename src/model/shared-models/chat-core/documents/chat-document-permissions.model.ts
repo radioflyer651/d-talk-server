@@ -34,7 +34,8 @@ export interface ChatDirectoryPermissions extends ChatDocumentPermissions {
     canCreateSubfolders: boolean;
     rootFolder: string;
     canCreateFiles: boolean;
-    instructions: string,
+    instructions: string;
+    debugMode?: boolean;
 }
 
 export function createChatDirectoryPermissions(): ChatDirectoryPermissions {

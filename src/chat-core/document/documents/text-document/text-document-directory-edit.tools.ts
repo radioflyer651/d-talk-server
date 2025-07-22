@@ -16,7 +16,7 @@ const commonNotes = `IMPORTANT: If deleting lines and editing lines, ALWAYS do t
     `After edits occur, the future message histories will reflect the newest version of the document, removing old versions from the chat history.\n` +
     generalDocumentInstructions;
 
-export interface ManageDocumentFolderFunctionInfo extends CreateTextDocumentsPluginParams {
+export interface ManageDocumentFolderFunctionInfo {
     pluginId: ObjectId;
     textDocumentResolver: TextDocumentResolver;
     chatDocumentDbService: ChatDocumentDbService;
@@ -41,6 +41,10 @@ function createEditDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof editDocumentSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('edit_document_lines_' + info.pluginId.toString());
+            }
+
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -67,6 +71,10 @@ function createDeleteDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof deleteLineSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('delete_document_lines_' + info.pluginId.toString());
+            }
+
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -90,6 +98,9 @@ function createEditDocumentContentTool(info: ManageDocumentFolderFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof editContentSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('edit_document_full_content_' + info.pluginId.toString());
+            }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -113,6 +124,9 @@ function createEditDocumentNameTool(info: ManageDocumentFolderFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof editNameSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('edit_document_name_' + info.pluginId.toString());
+            }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -136,6 +150,9 @@ function createEditDocumentDescriptionTool(info: ManageDocumentFolderFunctionInf
 
     return tool(
         async (options: z.infer<typeof editDescriptionSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('edit_document_description_' + info.pluginId.toString());
+            }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -160,6 +177,9 @@ function createAddDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof addCommentSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('add_document_comment_' + info.pluginId.toString());
+            }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -187,6 +207,9 @@ function createEditDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof editCommentSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('edit_document_comment_' + info.pluginId.toString());
+            }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -214,6 +237,9 @@ function createDeleteDocumentCommentTool(info: ManageDocumentFolderFunctionInfo)
 
     return tool(
         async (options: z.infer<typeof deleteCommentSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('delete_document_comment_' + info.pluginId.toString());
+            }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -241,6 +267,9 @@ function createInsertDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof insertLinesSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('insert_document_lines_' + info.pluginId.toString());
+            }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -268,6 +297,9 @@ function createAppendDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
 
     return tool(
         async (options: z.infer<typeof appendLinesSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('append_document_lines_' + info.pluginId.toString());
+            }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
 
@@ -285,14 +317,14 @@ function createAppendDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
 // ----------------------------
 function getCommonInstructions(params: ManageDocumentFolderFunctionInfo): string {
     return `
-Creates a new text document, which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.rootFolder}. 
+Creates a new text document (also called a "file" sometimes), which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.permissions.rootFolder}. 
 After the document is created, you can edit the document through another tool call.
 When creating new document, be sure to include detailed descriptions, indicating what the content of the document is for, and when to edit it.
 Do not attempt to provide links to new documents.  They won't work.
 Keep document names short, and use spaces.  These are not file names.
 Folder path formats are 'folder1/folder2/folder3'.
 ${generalDocumentInstructions}
-${params.instructions}
+${params.permissions.instructions}
 `;
 }
 
@@ -315,7 +347,7 @@ function getCreateRegularDocumentsTools(params: ManageDocumentFolderFunctionInfo
                 content: options.content,
                 comments: [],
                 description: options.description,
-                folderLocation: params.rootFolder,
+                folderLocation: params.permissions.rootFolder,
                 projectId: params.projectId,
                 lastChangedBy: { entityType: 'agent', id: params.agentId },
                 createdDate: new Date(),
@@ -338,7 +370,7 @@ function getCreateDocumentsAndFoldersTools(params: ManageDocumentFolderFunctionI
         describe: getCommonInstructions(params),
         schema: z.object({
             fileName: z.string().describe(`The name of the file you're creating.`),
-            subFolder: z.string().describe(`The sub folder of ${params.rootFolder}, IF ANY, to add the document to.  If placing it in the current root, then leave this an empty string.`),
+            subFolder: z.string().describe(`The sub folder of ${params.permissions.rootFolder}, IF ANY, to add the document to.  If placing it in the current root, then leave this an empty string.`),
             description: z.string().describe(`This is a description of what this file is, and what it's for.  If the description also has instructions, those instructions are provided to any LLM agent using the file as a system message as well.`),
             content: z.string().describe(`The content of the document.`),
         })
@@ -378,7 +410,7 @@ function getCreateDocumentsAndFoldersTools(params: ManageDocumentFolderFunctionI
                 content: options.content,
                 comments: [],
                 description: options.description,
-                folderLocation: combineFolders(params.rootFolder, options.subFolder),
+                folderLocation: combineFolders(params.permissions.rootFolder, options.subFolder),
                 projectId: params.projectId,
                 lastChangedBy: { entityType: 'agent', id: params.agentId },
                 createdDate: new Date(),
@@ -399,20 +431,20 @@ function getCreateDocumentsAndFoldersTools(params: ManageDocumentFolderFunctionI
 function createListDocumentTools(params: ManageDocumentFolderFunctionInfo) {
     const listDocumentsToolSchema = {
         name: `list_folder_documents_${params.pluginId.toString()}`,
-        describe: `Returns a list of documents for the folder ${params.rootFolder} with most information excluding their content.`,
+        describe: `Returns a list of documents for the folder ${params.permissions.rootFolder} with most information excluding their content.`,
         scheme: z.object({})
     };
 
     const listDocumentsTool = tool(
         async (options: z.infer<typeof listDocumentsToolSchema.scheme>) => {
-            return params.chatDocumentDbService.getDocumentListItemsByFolderPrefix(params.projectId, params.rootFolder);
+            return params.chatDocumentDbService.getDocumentListItemsByFolderPrefix(params.projectId, params.permissions.rootFolder);
         },
         listDocumentsToolSchema
     );
 
     const getDocumentsByIdSchema = {
         name: `get_documents_by_id_${params.pluginId.toString()}`,
-        describe: `Returns a set of documents by their IDs in the folder: ${params.rootFolder}.`,
+        describe: `Returns a set of documents by their IDs in the folder: ${params.permissions.rootFolder}.`,
         schema: z.object({
             documentIds: z.array(z.string()).describe(`The string version of the document's ID.  The tool will convert these to actual ObjectIds for you.`)
         })
@@ -430,7 +462,7 @@ function createListDocumentTools(params: ManageDocumentFolderFunctionInfo) {
 }
 
 function createCreationAndListingTools(params: ManageDocumentFolderFunctionInfo) {
-    if (params.canCreateSubfolders) {
+    if (params.permissions.canCreateSubfolders) {
         return [
             getCreateDocumentsAndFoldersTools(params),
         ];

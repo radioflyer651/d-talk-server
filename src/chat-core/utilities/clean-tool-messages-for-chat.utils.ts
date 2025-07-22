@@ -96,5 +96,22 @@ export function cleanToolMessagesForChat(messageHistory: BaseMessage[]) {
         messageHistory.splice(i, 1);
     });
 
+    // Remove any tool calls for non-ai messages.
+    messageHistory.forEach(m => {
+        if (m.getType() !== 'ai') {
+            if ((m as any).tool_calls) {
+                delete (m as any).tool_calls;
+            }
+
+            const additional_kwargs = m.additional_kwargs ?? {};
+            if (additional_kwargs.tool_calls) {
+                delete additional_kwargs.tool_calls;
+            }
+            if (additional_kwargs.function_call) {
+                delete additional_kwargs.function_call;
+            }
+        }
+    });
+
     return messageHistory;
 }

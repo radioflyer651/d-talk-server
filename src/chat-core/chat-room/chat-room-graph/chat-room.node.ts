@@ -286,7 +286,7 @@ export async function callTools(state: typeof ChatState.State) {
         try {
             toolResult = await tool.invoke(toolCall.args);
         } catch (err) {
-            toolResult = new Error(`Error executing ${toolCall.name}: ID: ${toolCall.id}.  ${err?.toString() ?? 'undefined'}`);
+            toolResult = `ERROR: An error occurred when executing ${toolCall.name}: ID: ${toolCall.id}.  ${err?.toString() ?? 'undefined'}`;
         }
 
         // Return the tool message as a result.

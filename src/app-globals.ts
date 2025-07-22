@@ -18,7 +18,7 @@ import { AgentInstanceDbService } from "./database/chat-core/agent-instance-db.s
 import { ChatRoomHydratorService } from "./chat-core/chat-room/chat-room-hydrator.service";
 import { ChatDocumentDbService } from "./database/chat-core/chat-document-db.service";
 import { ChatDocumentResolutionService } from "./chat-core/document/document-resolution.service";
-import { documentTypeResolvers, initializeDocumentTypeResolvers } from "./document-type-resolvers";
+import { documentTypeResolvers, initializeDocumentTypeResolvers, textDocumentResolver } from "./document-type-resolvers";
 import { OllamaModelConfigurationDbService as OllamaModelConfigDbService } from "./database/chat-core/ollama-configurations-db.service";
 import { OllamaAiAgentService } from "./chat-core/agent/model-services/ollama.model-service-service";
 import { OpenAiAgentService } from "./chat-core/agent/model-services/open-model-service";
@@ -92,8 +92,8 @@ export async function initializeServices(): Promise<void> {
         new OllamaAiAgentService(ollamaModelConfigDbService),
         new OpenAiAgentService(),
     ]);
-    await initializePluginTypeResolvers(config, modelResolver, dbHelper, chatDocumentDbService);
     await initializeDocumentTypeResolvers(config);
+    await initializePluginTypeResolvers(config, modelResolver, dbHelper, chatDocumentDbService, textDocumentResolver);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
     documentResolver = new ChatDocumentResolutionService(documentTypeResolvers, chatDocumentDbService);
     agentServiceFactory = new AgentServiceFactory(modelResolver, pluginResolver, agentDbService, agentInstanceDbService);

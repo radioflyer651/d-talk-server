@@ -16,11 +16,12 @@ import { ChatDocumentDbService } from "./database/chat-core/chat-document-db.ser
 import { ModelServiceResolver } from "./chat-core/agent/model-services/model-service-resolver";
 import { RandomChoicePluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/random-choice-plugin-resolver";
 import { ManageDocumentFolderPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/manage-document-folder-plugin-resolver";
+import { TextDocumentResolver } from "./chat-core/document/resolvers/text-document.resolver";
 
 
 export let pluginTypeResolvers: IPluginTypeResolver<any>[] = [];
 
-export async function initializePluginTypeResolvers(config: IAppConfig, modelResolver: ModelServiceResolver, dbHelper: MongoHelper, chatDocumentDbService: ChatDocumentDbService) {
+export async function initializePluginTypeResolvers(config: IAppConfig, modelResolver: ModelServiceResolver, dbHelper: MongoHelper, chatDocumentDbService: ChatDocumentDbService, textDocumentResolver: TextDocumentResolver) {
     pluginTypeResolvers.push(...[
         new RoomInfoPluginResolver(),
         new ActDrunkPluginResolver(),
@@ -34,6 +35,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new LabeledMemoryPluginResolver(dbHelper, modelResolver),
         new CreateTextDocumentsPluginResolver(chatDocumentDbService),
         new RandomChoicePluginResolver(),
-        new ManageDocumentFolderPluginResolver(chatDocumentDbService),
+        new ManageDocumentFolderPluginResolver(chatDocumentDbService, textDocumentResolver),
     ]);
 }

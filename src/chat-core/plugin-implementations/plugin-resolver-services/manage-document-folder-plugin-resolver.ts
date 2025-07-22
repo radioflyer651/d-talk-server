@@ -6,10 +6,12 @@ import { PluginInstanceReference } from "../../../model/shared-models/chat-core/
 import { PluginAttachmentTarget } from "../../agent-plugin/agent-plugin-base.service";
 import { ChatDocumentDbService } from "../../../database/chat-core/chat-document-db.service";
 import { isDocumentProvider } from "../../document/document-provider.interface";
+import { TextDocumentResolver } from "../../document/resolvers/text-document.resolver";
 
 export class ManageDocumentFolderPluginResolver implements IPluginTypeResolver<ManageDocumentFolderPlugin> {
     constructor(
         readonly chatDocumentDbService: ChatDocumentDbService,
+        readonly textDocumentResolver: TextDocumentResolver,
     ) { }
 
     canImplementType(typeName: string): boolean {
@@ -20,7 +22,7 @@ export class ManageDocumentFolderPluginResolver implements IPluginTypeResolver<M
         if (!isDocumentProvider(attachedTo)) {
             throw new Error('attachedTo must be an IDocumentProvider.');
         }
-        const result = new ManageDocumentFolderPlugin(specification, this.chatDocumentDbService);
+        const result = new ManageDocumentFolderPlugin(specification, this.chatDocumentDbService, this.textDocumentResolver);
         result.attachedTo = attachedTo;
         return result;
     }
@@ -29,7 +31,7 @@ export class ManageDocumentFolderPluginResolver implements IPluginTypeResolver<M
         if (!isDocumentProvider(attachedTo)) {
             throw new Error('attachedTo must be an IDocumentProvider.');
         }
-        const result = new ManageDocumentFolderPlugin(pluginInstance, this.chatDocumentDbService);
+        const result = new ManageDocumentFolderPlugin(pluginInstance, this.chatDocumentDbService, this.textDocumentResolver);
         result.attachedTo = attachedTo;
         return result;
     }

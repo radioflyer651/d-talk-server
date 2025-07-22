@@ -1,6 +1,6 @@
 import { StoredMessage } from "@langchain/core/messages";
 import { StoredMessageAgentTypes } from "./stored-message-agent-types.data";
-import { getSpeakerFromStoredMessage, MESSAGE_SPEAKER_KEY } from "../../../chat-core/utilities/speaker.utils";
+import { getDtalkParams, getSpeakerFromStoredMessage, MESSAGE_SPEAKER_KEY } from "./utils/messages.utils";
 
 export class StoredMessageWrapper {
     constructor(
@@ -75,5 +75,17 @@ export class StoredMessageWrapper {
         if (speaker) {
             speaker.speakerId = value;
         }
+    }
+
+    /** Gets or sets a boolean value indicating whether or not this
+     *   message is disabled, making omitting it from LLM calls.
+     */
+    get disabled(): boolean {
+        const params = getDtalkParams(this.message);
+        return !!params.disabled;
+    }
+    set disabled(value: boolean) {
+        const params = getDtalkParams(this.message);
+        params.disabled = value;
     }
 }

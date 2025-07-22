@@ -7,7 +7,7 @@ import { IgnoreSpecificAgentPluginParms } from "../../../model/shared-models/cha
 import { ObjectId } from "mongodb";
 import { BaseMessage } from "@langchain/core/messages";
 import { copyBaseMessages } from "../../../utils/copy-base-message.utils";
-import { getSpeakerFromMessage } from "../../utilities/speaker.utils";
+import { getSpeakerFromMessage } from "../../../model/shared-models/chat-core/utils/messages.utils";
 
 /**
  * Plugin: Ignore Specific Agent

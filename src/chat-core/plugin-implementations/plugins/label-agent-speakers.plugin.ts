@@ -3,7 +3,7 @@ import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-cont
 import { LABEL_AGENT_SPEAKERS_PLUGIN_TYPE_ID } from "../../../model/shared-models/chat-core/plugins/plugin-type-constants.data";
 import { BaseMessage, AIMessage, SystemMessage } from "@langchain/core/messages";
 import { copyBaseMessages } from "../../../utils/copy-base-message.utils";
-import { getSpeakerFromMessage } from "../../utilities/speaker.utils";
+import { getSpeakerFromMessage } from "../../../model/shared-models/chat-core/utils/messages.utils";
 import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
 import { MessagePositionTypes, PositionableMessage } from "../../../model/shared-models/chat-core/positionable-message.model";

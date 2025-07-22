@@ -6,6 +6,7 @@ import { ChatCallState, ChatState } from "./chat-room.state";
 import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 import { cleanToolMessagesForChat } from "../../utilities/clean-tool-messages-for-chat.utils";
 import { formatChatMessages } from "../../../utils/format-chat-messages.utils";
+import { isMessageDisabled } from "../../../model/shared-models/chat-core/utils/messages.utils";
 
 /** Returns a sorted version of the lifetime contributor list. */
 function getSortedContributors(contributors: IChatLifetimeContributor[], direction: 'forward' | 'reverse'): IChatLifetimeContributor[] {
@@ -141,6 +142,9 @@ export async function addPreChatMessages(state: typeof ChatState.State) {
             preChatMessages = preChatMessages.concat(msgs);
         }
     }
+
+    // Remove any disabled messages.
+    preChatMessages = preChatMessages.filter(m => !isMessageDisabled(m.message));
 
     // Prepend pre-chat messages to the callMessages
     state.callMessages = insertPositionableMessages(preChatMessages, state.callMessages);

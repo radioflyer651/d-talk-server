@@ -4,7 +4,7 @@ import { OTHER_AGENT_MESSAGES_AS_USER } from "../../../model/shared-models/chat-
 import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
 import { copyBaseMessages } from "../../../utils/copy-base-message.utils";
-import { getSpeakerFromMessage } from "../../utilities/speaker.utils";
+import { getSpeakerFromMessage } from "../../../model/shared-models/chat-core/utils/messages.utils";
 
 
 export class OtherAgentMessagesAsUserPlugin extends AgentPluginBase {

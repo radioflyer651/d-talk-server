@@ -1,4 +1,5 @@
 import { BaseMessage } from "@langchain/core/messages";
+import { getDtalkParams } from "../../model/shared-models/chat-core/utils/messages.utils";
 
 /** Provides grouping of messages in a message list, based on tool statuses and ai messages. */
 export class MessageGroupingState {
@@ -29,7 +30,7 @@ export class MessageGroupingState {
 
     get requiresTraversalBack(): boolean {
         const messageType = this.message.getType();
-        const previousState = this.getPreviousMessageTraversal();
+        const previousState = this.getPreviousMessageGrouping();
 
         // If there's no previous message, then we simply can't traverse backwards.  We're at the end.
         if (!previousState) {
@@ -50,7 +51,7 @@ export class MessageGroupingState {
 
     get requiresTraversalForward(): boolean {
         const messageType = this.message.getType();
-        const nextState = this.getNextMessageTraversal();
+        const nextState = this.getNextMessageGrouping();
 
         // If there's no next message, then we simply can't traverse forwards.  We're at the end.
         if (!nextState) {
@@ -78,7 +79,7 @@ export class MessageGroupingState {
 
     }
 
-    /** Finds the MessageTraversalState of the message with the lowest index related to this message. */
+    /** Finds the MessageGroupingState of the message with the lowest index related to this message. */
     getFirstRelatedMessage(): MessageGroupingState {
         // Check if we're done.  If we're done, then we're done!
         if (!this.requiresTraversalBack) {
@@ -87,11 +88,11 @@ export class MessageGroupingState {
 
         // We're not done.  We KNOW the previous message exists (because of the previous check),
         //  so let THAT ONE figure out who our mommy is.
-        const previousState = this.getPreviousMessageTraversal();
+        const previousState = this.getPreviousMessageGrouping();
         return previousState!.getFirstRelatedMessage();
     }
 
-    /** Finds the MessageTraversalState of the message with the highest index related to this message. */
+    /** Finds the MessageGroupingState of the message with the highest index related to this message. */
     getLastRelatedMessage(): MessageGroupingState {
         if (!this.requiresTraversalForward) {
             return this;
@@ -99,11 +100,12 @@ export class MessageGroupingState {
 
         // We're not done.  We KNOW the next message exists (because of the previous check),
         //  so let THAT ONE figure out who our daddy is.
-        const nextState = this.getNextMessageTraversal();
-        return nextState!.getLastRelatedMessage();
+        const nextState = this.getNextMessageGrouping()!;
+        return nextState.getLastRelatedMessage();
     }
 
-    getPreviousMessageTraversal(): MessageGroupingState | undefined {
+    /** Returns a message grouping state for the previous message. */
+    getPreviousMessageGrouping(): MessageGroupingState | undefined {
         const previousMessage = this.previousMessage;
 
         if (!previousMessage) {
@@ -113,7 +115,8 @@ export class MessageGroupingState {
         return new MessageGroupingState(this.messages, this.messageIndex - 1);
     }
 
-    getNextMessageTraversal(): MessageGroupingState | undefined {
+    /** Returns a message grouping state for the next message. */
+    getNextMessageGrouping(): MessageGroupingState | undefined {
         const nextMessage = this.messages[this.messageIndex + 1];
 
         if (!nextMessage) {
@@ -121,5 +124,45 @@ export class MessageGroupingState {
         }
 
         return new MessageGroupingState(this.messages, this.messageIndex + 1);
+    }
+
+    /** Returns a boolean value indicating whether or not the next message is a tool message. */
+    get isNextMessageToolCall(): boolean {
+        const nextMessage = this.getNextMessageGrouping();
+        if (!nextMessage) {
+            return false;
+        }
+
+        return nextMessage.messageType === 'tool';
+    }
+
+    /** Returns a grouping state for all tool messages that come after this message. */
+    getFollowingToolMessages(): MessageGroupingState[] {
+        if (!this.isNextMessageToolCall) {
+            return [];
+        }
+
+        // Get the next grouping, and let IT do the rest of the job for us.
+        const nextGrouping = this.getNextMessageGrouping()!;
+        const followingTools = nextGrouping.getFollowingToolMessages();
+        return [nextGrouping, ...followingTools];
+    }
+
+    /** Returns a boolean value indicating whether or not this message is disabled, and meant
+     *   not to be part of LLM chat calls. */
+    get isDisabledMessage(): boolean {
+        const data = getDtalkParams(this.message);
+        return !!data.disabled;
+    }
+
+    /** Returns all tool messages directly after this message. */
+    getToolMessagesFollowing(): MessageGroupingState[] {
+        const nextGrouping = this.getNextMessageGrouping();
+
+        if (nextGrouping && nextGrouping.messageType === 'tool') {
+            return [nextGrouping, ...nextGrouping.getToolMessagesFollowing()];
+        }
+
+        return [];
     }
 }

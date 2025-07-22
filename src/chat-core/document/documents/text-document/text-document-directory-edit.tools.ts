@@ -16,7 +16,7 @@ const commonNotes = `IMPORTANT: If deleting lines and editing lines, ALWAYS do t
     `After edits occur, the future message histories will reflect the newest version of the document, removing old versions from the chat history.\n` +
     generalDocumentInstructions;
 
-interface DocumentFunctionInfo extends CreateTextDocumentsPluginParams {
+export interface ManageDocumentFolderFunctionInfo extends CreateTextDocumentsPluginParams {
     pluginId: ObjectId;
     textDocumentResolver: TextDocumentResolver;
     chatDocumentDbService: ChatDocumentDbService;
@@ -26,7 +26,7 @@ interface DocumentFunctionInfo extends CreateTextDocumentsPluginParams {
     onContentChanged: () => Promise<void>;
 }
 
-function createEditDocumentLinesTool(info: DocumentFunctionInfo) {
+function createEditDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     const editDocumentSchema = {
         name: 'edit_document_lines_' + info.pluginId.toString(),
         description: `Edits the lines of a specified document ID.\n${commonNotes}`,
@@ -55,7 +55,7 @@ function createEditDocumentLinesTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createDeleteDocumentLinesTool(info: DocumentFunctionInfo) {
+function createDeleteDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     const deleteLineSchema = {
         name: 'delete_document_lines_' + info.pluginId.toString(),
         description: `Deletes lines on the specified document ID.\n${commonNotes}`,
@@ -78,7 +78,7 @@ function createDeleteDocumentLinesTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createEditDocumentContentTool(info: DocumentFunctionInfo) {
+function createEditDocumentContentTool(info: ManageDocumentFolderFunctionInfo) {
     const editContentSchema = {
         name: 'edit_document_full_content_' + info.pluginId.toString(),
         description: `Replaces the entire content of the specified document ID.\n${commonNotes}`,
@@ -101,7 +101,7 @@ function createEditDocumentContentTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createEditDocumentNameTool(info: DocumentFunctionInfo) {
+function createEditDocumentNameTool(info: ManageDocumentFolderFunctionInfo) {
     const editNameSchema = {
         name: 'edit_document_name_' + info.pluginId.toString(),
         description: `Updates the name of the specified document ID.`,
@@ -124,7 +124,7 @@ function createEditDocumentNameTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createEditDocumentDescriptionTool(info: DocumentFunctionInfo) {
+function createEditDocumentDescriptionTool(info: ManageDocumentFolderFunctionInfo) {
     const editDescriptionSchema = {
         name: 'edit_document_description_' + info.pluginId.toString(),
         description: `Updates the description of the specified document ID.`,
@@ -147,7 +147,7 @@ function createEditDocumentDescriptionTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createAddDocumentCommentTool(info: DocumentFunctionInfo) {
+function createAddDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
     const addCommentSchema = {
         name: 'add_document_comment_' + info.pluginId.toString(),
         description: `Adds a comment to the specified document ID.`,
@@ -174,7 +174,7 @@ function createAddDocumentCommentTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createEditDocumentCommentTool(info: DocumentFunctionInfo) {
+function createEditDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
     const editCommentSchema = {
         name: 'edit_document_comment_' + info.pluginId.toString(),
         description: `Edits a comment on the specified document ID.`,
@@ -202,7 +202,7 @@ function createEditDocumentCommentTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createDeleteDocumentCommentTool(info: DocumentFunctionInfo) {
+function createDeleteDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
     const deleteCommentSchema = {
         name: 'delete_document_comment_' + info.pluginId.toString(),
         description: `Deletes a comment from the specified document ID.`,
@@ -228,7 +228,7 @@ function createDeleteDocumentCommentTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createInsertDocumentLinesTool(info: DocumentFunctionInfo) {
+function createInsertDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     const insertLinesSchema = {
         name: 'insert_document_lines_' + info.pluginId.toString(),
         description: `Inserts new lines into the specified document ID at a specified index.`,
@@ -256,7 +256,7 @@ function createInsertDocumentLinesTool(info: DocumentFunctionInfo) {
     );
 }
 
-function createAppendDocumentLinesTool(info: DocumentFunctionInfo) {
+function createAppendDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     const appendLinesSchema = {
         name: 'append_document_lines_' + info.pluginId.toString(),
         description: `Appends new lines to the end of the specified document ID.`,
@@ -283,7 +283,7 @@ function createAppendDocumentLinesTool(info: DocumentFunctionInfo) {
 }
 
 // ----------------------------
-function getCommonInstructions(params: DocumentFunctionInfo): string {
+function getCommonInstructions(params: ManageDocumentFolderFunctionInfo): string {
     return `
 Creates a new text document, which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.rootFolder}. 
 After the document is created, you can edit the document through another tool call.
@@ -296,7 +296,7 @@ ${params.instructions}
 `;
 }
 
-function getCreateRegularDocumentsTools(params: DocumentFunctionInfo) {
+function getCreateRegularDocumentsTools(params: ManageDocumentFolderFunctionInfo) {
     const createDocumentSchema = {
         name: `create_text_document_${params.pluginId.toString()}`,
         describe: getCommonInstructions(params),
@@ -332,7 +332,7 @@ function getCreateRegularDocumentsTools(params: DocumentFunctionInfo) {
     return createDocumentTool;
 }
 
-function getCreateDocumentsAndFoldersTools(params: DocumentFunctionInfo) {
+function getCreateDocumentsAndFoldersTools(params: ManageDocumentFolderFunctionInfo) {
     const createDocumentInFolderSchema = {
         name: `create_text_document_${params.pluginId.toString()}`,
         describe: getCommonInstructions(params),
@@ -396,7 +396,7 @@ function getCreateDocumentsAndFoldersTools(params: DocumentFunctionInfo) {
     return createDocumentInFolderTool;
 }
 
-function createListDocumentTools(params: DocumentFunctionInfo) {
+function createListDocumentTools(params: ManageDocumentFolderFunctionInfo) {
     const listDocumentsToolSchema = {
         name: `list_folder_documents_${params.pluginId.toString()}`,
         describe: `Returns a list of documents for the folder ${params.rootFolder} with most information excluding their content.`,
@@ -412,7 +412,7 @@ function createListDocumentTools(params: DocumentFunctionInfo) {
 
     const getDocumentsByIdSchema = {
         name: `get_documents_by_id_${params.pluginId.toString()}`,
-        describe: `Returns a set of documents by their IDs.`,
+        describe: `Returns a set of documents by their IDs in the folder: ${params.rootFolder}.`,
         schema: z.object({
             documentIds: z.array(z.string()).describe(`The string version of the document's ID.  The tool will convert these to actual ObjectIds for you.`)
         })
@@ -429,7 +429,7 @@ function createListDocumentTools(params: DocumentFunctionInfo) {
     return [listDocumentsTool, getDocumentsByIdTool];
 }
 
-function createCreationAndListingTools(params: DocumentFunctionInfo) {
+function createCreationAndListingTools(params: ManageDocumentFolderFunctionInfo) {
     if (params.canCreateSubfolders) {
         return [
             getCreateDocumentsAndFoldersTools(params),
@@ -443,7 +443,7 @@ function createCreationAndListingTools(params: DocumentFunctionInfo) {
 // ---------------------------
 
 /** Returns the tools required to edit/modify document information. */
-export function createTextDocumentTools(info: DocumentFunctionInfo) {
+export function createTextDocumentTools(info: ManageDocumentFolderFunctionInfo) {
     const perms = info.permissions || {};
     const result: (ToolNode | StructuredToolInterface)[] = [
         ...createListDocumentTools(info)

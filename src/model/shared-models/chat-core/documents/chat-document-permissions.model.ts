@@ -34,17 +34,19 @@ export interface ChatDirectoryPermissions extends ChatDocumentPermissions {
     canCreateSubfolders: boolean;
     rootFolder: string;
     canCreateFiles: boolean;
+    instructions: string,
 }
 
 export function createChatDirectoryPermissions(): ChatDirectoryPermissions {
     return {
-        canRead: false,
-        canEdit: false,
-        canUpdateDescription: false,
-        canChangeName: false,
-        canUpdateComments: false,
-        canCreateSubfolders: false,
-        canCreateFiles: false,
+        canRead: true,
+        canEdit: true,
+        canUpdateDescription: true,
+        canChangeName: true,
+        canUpdateComments: true,
+        canCreateSubfolders: true,
+        canCreateFiles: true,
+        instructions: '',
         rootFolder: '',
     };
 }
@@ -63,6 +65,7 @@ export function combineDirectoryPermissions(permissions: ChatDirectoryPermission
         canCreateSubfolders: c.canCreateSubfolders || p.canCreateSubfolders,
         canCreateFiles: p.canCreateFiles || c.canCreateFiles,
         rootFolder: p.rootFolder || c.rootFolder,
+        instructions: p.instructions || c.instructions
     }), createChatDirectoryPermissions());
     return result;
 }

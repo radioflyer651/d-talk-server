@@ -1,3 +1,4 @@
+import { createChatDirectoryPermissions } from "../documents/chat-document-permissions.model";
 import { CreateTextDocumentsPluginParams } from "./create-text-documents-plugin.params";
 import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
 
@@ -14,6 +15,7 @@ export const WEB_SEARCH_PLUGIN_TYPE_ID = 'web-search-plugin';
 export const LABELED_MEMORY_PLUGIN_TYPE_ID = 'labeled-memory-plugin';
 export const CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID = 'create-text-documents-plugin';
 export const RANDOM_CHOICE_PLUGIN_TYPE_ID = 'random-choice-plugin';
+export const MANAGE_DOCUMENT_FOLDER_PLUGIN_TYPE_ID = 'manage-document-folder';
 
 export interface PluginInfo {
     pluginType: string;
@@ -148,5 +150,14 @@ export const pluginInformation: PluginInfo[] = [
         attachesToChatRoom: true,
         attachesToJob: true,
         defaultParameterCreator: () => undefined,
+    },
+    {
+        pluginType: MANAGE_DOCUMENT_FOLDER_PLUGIN_TYPE_ID,
+        displayName: 'Manage Document Folder',
+        description: 'Allows agents to manage document folders, including creating and organizing folders.',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => createChatDirectoryPermissions()
     },
 ];

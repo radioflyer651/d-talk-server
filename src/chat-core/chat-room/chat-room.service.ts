@@ -277,7 +277,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
             const graph = createChatRoomGraph();
 
             // Execute the chat call.
-            const result = graph.streamEvents(graphState, { version: 'v2', recursionLimit: 40 });
+            const result = graph.streamEvents(graphState, { version: 'v2', recursionLimit: 80 });
             const newMessages = [];
             let lastEvent: StreamEvent | undefined = undefined;
             try {

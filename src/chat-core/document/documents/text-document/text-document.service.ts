@@ -78,6 +78,12 @@ export class TextDocument extends ChatDocument implements IDisposable {
         }
     }
 
+    changeFolderLocation(newFolderLocation: string, editorId: UpdateInfo) {
+        this.data.folderLocation = newFolderLocation;
+        this.updateChangeInfo(editorId);
+        this._contentChanged$.next(this);
+    }
+
     editLine(editorId: UpdateInfo, lineNumber: number, newContent: string) {
         this.validateLineNumber(lineNumber);
 

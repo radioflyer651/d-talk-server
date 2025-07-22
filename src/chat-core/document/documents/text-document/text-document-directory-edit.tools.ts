@@ -356,6 +356,41 @@ function createAppendDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     );
 }
 
+
+function createMoveDocumentTool(info: ManageDocumentFolderFunctionInfo) {
+    const moveDocumentSchema = {
+        name: 'move_document_' + info.pluginId.toString(),
+        description: `Moves a document to another folder by updating its folderLocation. ${getExclusiveFolderInstructionText(info.permissions)}.`,
+        schema: z.object({
+            documentId: z.string(),
+            newFolderLocation: z.string().describe('The new folder path to move the document to.')
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof moveDocumentSchema.schema>) => {
+            if (info.permissions?.debugMode) {
+                console.log('move_document_' + info.pluginId.toString());
+            }
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            callHasFolderAccess(document, info.permissions!);
+
+            // Check that newFolderLocation is inside the allowed rootFolder
+            if (!(info.permissions.rootFolder.trim() === '' || options.newFolderLocation.trim().toLowerCase().startsWith(info.permissions.rootFolder.trim().toLowerCase()))) {
+                throw new Error(`Permissions only allow moving documents to the folderLocation ${info.permissions.rootFolder} and sub folders. The requested new folderLocation is ${options.newFolderLocation}.`);
+            }
+
+            document.changeFolderLocation(options.newFolderLocation, { entityType: 'agent', id: info.agentId });
+            await document.commitToDb();
+            info.onContentChanged();
+            return 'Document moved successfully.';
+        },
+        moveDocumentSchema
+    );
+}
+
 // ----------------------------
 function getCommonInstructions(params: ManageDocumentFolderFunctionInfo): string {
     return `
@@ -533,6 +568,7 @@ export function createTextDocumentTools(info: ManageDocumentFolderFunctionInfo) 
 
     if (perms.canChangeName) {
         result.push(createEditDocumentNameTool(info));
+        result.push(createMoveDocumentTool(info));
     }
 
     if (perms.canUpdateDescription) {

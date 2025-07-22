@@ -13,6 +13,7 @@ export const IGNORE_SPECIFIC_AGENT_PLUGIN_TYPE_ID = 'ignore-specific-agent';
 export const WEB_SEARCH_PLUGIN_TYPE_ID = 'web-search-plugin';
 export const LABELED_MEMORY_PLUGIN_TYPE_ID = 'labeled-memory-plugin';
 export const CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID = 'create-text-documents-plugin';
+export const RANDOM_CHOICE_PLUGIN_TYPE_ID = 'random-choice-plugin';
 
 export interface PluginInfo {
     pluginType: string;
@@ -138,5 +139,14 @@ export const pluginInformation: PluginInfo[] = [
             instructions: '',
             rootFolder: '',
         }
+    },
+    {
+        pluginType: RANDOM_CHOICE_PLUGIN_TYPE_ID,
+        displayName: `Random Choice`,
+        description: `Allows the LLM to have a set of values, and this plugin will choose random items from the list.`,
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => undefined,
     },
 ];

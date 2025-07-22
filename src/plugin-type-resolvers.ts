@@ -15,6 +15,7 @@ import { MongoHelper } from "./mongo-helper";
 import { ChatDocumentDbService } from "./database/chat-core/chat-document-db.service";
 import { AgentDbService } from "./database/chat-core/agent-db.service";
 import { ModelServiceResolver } from "./chat-core/agent/model-services/model-service-resolver";
+import { RandomChoicePluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/random-choice-plugin-resolver";
 
 
 export let pluginTypeResolvers: IPluginTypeResolver<any>[] = [];
@@ -32,5 +33,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new WebSearchPluginResolver(config.tavilyConfiguration.apiKey),
         new LabeledMemoryPluginResolver(dbHelper, modelResolver),
         new CreateTextDocumentsPluginResolver(chatDocumentDbService),
+        new RandomChoicePluginResolver(),
     ]);
 }

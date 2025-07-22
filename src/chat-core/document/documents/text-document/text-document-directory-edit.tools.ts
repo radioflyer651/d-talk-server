@@ -1,0 +1,479 @@
+import { z } from "zod";
+import { StructuredToolInterface, tool } from "@langchain/core/tools";
+import { ObjectId } from "mongodb";
+import { ToolNode } from "@langchain/langgraph/prebuilt";
+import { ChatDirectoryPermissions, ChatDocumentPermissions } from "../../../../model/shared-models/chat-core/documents/chat-document-permissions.model";
+import { generalDocumentInstructions } from "../../general-document-instructions.constants";
+import { TextDocumentResolver } from "../../resolvers/text-document.resolver";
+import { ChatDocumentDbService } from "../../../../database/chat-core/chat-document-db.service";
+import { TextDocumentData } from "../../../../model/shared-models/chat-core/documents/document-types/text-document.model";
+import { CreateTextDocumentsPluginParams } from "../../../../model/shared-models/chat-core/plugins/create-text-documents-plugin.params";
+import { NewDbItem } from "../../../../model/shared-models/db-operation-types.model";
+
+
+
+const commonNotes = `IMPORTANT: If deleting lines and editing lines, ALWAYS do the deletions FIRST, and then make a separate call later to update lines, since the line numbers will change after deletions.\n` +
+    `After edits occur, the future message histories will reflect the newest version of the document, removing old versions from the chat history.\n` +
+    generalDocumentInstructions;
+
+interface DocumentFunctionInfo extends CreateTextDocumentsPluginParams {
+    pluginId: ObjectId;
+    textDocumentResolver: TextDocumentResolver;
+    chatDocumentDbService: ChatDocumentDbService;
+    agentId: ObjectId;
+    projectId: ObjectId;
+    permissions: ChatDirectoryPermissions;
+    onContentChanged: () => Promise<void>;
+}
+
+function createEditDocumentLinesTool(info: DocumentFunctionInfo) {
+    const editDocumentSchema = {
+        name: 'edit_document_lines_' + info.pluginId.toString(),
+        description: `Edits the lines of a specified document ID.\n${commonNotes}`,
+        schema: z.object({
+            documentId: z.string(),
+            lines: z.array(z.object({
+                lineNumber: z.number().int(),
+                newContent: z.string()
+            }))
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof editDocumentSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+
+            options.lines.forEach(l => {
+                document.editLine({ entityType: 'agent', id: info.agentId }, l.lineNumber, l.newContent);
+            });
+            await document.commitToDb();
+            info.onContentChanged();
+        },
+        editDocumentSchema
+    );
+}
+
+function createDeleteDocumentLinesTool(info: DocumentFunctionInfo) {
+    const deleteLineSchema = {
+        name: 'delete_document_lines_' + info.pluginId.toString(),
+        description: `Deletes lines on the specified document ID.\n${commonNotes}`,
+        schema: z.object({
+            documentId: z.string(),
+            lines: z.array(z.number().int())
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof deleteLineSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.deleteLines({ entityType: 'agent', id: info.agentId }, options.lines);
+            await document.commitToDb();
+            info.onContentChanged();
+        },
+        deleteLineSchema
+    );
+}
+
+function createEditDocumentContentTool(info: DocumentFunctionInfo) {
+    const editContentSchema = {
+        name: 'edit_document_full_content_' + info.pluginId.toString(),
+        description: `Replaces the entire content of the specified document ID.\n${commonNotes}`,
+        schema: z.object({
+            documentId: z.string(),
+            newContent: z.string()
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof editContentSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.updateContent({ entityType: 'agent', id: info.agentId }, options.newContent);
+            await document.commitToDb();
+            info.onContentChanged();
+        },
+        editContentSchema
+    );
+}
+
+function createEditDocumentNameTool(info: DocumentFunctionInfo) {
+    const editNameSchema = {
+        name: 'edit_document_name_' + info.pluginId.toString(),
+        description: `Updates the name of the specified document ID.`,
+        schema: z.object({
+            documentId: z.string(),
+            newName: z.string()
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof editNameSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.updateName({ entityType: 'agent', id: info.agentId }, options.newName);
+            await document.commitToDb();
+            info.onContentChanged();
+        },
+        editNameSchema
+    );
+}
+
+function createEditDocumentDescriptionTool(info: DocumentFunctionInfo) {
+    const editDescriptionSchema = {
+        name: 'edit_document_description_' + info.pluginId.toString(),
+        description: `Updates the description of the specified document ID.`,
+        schema: z.object({
+            documentId: z.string(),
+            newDescription: z.string()
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof editDescriptionSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.updateDescription({ entityType: 'agent', id: info.agentId }, options.newDescription);
+            await document.commitToDb();
+            info.onContentChanged();
+        },
+        editDescriptionSchema
+    );
+}
+
+function createAddDocumentCommentTool(info: DocumentFunctionInfo) {
+    const addCommentSchema = {
+        name: 'add_document_comment_' + info.pluginId.toString(),
+        description: `Adds a comment to the specified document ID.`,
+        schema: z.object({
+            documentId: z.string(),
+            creator: z.string(), // ObjectId as string
+            content: z.string()
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof addCommentSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.addComment(
+                { entityType: 'agent', id: info.agentId },
+                { creator: new ObjectId(options.creator), content: options.content }
+            );
+            await document.commitToDb();
+            info.onContentChanged();
+        },
+        addCommentSchema
+    );
+}
+
+function createEditDocumentCommentTool(info: DocumentFunctionInfo) {
+    const editCommentSchema = {
+        name: 'edit_document_comment_' + info.pluginId.toString(),
+        description: `Edits a comment on the specified document ID.`,
+        schema: z.object({
+            documentId: z.string(),
+            commentIndex: z.number().int(),
+            newContent: z.string()
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof editCommentSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.editComment(
+                { entityType: 'agent', id: info.agentId },
+                options.commentIndex,
+                options.newContent
+            );
+            await document.commitToDb();
+            info.onContentChanged();
+        },
+        editCommentSchema
+    );
+}
+
+function createDeleteDocumentCommentTool(info: DocumentFunctionInfo) {
+    const deleteCommentSchema = {
+        name: 'delete_document_comment_' + info.pluginId.toString(),
+        description: `Deletes a comment from the specified document ID.`,
+        schema: z.object({
+            documentId: z.string(),
+            commentIndex: z.number().int()
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof deleteCommentSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.deleteComment(
+                { entityType: 'agent', id: info.agentId },
+                options.commentIndex
+            );
+            await document.commitToDb();
+            info.onContentChanged();
+        },
+        deleteCommentSchema
+    );
+}
+
+function createInsertDocumentLinesTool(info: DocumentFunctionInfo) {
+    const insertLinesSchema = {
+        name: 'insert_document_lines_' + info.pluginId.toString(),
+        description: `Inserts new lines into the specified document ID at a specified index.`,
+        schema: z.object({
+            documentId: z.string(),
+            startIndex: z.number().int(),
+            newLines: z.array(z.string())
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof insertLinesSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.insertLines(
+                { entityType: 'agent', id: info.agentId },
+                options.startIndex,
+                options.newLines
+            );
+            await document.commitToDb();
+            await info.onContentChanged();
+        },
+        insertLinesSchema
+    );
+}
+
+function createAppendDocumentLinesTool(info: DocumentFunctionInfo) {
+    const appendLinesSchema = {
+        name: 'append_document_lines_' + info.pluginId.toString(),
+        description: `Appends new lines to the end of the specified document ID.`,
+        schema: z.object({
+            documentId: z.string(),
+            newLines: z.array(z.string())
+        })
+    };
+
+    return tool(
+        async (options: z.infer<typeof appendLinesSchema.schema>) => {
+            const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
+            const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
+
+            document.appendLines(
+                { entityType: 'agent', id: info.agentId },
+                options.newLines
+            );
+            await document.commitToDb();
+            await info.onContentChanged();
+        },
+        appendLinesSchema
+    );
+}
+
+// ----------------------------
+function getCommonInstructions(params: DocumentFunctionInfo): string {
+    return `
+Creates a new text document, which may be ANY form of text file (HTML, plain text, JSON, etc) in the folder ${params.rootFolder}. 
+After the document is created, you can edit the document through another tool call.
+When creating new document, be sure to include detailed descriptions, indicating what the content of the document is for, and when to edit it.
+Do not attempt to provide links to new documents.  They won't work.
+Keep document names short, and use spaces.  These are not file names.
+Folder path formats are 'folder1/folder2/folder3'.
+${generalDocumentInstructions}
+${params.instructions}
+`;
+}
+
+function getCreateRegularDocumentsTools(params: DocumentFunctionInfo) {
+    const createDocumentSchema = {
+        name: `create_text_document_${params.pluginId.toString()}`,
+        describe: getCommonInstructions(params),
+        schema: z.object({
+            fileName: z.string().describe(`The name of the file you're creating.`),
+            description: z.string().describe(`This is a description of what this file is, and what it's for.  If the description also has instructions, those instructions are provided to any LLM agent using the file as a system message as well.`),
+            content: z.string().describe(`The content of the document.`),
+        })
+    };
+    const createDocumentTool = tool(
+        async (options: z.infer<typeof createDocumentSchema.schema>) => {
+            // Create the document.
+            const newTextDocument = <NewDbItem<TextDocumentData>>{
+                name: options.fileName,
+                type: 'text',
+                content: options.content,
+                comments: [],
+                description: options.description,
+                folderLocation: params.rootFolder,
+                projectId: params.projectId,
+                lastChangedBy: { entityType: 'agent', id: params.agentId },
+                createdDate: new Date(),
+                updatedDate: new Date,
+            };
+
+            // Add it to the database.
+            const dbDocument = await params.chatDocumentDbService.createDocument(newTextDocument);
+            return `A new document with the id ${dbDocument._id.toString()} was created with the name of ${newTextDocument.name}.`;
+        },
+        createDocumentSchema
+    );
+
+    return createDocumentTool;
+}
+
+function getCreateDocumentsAndFoldersTools(params: DocumentFunctionInfo) {
+    const createDocumentInFolderSchema = {
+        name: `create_text_document_${params.pluginId.toString()}`,
+        describe: getCommonInstructions(params),
+        schema: z.object({
+            fileName: z.string().describe(`The name of the file you're creating.`),
+            subFolder: z.string().describe(`The sub folder of ${params.rootFolder}, IF ANY, to add the document to.  If placing it in the current root, then leave this an empty string.`),
+            description: z.string().describe(`This is a description of what this file is, and what it's for.  If the description also has instructions, those instructions are provided to any LLM agent using the file as a system message as well.`),
+            content: z.string().describe(`The content of the document.`),
+        })
+    };
+
+    function combineFolders(root: string, subFolder: string): string {
+        // Ensures there are no leading/trailing slashes or whitespace.
+        function conditionPathPart(val: string) {
+            val = val.trim();
+
+            if (val.endsWith('/')) {
+                val = val.substring(0, val.length - 2);
+            }
+
+            if (val.startsWith('/')) {
+                val = val.substring(1);
+            }
+
+            return val;
+        }
+
+        // Condition the two parts.
+        root = conditionPathPart(root);
+        subFolder = conditionPathPart(subFolder);
+
+        // Return the two combined with a slash.  In case either was blank,
+        //  we need to "condition" them, so there are no leading/trailing slashes.
+        return conditionPathPart(root + '/' + subFolder);
+    }
+
+    const createDocumentInFolderTool = tool(
+        async (options: z.infer<typeof createDocumentInFolderSchema.schema>) => {
+            // Create the document.
+            const newTextDocument = <NewDbItem<TextDocumentData>>{
+                name: options.fileName,
+                type: 'text',
+                content: options.content,
+                comments: [],
+                description: options.description,
+                folderLocation: combineFolders(params.rootFolder, options.subFolder),
+                projectId: params.projectId,
+                lastChangedBy: { entityType: 'agent', id: params.agentId },
+                createdDate: new Date(),
+                updatedDate: new Date,
+            };
+
+            // Add it to the database.
+            const dbDocument = await params.chatDocumentDbService.createDocument(newTextDocument);
+
+            return `A new document with the id ${dbDocument._id.toString()} was created with the name of ${newTextDocument.name}.`;
+        },
+        createDocumentInFolderSchema
+    );
+
+    return createDocumentInFolderTool;
+}
+
+function createListDocumentTools(params: DocumentFunctionInfo) {
+    const listDocumentsToolSchema = {
+        name: `list_folder_documents_${params.pluginId.toString()}`,
+        describe: `Returns a list of documents for the folder ${params.rootFolder} with most information excluding their content.`,
+        scheme: z.object({})
+    };
+
+    const listDocumentsTool = tool(
+        async (options: z.infer<typeof listDocumentsToolSchema.scheme>) => {
+            return params.chatDocumentDbService.getDocumentListItemsByFolderPrefix(params.projectId, params.rootFolder);
+        },
+        listDocumentsToolSchema
+    );
+
+    const getDocumentsByIdSchema = {
+        name: `get_documents_by_id_${params.pluginId.toString()}`,
+        describe: `Returns a set of documents by their IDs.`,
+        schema: z.object({
+            documentIds: z.array(z.string()).describe(`The string version of the document's ID.  The tool will convert these to actual ObjectIds for you.`)
+        })
+    };
+
+    const getDocumentsByIdTool = tool(
+        async (options: z.infer<typeof getDocumentsByIdSchema.schema>) => {
+            const ids = options.documentIds.map(id => new ObjectId(id));
+            return await params.chatDocumentDbService.getDocumentsByIds(ids);
+        },
+        getDocumentsByIdSchema
+    );
+
+    return [listDocumentsTool, getDocumentsByIdTool];
+}
+
+function createCreationAndListingTools(params: DocumentFunctionInfo) {
+    if (params.canCreateSubfolders) {
+        return [
+            getCreateDocumentsAndFoldersTools(params),
+        ];
+    } else {
+        return [
+            getCreateRegularDocumentsTools(params),
+        ];
+    }
+}
+// ---------------------------
+
+/** Returns the tools required to edit/modify document information. */
+export function createTextDocumentTools(info: DocumentFunctionInfo) {
+    const perms = info.permissions || {};
+    const result: (ToolNode | StructuredToolInterface)[] = [
+        ...createListDocumentTools(info)
+    ];
+
+    if (perms.canEdit) {
+        result.push(createEditDocumentContentTool(info));
+        result.push(createDeleteDocumentLinesTool(info));
+        result.push(createEditDocumentLinesTool(info));
+        result.push(createInsertDocumentLinesTool(info));
+        result.push(createAppendDocumentLinesTool(info));
+    }
+
+    if (perms.canChangeName) {
+        result.push(createEditDocumentNameTool(info));
+    }
+
+    if (perms.canUpdateDescription) {
+        result.push(createEditDocumentDescriptionTool(info));
+    }
+
+    if (perms.canUpdateComments) {
+        result.push(createAddDocumentCommentTool(info));
+        result.push(createEditDocumentCommentTool(info));
+        result.push(createDeleteDocumentCommentTool(info));
+    }
+
+    if (perms.canCreateFiles) {
+        result.push(...createCreationAndListingTools(info));
+    }
+
+    return result;
+}

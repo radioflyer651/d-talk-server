@@ -1,4 +1,4 @@
-import { AgentPluginBase, PluginAttachmentTarget } from "../../agent-plugin/agent-plugin-base.service";
+import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
 import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 import { CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID } from "../../../model/shared-models/chat-core/plugins/plugin-type-constants.data";
 import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";

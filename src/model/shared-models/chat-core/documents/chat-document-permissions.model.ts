@@ -1,5 +1,3 @@
-
-
 export interface ChatDocumentPermissions {
     canRead?: boolean;
     canEdit?: boolean;
@@ -28,5 +26,43 @@ export function combinePermissions(permissions: ChatDocumentPermissions[]): Chat
         canUpdateComments: c.canUpdateComments || p.canUpdateComments,
     }), createChatDocumentPermissions());
 
+    return result;
+}
+
+
+export interface ChatDirectoryPermissions extends ChatDocumentPermissions {
+    canCreateSubfolders: boolean;
+    rootFolder: string;
+    canCreateFiles: boolean;
+}
+
+export function createChatDirectoryPermissions(): ChatDirectoryPermissions {
+    return {
+        canRead: false,
+        canEdit: false,
+        canUpdateDescription: false,
+        canChangeName: false,
+        canUpdateComments: false,
+        canCreateSubfolders: false,
+        canCreateFiles: false,
+        rootFolder: '',
+    };
+}
+
+export function combineDirectoryPermissions(permissions: ChatDirectoryPermissions[]): ChatDirectoryPermissions {
+    if (!permissions.every(p => p.rootFolder === permissions[0].rootFolder)) {
+        throw new Error(`Permission root folders must match.`);
+    }
+
+    const result = permissions.reduce((p, c) => ({
+        canRead: c.canRead || p.canRead,
+        canEdit: c.canEdit || p.canEdit,
+        canUpdateDescription: c.canUpdateDescription || p.canUpdateDescription,
+        canChangeName: c.canChangeName || p.canChangeName,
+        canUpdateComments: c.canUpdateComments || p.canUpdateComments,
+        canCreateSubfolders: c.canCreateSubfolders || p.canCreateSubfolders,
+        canCreateFiles: p.canCreateFiles || c.canCreateFiles,
+        rootFolder: p.rootFolder || c.rootFolder,
+    }), createChatDirectoryPermissions());
     return result;
 }

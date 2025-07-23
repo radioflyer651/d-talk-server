@@ -18,4 +18,7 @@ export const LabeledMemoryPluginState = Annotation.Root({
     operationType: Annotation<LabeledMemoryMessageOperationTypes>,
     store: Annotation<MongoDbStore>,
     resultingMemoryMessages: Annotation<BaseMessage[]>,
+    toolCallCount: Annotation<number>,
+    toolCallCountLimit: Annotation<number>,
+    logStepsToConsole: Annotation<boolean | undefined>,
 });

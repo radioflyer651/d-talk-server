@@ -9,6 +9,7 @@ import { generalDocumentInstructions } from "../../general-document-instructions
 
 
 const commonNotes = `IMPORTANT: If deleting lines and editing lines, ALWAYS do the deletions FIRST, and then make a separate call later to update lines, since the line numbers will change after deletions.\n` +
+    `When referencing line numbers, remember they are zero-based, with the first line of the document being 0.  Be careful, if the user states a line number, assume they are using 1-based indexes, or use the context of the document you're referring to.\n` +
     `After edits occur, the future message histories will reflect the newest version of the document, removing old versions from the chat history.\n` +
     generalDocumentInstructions;
 

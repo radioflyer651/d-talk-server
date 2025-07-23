@@ -45,6 +45,8 @@ export class LabeledMemoryPlugin extends AgentPluginBase implements IChatLifetim
             operationType: 'retrieve',
             store: this.memoryService,
             memoryParams: this.params,
+            toolCallCountLimit: 2,
+            logStepsToConsole: false,
         };
 
         // Execute the graph.

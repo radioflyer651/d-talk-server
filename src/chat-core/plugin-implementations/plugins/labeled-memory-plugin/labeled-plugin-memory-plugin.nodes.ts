@@ -18,6 +18,7 @@ Be sure to use the search or list functions before deciding whether or not to re
 function getRetrievalInstructions(params: LabeledMemoryPluginParams, messageHistory: BaseMessage[]): BaseMessage[] {
     const instructions: BaseMessage[] = [
         new SystemMessage(`You are a memory manager for an LLM.  You inspect memory data that can be included in chat calls, and provide it to the main LLM for their use.  Do not repeat information already in the conversation history.  The LLM already knows this.`),
+        new SystemMessage(`Be efficient with your tool calls.  You shouldn't make tool calls in more than 2 separate responses.`),
         new SystemMessage(memoryStoreInstructions),
         new SystemMessage(`The following is the purpose of this particular memory set you should be concerned with:\n${params.memorySetPurpose}`),
         ...messageHistory,
@@ -34,6 +35,7 @@ function describeMemoryKeys(memoryKeyDescriptions: string[]) {
 function getStorageInstructions(params: LabeledMemoryPluginParams, messageHistory: BaseMessage[]): BaseMessage[] {
     const instructions: BaseMessage[] = [
         new SystemMessage(`You are a memory manager for an LLM.  You inspect conversation histories and decide what information to retain for long-term use.\nSince you are involved in each message call made, you should be most interested in more recent messages within the history.`),
+        new SystemMessage(`Be efficient with your tool calls.  You shouldn't make tool calls in more than 2 separate responses.`),
         new SystemMessage(memoryStoreInstructions),
         new SystemMessage(`The following is the purpose of this particular memory set you should be concerned with:\n${params.memorySetPurpose}`),
         new SystemMessage(`When storing messages, they must be done in an array of key values for its index.  These key values are sort of like folders/nested folders, and can help drill into subjects more easily.  The description of each of the keys you have access to add data for are as follows: ${describeMemoryKeys(params.keyMeanings)}`),
@@ -44,11 +46,24 @@ function getStorageInstructions(params: LabeledMemoryPluginParams, messageHistor
 }
 
 export async function initializeCall(state: typeof LabeledMemoryPluginState.State) {
+    if (state.logStepsToConsole === true) {
+        console.log('initializeCall');
+    }
+
+    if (!state.toolCallCountLimit) {
+        state.toolCallCountLimit = 2;
+    }
+    state.toolCallCount = 0;
+
     state.tools = getMemoryTools(state.store, state.memoryParams, state.operationType === 'store');
+
     return state;
 }
 
 export async function addMemoryInstructions(state: typeof LabeledMemoryPluginState.State) {
+    if (state.logStepsToConsole === true) {
+        console.log('addMemoryInstructions');
+    }
     // Create a copy of the message history.
     const messageHistory = cleanToolMessagesForChat(state.originalChatHistory);
 
@@ -66,22 +81,20 @@ export async function addMemoryInstructions(state: typeof LabeledMemoryPluginSta
 
 /** Performs the LLM chat call for memory retrieval. */
 export async function performMemoryCall(state: typeof LabeledMemoryPluginState.State) {
-    const tools = state.tools;
+    if (state.logStepsToConsole === true) {
+        console.log('performMemoryCall');
+    }
+    let tools = state.tools;
+
+    if (state.toolCallCount >= state.toolCallCountLimit) {
+        tools = [];
+    }
 
     // Get the LLM.  Handle the addition to the tools, if we can.
     let llm = state.chatModel;
 
     // Make the LLM call.
     const result = await llm.bindTools!(tools).invoke(state.messages);
-    // if (result.tool_calls || result.tool_call_chunks) {
-    //     if (result.tool_calls) {
-    //         console.log(result.tool_calls.map(c => c.name).join('\n'));
-    //     } else {
-    //         console.log(result.tool_call_chunks?.map(c => c.name).join('\n'));
-    //     }
-    // } else {
-    //     console.log(result.text);
-    // }
 
     state.messages.push(result);
 
@@ -90,6 +103,9 @@ export async function performMemoryCall(state: typeof LabeledMemoryPluginState.S
 }
 
 export async function summarizeMemoryData(state: typeof LabeledMemoryPluginState.State) {
+    if (state.logStepsToConsole === true) {
+        console.log('summarizeMemoryData');
+    }
     state.messages.push(new SystemMessage(`Add a summary of the data you believe the main LLM should know from your memory operations.  Make sure there is a high amount of detail in the summary to allow more understanding.`));
 
     // Get the LLM.  Handle the addition to the tools, if we can.
@@ -106,6 +122,9 @@ export async function summarizeMemoryData(state: typeof LabeledMemoryPluginState
 }
 
 export async function isMemoryOperationsCompleteDecider(state: typeof LabeledMemoryPluginState.State) {
+    if (state.logStepsToConsole === true) {
+        console.log('isMemoryOperationsCompleteDecider');
+    }
     // Get the last message in the history.
     const aiMessage = state.messages[state.messages.length - 1] as AIMessage;
 
@@ -126,6 +145,10 @@ export async function isMemoryOperationsCompleteDecider(state: typeof LabeledMem
 
 /** Calls the tools from a chat call response. */
 export async function callTools(state: typeof LabeledMemoryPluginState.State) {
+    if (state.logStepsToConsole === true) {
+        console.log('callTools');
+    }
+
     // Get the tool call.
     const toolMessage = state.messages[state.messages.length - 1] as AIMessage;
 
@@ -134,24 +157,32 @@ export async function callTools(state: typeof LabeledMemoryPluginState.State) {
         throw new Error(`No tool_calls were found on the last message of the messageHistory.`);
     }
 
-    // Call the tools.
-    const toolCallPromises = toolMessage.tool_calls.map(async toolCall => {
-        // Find the tool for this call.
-        const tool = state.tools.find(t => (t as any)['name'] === toolCall.name);
+    let toolCallPromises: Promise<ToolMessage>[];
+    if (state.toolCallCount++ > state.toolCallCountLimit) {
+        toolCallPromises = toolMessage.tool_calls.map(async toolCall => {
+            return new ToolMessage(`ERROR: Tool call limit exceeded`, toolCall.id!);
+        });
 
-        // If not found, then we have a problem.
-        if (!tool) {
-            throw new Error(`Tool ${toolCall.name} was not found in the tool list.`);
-        }
+    } else {
+        // Call the tools.
+        toolCallPromises = toolMessage.tool_calls.map(async toolCall => {
+            // Find the tool for this call.
+            const tool = state.tools.find(t => (t as any)['name'] === toolCall.name);
 
-        // Execute the tool.
-        const toolResult = await tool.invoke(toolCall.args);
+            // If not found, then we have a problem.
+            if (!tool) {
+                throw new Error(`Tool ${toolCall.name} was not found in the tool list.`);
+            }
 
-        // Return the tool message as a result.
-        const toolMessage = new ToolMessage(JSON.stringify(toolResult) ?? '', toolCall.id!);
+            // Execute the tool.
+            const toolResult = await tool.invoke(toolCall.args);
 
-        return toolMessage;
-    });
+            // Return the tool message as a result.
+            const toolMessage = new ToolMessage(JSON.stringify(toolResult) ?? '', toolCall.id!);
+
+            return toolMessage;
+        });
+    }
 
     // Wait til everything is done.
     const results = await Promise.all(toolCallPromises);

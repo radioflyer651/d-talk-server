@@ -295,9 +295,9 @@ export class TextDocumentLifetimeContributor implements IChatLifetimeContributor
         this.isDataChanged = false;
 
         // Remove the previous messages.
-        this.removeOwnMessages(callMessages);
+        // this.removeOwnMessages(callMessages);
 
         // Insert our updated instructions.
-        callMessages.splice(0, 0, new SystemMessage(this.getInstructions()));
+        callMessages.push(new SystemMessage(this.getInstructions()));
     }
 }

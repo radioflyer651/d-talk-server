@@ -107,7 +107,7 @@ function createDeleteDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
 
 function createEditDocumentContentTool(info: ManageDocumentFolderFunctionInfo) {
     const editContentSchema = {
-        name: 'edit_document_full_content_' + info.pluginId.toString(),
+        name: 'edit_document_full_content_in_folder_' + info.pluginId.toString(),
         description: `Replaces the entire content of the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.\n${commonNotes}`,
         schema: z.object({
             documentId: z.string(),
@@ -118,7 +118,7 @@ function createEditDocumentContentTool(info: ManageDocumentFolderFunctionInfo) {
     return tool(
         async (options: z.infer<typeof editContentSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('edit_document_full_content_' + info.pluginId.toString());
+                console.log('edit_document_full_content_in_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -136,7 +136,7 @@ function createEditDocumentContentTool(info: ManageDocumentFolderFunctionInfo) {
 
 function createEditDocumentNameTool(info: ManageDocumentFolderFunctionInfo) {
     const editNameSchema = {
-        name: 'edit_document_name_' + info.pluginId.toString(),
+        name: 'edit_document_name_folder_' + info.pluginId.toString(),
         description: `Updates the name of the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
             documentId: z.string(),
@@ -147,7 +147,7 @@ function createEditDocumentNameTool(info: ManageDocumentFolderFunctionInfo) {
     return tool(
         async (options: z.infer<typeof editNameSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('edit_document_name_' + info.pluginId.toString());
+                console.log('edit_document_name_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -165,7 +165,7 @@ function createEditDocumentNameTool(info: ManageDocumentFolderFunctionInfo) {
 
 function createEditDocumentDescriptionTool(info: ManageDocumentFolderFunctionInfo) {
     const editDescriptionSchema = {
-        name: 'edit_document_description_' + info.pluginId.toString(),
+        name: 'edit_document_description_folder_' + info.pluginId.toString(),
         description: `Updates the description of the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
             documentId: z.string(),
@@ -176,7 +176,7 @@ function createEditDocumentDescriptionTool(info: ManageDocumentFolderFunctionInf
     return tool(
         async (options: z.infer<typeof editDescriptionSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('edit_document_description_' + info.pluginId.toString());
+                console.log('edit_document_description_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -194,7 +194,7 @@ function createEditDocumentDescriptionTool(info: ManageDocumentFolderFunctionInf
 
 function createAddDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
     const addCommentSchema = {
-        name: 'add_document_comment_' + info.pluginId.toString(),
+        name: 'add_document_comment_folder_' + info.pluginId.toString(),
         description: `Adds a comment to the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
             documentId: z.string(),
@@ -206,7 +206,7 @@ function createAddDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
     return tool(
         async (options: z.infer<typeof addCommentSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('add_document_comment_' + info.pluginId.toString());
+                console.log('add_document_comment_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -227,7 +227,7 @@ function createAddDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
 
 function createEditDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
     const editCommentSchema = {
-        name: 'edit_document_comment_' + info.pluginId.toString(),
+        name: 'edit_document_comment_folder_' + info.pluginId.toString(),
         description: `Edits a comment on the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
             documentId: z.string(),
@@ -239,7 +239,7 @@ function createEditDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
     return tool(
         async (options: z.infer<typeof editCommentSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('edit_document_comment_' + info.pluginId.toString());
+                console.log('edit_document_comment_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -261,7 +261,7 @@ function createEditDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
 
 function createDeleteDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
     const deleteCommentSchema = {
-        name: 'delete_document_comment_' + info.pluginId.toString(),
+        name: 'delete_document_comment_folder_' + info.pluginId.toString(),
         description: `Deletes a comment from the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
             documentId: z.string(),
@@ -272,7 +272,7 @@ function createDeleteDocumentCommentTool(info: ManageDocumentFolderFunctionInfo)
     return tool(
         async (options: z.infer<typeof deleteCommentSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('delete_document_comment_' + info.pluginId.toString());
+                console.log('delete_document_comment_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -293,7 +293,7 @@ function createDeleteDocumentCommentTool(info: ManageDocumentFolderFunctionInfo)
 
 function createInsertDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     const insertLinesSchema = {
-        name: 'insert_document_lines_' + info.pluginId.toString(),
+        name: 'insert_document_lines_folder_' + info.pluginId.toString(),
         description: `Inserts new lines into the specified document ID at a specified index.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
             documentId: z.string(),
@@ -305,7 +305,7 @@ function createInsertDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     return tool(
         async (options: z.infer<typeof insertLinesSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('insert_document_lines_' + info.pluginId.toString());
+                console.log('insert_document_lines_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -327,7 +327,7 @@ function createInsertDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
 
 function createAppendDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     const appendLinesSchema = {
-        name: 'append_document_lines_' + info.pluginId.toString(),
+        name: 'append_document_lines_folder_' + info.pluginId.toString(),
         description: `Appends new lines to the end of the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
             documentId: z.string(),
@@ -338,7 +338,7 @@ function createAppendDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
     return tool(
         async (options: z.infer<typeof appendLinesSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('append_document_lines_' + info.pluginId.toString());
+                console.log('append_document_lines_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -360,7 +360,7 @@ function createAppendDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
 
 function createMoveDocumentTool(info: ManageDocumentFolderFunctionInfo) {
     const moveDocumentSchema = {
-        name: 'move_document_' + info.pluginId.toString(),
+        name: 'move_document_folder_' + info.pluginId.toString(),
         description: `Moves a document to another folder by updating its folderLocation. ${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
             documentId: z.string(),
@@ -371,7 +371,7 @@ function createMoveDocumentTool(info: ManageDocumentFolderFunctionInfo) {
     return tool(
         async (options: z.infer<typeof moveDocumentSchema.schema>) => {
             if (info.permissions?.debugMode) {
-                console.log('move_document_' + info.pluginId.toString());
+                console.log('move_document_folder_' + info.pluginId.toString());
             }
             const documentData = await info.chatDocumentDbService.getDocumentById(new ObjectId(options.documentId)) as TextDocumentData;
             const document = await info.textDocumentResolver.hydrateDocument(documentData, info.chatDocumentDbService);
@@ -408,7 +408,7 @@ ${params.permissions.instructions}
 
 function getCreateRegularDocumentsTools(params: ManageDocumentFolderFunctionInfo) {
     const createDocumentSchema = {
-        name: `create_text_document_${params.pluginId.toString()}`,
+        name: `create_text_document_folder_${params.pluginId.toString()}`,
         description: getCommonInstructions(params),
         schema: z.object({
             fileName: z.string().describe(`The name of the file you're creating.`),
@@ -444,7 +444,7 @@ function getCreateRegularDocumentsTools(params: ManageDocumentFolderFunctionInfo
 
 function getCreateDocumentsAndFoldersTools(params: ManageDocumentFolderFunctionInfo) {
     const createDocumentInFolderSchema = {
-        name: `create_text_document_${params.pluginId.toString()}`,
+        name: `create_text_document_folder_${params.pluginId.toString()}`,
         description: getCommonInstructions(params),
         schema: z.object({
             fileName: z.string().describe(`The name of the file you're creating.`),
@@ -521,7 +521,7 @@ function createListDocumentTools(params: ManageDocumentFolderFunctionInfo) {
     );
 
     const getDocumentsByIdSchema = {
-        name: `get_documents_by_id_${params.pluginId.toString()}`,
+        name: `get_documents_by_id_folder_${params.pluginId.toString()}`,
         description: `Returns a set of documents by their IDs in the folder: ${params.permissions.rootFolder}.`,
         schema: z.object({
             documentIds: z.array(z.string()).describe(`The string version of the document's ID.  The tool will convert these to actual ObjectIds for you.`)

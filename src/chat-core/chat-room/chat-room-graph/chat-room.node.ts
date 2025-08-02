@@ -343,20 +343,21 @@ export async function chatCall(state: typeof ChatState.State) {
     // Get the LLM.  Handle the addition to the tools, if we can.
     let llm = state.chatModel;
 
-    const callMessages = cleanToolMessagesForChat(state.callMessages);
+    let callMessages: BaseMessage[] | string = cleanToolMessagesForChat(state.callMessages);
+
+    if (state.chatFormatting) {
+        callMessages = formatChatMessages(callMessages, state.chatFormatting);
+        // result = await llm.invoke(textMessages);
+    }
 
     // Make the LLM call.
     let result: AIMessageChunk;
-    if (state.chatFormatting) {
-        const textMessages = formatChatMessages(callMessages, state.chatFormatting);
-        result = await llm.invoke(textMessages);
+    if (llm.bindTools && tools.length > 0) {
+        result = await llm.bindTools(tools).invoke(callMessages);
     } else {
-        if (llm.bindTools && tools.length > 0) {
-            result = await llm.bindTools(tools).invoke(callMessages);
-        } else {
-            result = await llm.invoke(callMessages);
-        }
+        result = await llm.invoke(callMessages);
     }
+
 
 
     setMessageId(result);

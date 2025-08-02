@@ -19,6 +19,10 @@ export interface ChatAgentIdentityConfiguration extends IPluginConfigurationAtta
     /** A name to identify this configuration. */
     name: string;
 
+    /** Gets or sets a grouping name to help organize chat agents.  This is only for the UI
+     *   and has no functional utility. */
+    group?: string;
+
     /** A name to show in chat for this agent. */
     chatName: string;
 

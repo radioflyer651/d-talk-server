@@ -16,6 +16,10 @@ export interface ChatJobConfiguration extends ChatDocumentLinker {
     /** Gets or sets the order that this job gets executed in the execution order. */
     order: number;
 
+    /** Gets or sets a grouping name to help organize chat jobs.  This is only for the UI
+     *   and has no functional utility. */
+    group?: string;
+
     /** A name for this chat job, to uniquely identify it in the UI and debugging. */
     name: string;
 

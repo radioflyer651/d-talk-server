@@ -7,6 +7,25 @@ export interface OpenAiModelParams extends ModelServiceParams<OpenAiModelService
 
 export interface OpenAiModelServiceParams {
     model: string;
+    /** Sampling temperature to use */
+    temperature?: number;
+    /**
+   * Whether to return log probabilities of the output tokens or not.
+   * If true, returns the log probabilities of each output token returned in the content of message.
+   */
+    logprobs?: boolean;
+    /**
+     * An integer between 0 and 5 specifying the number of most likely tokens to return at each token position,
+     * each with an associated log probability. logprobs must be set to true if this parameter is used.
+     */
+    topLogprobs?: number;
+    /**
+     * Maximum number of tokens to generate in the completion. -1 returns as many
+     * tokens as possible given the prompt and the model's maximum context size.
+     */
+    maxTokens?: number;
+    /** Total probability mass of tokens to consider at each step */
+    topP?: number;
 }
 
 const openAiModels: IGptModelData[] = [

@@ -12,10 +12,16 @@ export class OpenAiAgentService extends ModelServiceBase {
 
     protected async getChatModelBase(params: ModelServiceParams<OpenAiModelServiceParams>): Promise<BaseChatModel> {
         const appConfig = await getAppConfig();
+        const serviceParams: OpenAiModelServiceParams = params.serviceParams;
 
         const openAiParams: ChatOpenAIFields = {
             apiKey: appConfig.openAiConfig.openAiKey,
-            model: params.serviceParams.model
+            model: serviceParams.model,
+            temperature: serviceParams.temperature,
+            logprobs: serviceParams.logprobs,
+            topLogprobs: serviceParams.topLogprobs,
+            maxTokens: serviceParams.maxTokens,
+            topP: serviceParams.topP
         };
 
         return new ChatOpenAI(openAiParams);

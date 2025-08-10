@@ -21,6 +21,9 @@ export interface OllamaModelConfiguration {
     /** The actual name of the model. */
     modelName: string;
 
+    /** Gets or sets the max context size for the LLM.  Default if 4096, based on Ollama defaults. */
+    maxContext?: number;
+
     /** A display name for this configuration in dropdowns. */
     displayName: string;
 

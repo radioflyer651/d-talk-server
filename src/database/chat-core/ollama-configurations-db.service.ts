@@ -35,6 +35,12 @@ export class OllamaModelConfigurationDbService extends DbService {
 
     /** Update an Ollama model configuration by its ObjectId. */
     async updateOllamaModelConfiguration(configId: ObjectId, update: Partial<OllamaModelConfiguration>): Promise<number> {
+        if (update.maxContext === undefined) {
+            // Because setting this to undefined in the UI means the property isn't set,
+            //  we need to actually create the value in the update object, and set the value.
+            //  Otherwise, the $set method doesn't update the property, because it doesn't exist in the update object.
+            update.maxContext = undefined;
+        }
         return await this.dbHelper.updateDataItems<OllamaModelConfiguration>(
             DbCollectionNames.OllamaModelConfigurations,
             { _id: configId },

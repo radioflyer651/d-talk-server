@@ -358,8 +358,6 @@ export async function chatCall(state: typeof ChatState.State) {
         result = await llm.invoke(callMessages);
     }
 
-
-
     setMessageId(result);
 
     // Add the result to the message stacks.

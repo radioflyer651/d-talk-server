@@ -117,6 +117,51 @@ const openAiModels: IGptModelData[] = [
         reasoningTokens: false,
         value: 'gpt-4o' as const
     },
+
+    {
+        label: 'GPT 5', // **
+        inputCost: 1.25,
+        outputCost: 10.00,
+        contextWindow: 400000,
+        maxOutputTokens: 128000,
+        speed: 3,
+        reasoning: 4,
+        reasoningTokens: true,
+        value: 'gpt-5' as const
+    },
+    {
+        label: 'GPT 5 Mini', // **
+        inputCost: 0.25,
+        outputCost: 2.00,
+        contextWindow: 400000,
+        maxOutputTokens: 128000,
+        speed: 4,
+        reasoning: 3,
+        reasoningTokens: true,
+        value: 'gpt-5-mini' as const
+    },
+    {
+        label: 'GPT 5 Nano', // **
+        inputCost: 0.05,
+        outputCost: 0.40,
+        contextWindow: 400000,
+        maxOutputTokens: 128000,
+        speed: 5,
+        reasoning: 2,
+        reasoningTokens: true,
+        value: 'gpt-5-nano' as const
+    },
+    {
+        label: 'GPT 5 Chat', // **
+        inputCost: 1.25,
+        outputCost: 10.00,
+        contextWindow: 400000,
+        maxOutputTokens: 128000,
+        speed: 3,
+        reasoning: 3,
+        reasoningTokens: true,
+        value: 'gpt-5-chat' as const
+    },
 ];
 
 export const modelList = openAiModels

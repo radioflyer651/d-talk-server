@@ -77,12 +77,8 @@ ollamaModelConfigServer.put('/ollama-model-config', async (req, res) => {
             return;
         }
         const configId = new ObjectId(update._id);
-        const result = await ollamaModelConfigDbService.updateOllamaModelConfiguration(configId, update);
-        if (result > 0) {
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Model configuration not found or not updated' });
-        }
+        await ollamaModelConfigDbService.updateOllamaModelConfiguration(configId, update);
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to update model configuration' });
     }

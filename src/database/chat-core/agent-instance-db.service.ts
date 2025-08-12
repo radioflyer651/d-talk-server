@@ -56,7 +56,7 @@ export class AgentInstanceDbService extends DbService {
         return await this.dbHelper.deleteDataItems<AgentInstanceConfiguration>(
             DbCollectionNames.AgentInstances,
             { projectId: projectId },
-            { deleteMany: false }
+            { deleteMany: true }
         );
     }
 

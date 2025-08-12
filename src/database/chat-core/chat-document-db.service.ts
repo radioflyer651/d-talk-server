@@ -50,7 +50,7 @@ export class ChatDocumentDbService extends DbService {
         return await this.dbHelper.deleteDataItems<IChatDocumentData>(
             DbCollectionNames.ChatDocuments,
             { projectId: projectId },
-            { deleteMany: false }
+            { deleteMany: true }
         );
     }
 

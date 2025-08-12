@@ -7,6 +7,7 @@ import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-cont
 import { cleanToolMessagesForChat } from "../../utilities/clean-tool-messages-for-chat.utils";
 import { formatChatMessages } from "../../../utils/format-chat-messages.utils";
 import { isMessageDisabled } from "../../../model/shared-models/chat-core/utils/messages.utils";
+import { CustomChatFormatting } from '../../../model/shared-models/chat-core/model-service-params.model';
 
 /** Returns a sorted version of the lifetime contributor list. */
 function getSortedContributors(contributors: IChatLifetimeContributor[], direction: 'forward' | 'reverse'): IChatLifetimeContributor[] {
@@ -328,6 +329,18 @@ export async function peekToolCallMessages(state: typeof ChatState.State) {
     return state;
 }
 
+function hasValidChatFormatting(formatting: CustomChatFormatting | undefined) {
+    if (!formatting) {
+        return false;
+    }
+
+    return [
+        formatting.aiMarkers,
+        formatting.systemMarkers,
+        formatting.userMarkers
+    ].some(v => v.closeDelimiter.trim().length > 0 || v.openDelimiter.trim().length > 0);
+}
+
 /**
  * The main chat call node. This is where the actual chat logic (e.g., LLM call) would be implemented.
  */
@@ -345,14 +358,14 @@ export async function chatCall(state: typeof ChatState.State) {
 
     let callMessages: BaseMessage[] | string = cleanToolMessagesForChat(state.callMessages);
 
-    if (state.chatFormatting) {
-        callMessages = formatChatMessages(callMessages, state.chatFormatting);
+    if (hasValidChatFormatting(state.chatFormatting)) {
+        callMessages = formatChatMessages(callMessages, state.chatFormatting!);
         // result = await llm.invoke(textMessages);
     }
 
     // Make the LLM call.
     let result: AIMessageChunk;
-    if (llm.bindTools && tools.length > 0) {
+    if (llm.bindTools && tools.length > 0 && typeof callMessages !== 'string') {
         result = await llm.bindTools(tools).invoke(callMessages);
     } else {
         result = await llm.invoke(callMessages);

@@ -66,7 +66,7 @@ export class AgentDbService extends DbService {
         return await this.dbHelper.deleteDataItems<ChatAgentIdentityConfiguration>(
             DbCollectionNames.AgentConfigurations,
             { projectId: projectId },
-            { deleteMany: false }
+            { deleteMany: true }
         );
     }
 }

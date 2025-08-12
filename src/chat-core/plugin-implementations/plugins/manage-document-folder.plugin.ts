@@ -25,6 +25,9 @@ export class ManageDocumentFolderPlugin extends AgentPluginBase implements IChat
         const permissions = this.specification!.configuration;
 
         const result = `You have been given the ability to work with the folder "${permissions.rootFolder}, and the files within it.
+            When instructions involve modifying documents, consider your tools available, and whether or not this set of tools will accomplish your task.
+            When considering documents to work with, use the listing functionality to get a list of documents.
+            Do not call the listing funcitons more than once per root folder.  Only list the documents in the root folders to get all documents in sub-folders, as well as the root folder.
             You can list the documents in this folder and read the contents within files of it (any document within the path of ${permissions.rootFolder} can be seen).
             Tools suffixed with ${this.specification!.id.toString()} are used to work with this folder.
             You have the following permissions:

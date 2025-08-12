@@ -45,10 +45,10 @@ function createEditDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'edit_document_lines_' + info.pluginId.toString(),
         description: `Edits the lines of a specified document ID, for documents inside the ${info.permissions.rootFolder} folder or sub-folders.\n${commonNotes}`,
         schema: z.object({
-            documentId: z.string(),
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
             lines: z.array(z.object({
-                lineNumber: z.number().int(),
-                newContent: z.string()
+                lineNumber: z.number().int().describe(`The zero-based line number of the line to change`),
+                newContent: z.string().describe('The new content to change the line to.')
             }))
         })
     };
@@ -80,8 +80,8 @@ function createDeleteDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'delete_document_lines_' + info.pluginId.toString(),
         description: `Deletes lines on the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.\n${commonNotes}`,
         schema: z.object({
-            documentId: z.string(),
-            lines: z.array(z.number().int())
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
+            lines: z.array(z.number().int()).describe('The set of zero-based line numbers to delete.')
         })
     };
 
@@ -110,8 +110,8 @@ function createEditDocumentContentTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'edit_document_full_content_in_folder_' + info.pluginId.toString(),
         description: `Replaces the entire content of the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.\n${commonNotes}`,
         schema: z.object({
-            documentId: z.string(),
-            newContent: z.string()
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document to edit.'),
+            newContent: z.string().describe('The new content for the document.')
         })
     };
 
@@ -139,8 +139,8 @@ function createEditDocumentNameTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'edit_document_name_folder_' + info.pluginId.toString(),
         description: `Updates the name of the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
-            documentId: z.string(),
-            newName: z.string()
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
+            newName: z.string().describe('The new name of the document.')
         })
     };
 
@@ -168,8 +168,8 @@ function createEditDocumentDescriptionTool(info: ManageDocumentFolderFunctionInf
         name: 'edit_document_description_folder_' + info.pluginId.toString(),
         description: `Updates the description of the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
-            documentId: z.string(),
-            newDescription: z.string()
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
+            newDescription: z.string().describe('The new description for this document.')
         })
     };
 
@@ -197,9 +197,9 @@ function createAddDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'add_document_comment_folder_' + info.pluginId.toString(),
         description: `Adds a comment to the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
-            documentId: z.string(),
-            creator: z.string(), // ObjectId as string
-            content: z.string()
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
+            creator: z.string().describe(`The ObjectID of the agent creating the new comment.`),
+            content: z.string().describe('The content of the new comment.')
         })
     };
 
@@ -230,9 +230,9 @@ function createEditDocumentCommentTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'edit_document_comment_folder_' + info.pluginId.toString(),
         description: `Edits a comment on the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
-            documentId: z.string(),
-            commentIndex: z.number().int(),
-            newContent: z.string()
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
+            commentIndex: z.number().int().describe('The zero-based index of the comment to edit.'),
+            newContent: z.string().describe('The new content for the comment.')
         })
     };
 
@@ -264,8 +264,8 @@ function createDeleteDocumentCommentTool(info: ManageDocumentFolderFunctionInfo)
         name: 'delete_document_comment_folder_' + info.pluginId.toString(),
         description: `Deletes a comment from the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
-            documentId: z.string(),
-            commentIndex: z.number().int()
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
+            commentIndex: z.number().int().describe('The zero-based index of the comment to delete.')
         })
     };
 
@@ -296,9 +296,9 @@ function createInsertDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'insert_document_lines_folder_' + info.pluginId.toString(),
         description: `Inserts new lines into the specified document ID at a specified index.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
-            documentId: z.string(),
-            startIndex: z.number().int(),
-            newLines: z.array(z.string())
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
+            startIndex: z.number().int().describe('The zero-based index of the line to insert new lines into.'),
+            newLines: z.array(z.string()).describe('The new lines of content to insert into the document.')
         })
     };
 
@@ -330,8 +330,8 @@ function createAppendDocumentLinesTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'append_document_lines_folder_' + info.pluginId.toString(),
         description: `Appends new lines to the end of the specified document ID.${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
-            documentId: z.string(),
-            newLines: z.array(z.string())
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
+            newLines: z.array(z.string()).describe('The new content to append to the document.')
         })
     };
 
@@ -363,7 +363,7 @@ function createMoveDocumentTool(info: ManageDocumentFolderFunctionInfo) {
         name: 'move_document_folder_' + info.pluginId.toString(),
         description: `Moves a document to another folder by updating its folderLocation. ${getExclusiveFolderInstructionText(info.permissions)}.`,
         schema: z.object({
-            documentId: z.string(),
+            documentId: z.string().describe('The ObjectID (MongoDB) of the document being worked with.'),
             newFolderLocation: z.string().describe('The new folder path to move the document to.')
         })
     };
@@ -509,13 +509,22 @@ function getCreateDocumentsAndFoldersTools(params: ManageDocumentFolderFunctionI
 function createListDocumentTools(params: ManageDocumentFolderFunctionInfo) {
     const listDocumentsToolSchema = {
         name: `list_folder_documents_${params.pluginId.toString()}`,
-        description: `Returns a list of documents for the folder ${params.permissions.rootFolder} with most information excluding their content.`,
+        description: `
+        Returns a list of documents for the folder ${params.permissions.rootFolder} with most information excluding their content.  
+        IMPORTANT: This method may only be called ONCE.
+        IMPORTANT: Before working with specific documents, be sure this method has been called at least once to obtain ObjectIds of documents you wish to work with.`.replaceAll(/\t+/g, ''),
         scheme: z.object({})
     };
 
+    let counter = 0;
     const listDocumentsTool = tool(
         async (options: z.infer<typeof listDocumentsToolSchema.scheme>) => {
-            return params.chatDocumentDbService.getDocumentListItemsByFolderPrefix(params.projectId, params.permissions.rootFolder);
+            if (counter++ > 0) {
+                throw new Error(`This method cannot be called more than once, and has already been called once.`);
+            }
+
+            const result = await params.chatDocumentDbService.getDocumentListItemsByFolderPrefix(params.projectId, params.permissions.rootFolder);
+            return result;
         },
         listDocumentsToolSchema
     );
@@ -524,7 +533,7 @@ function createListDocumentTools(params: ManageDocumentFolderFunctionInfo) {
         name: `get_documents_by_id_folder_${params.pluginId.toString()}`,
         description: `Returns a set of documents by their IDs in the folder: ${params.permissions.rootFolder}.`,
         schema: z.object({
-            documentIds: z.array(z.string()).describe(`The string version of the document's ID.  The tool will convert these to actual ObjectIds for you.`)
+            documentIds: z.array(z.string()).describe(`The ObjectIds of the documents.`)
         })
     };
 

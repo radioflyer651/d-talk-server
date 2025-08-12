@@ -16,6 +16,7 @@ export const LABELED_MEMORY_PLUGIN_TYPE_ID = 'labeled-memory-plugin';
 export const CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID = 'create-text-documents-plugin';
 export const RANDOM_CHOICE_PLUGIN_TYPE_ID = 'random-choice-plugin';
 export const MANAGE_DOCUMENT_FOLDER_PLUGIN_TYPE_ID = 'manage-document-folder';
+export const CURRENT_TIME_AND_DATE_PLUGIN_TYPE_ID = 'current-time-and-date-plugin';
 
 export interface PluginInfo {
     pluginType: string;
@@ -159,5 +160,14 @@ export const pluginInformation: PluginInfo[] = [
         attachesToChatRoom: true,
         attachesToJob: true,
         defaultParameterCreator: () => createChatDirectoryPermissions()
+    },
+    {
+        pluginType: CURRENT_TIME_AND_DATE_PLUGIN_TYPE_ID,
+        displayName: 'Current Time Date',
+        description: 'Adds the current time and date to the message list.',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => ({})
     },
 ];

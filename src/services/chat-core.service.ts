@@ -253,11 +253,15 @@ export class ChatCoreService {
 
         // Delete all of the parts of the project.
         const agentsP = this.agentDbService.deleteAgentIdentitiesByProjectId(projectId);
+        const agentInstancesP = this.agentInstanceDbService.deleteAgentInstancesByProjectId(projectId);
         const jobsP = this.chatJobDbService.deleteChatJobsByProjectId(projectId);
-        const projectP = this.chatRoomDbService.deleteChatRoomsByProjectId(projectId);
         const documentsP = this.documentDbService.deleteDocumentsByProjectId(projectId);
+        const chatRoomsP = this.chatRoomDbService.deleteChatRoomsByProjectId(projectId);
 
         // Wait for them to complete.
-        await Promise.all([agentsP, jobsP, projectP, documentsP]);
+        await Promise.all([agentsP, jobsP, chatRoomsP, documentsP, agentInstancesP]);
+
+        // Delete the project.
+        await this.projectDbService.deleteProject(projectId);
     }
 }

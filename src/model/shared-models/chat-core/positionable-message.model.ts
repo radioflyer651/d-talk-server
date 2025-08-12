@@ -20,6 +20,9 @@ export interface PositionableMessage<T> {
     /** The location to place the message. */
     location: MessagePositionTypes;
 
+    /** Optional, a display name to show for this item in the UI. */
+    description?: string;
+
     /** The messages to be added to the chat history. */
     message: T;
 

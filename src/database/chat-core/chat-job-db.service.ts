@@ -56,7 +56,7 @@ export class ChatJobDbService extends DbService {
         return await this.dbHelper.deleteDataItems<ChatJobConfiguration>(
             DbCollectionNames.ChatJobs,
             { projectId: projectId },
-            { deleteMany: false }
+            { deleteMany: true }
         );
     }
 }

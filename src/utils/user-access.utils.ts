@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { chatDocumentDbService, projectDbService } from "../app-globals";
+import { agentDbService, chatDocumentDbService, projectDbService } from "../app-globals";
 import { chatRoomDbService } from "../app-globals";
 import { IChatDocumentData } from "../model/shared-models/chat-core/documents/chat-document.model";
 
@@ -74,4 +74,25 @@ export async function isUserOwnerOfChatRoom(userId: ObjectId, roomId: ObjectId):
     return room.userId.equals(userId);
 }
 
+/** Returns a boolean value indicating whether or not a specified userId is the owner of the project which
+ *   owns a specified agent configuration. */
+export async function userHasAccessToAgentsProject(agentId: ObjectId, userId: ObjectId): Promise<boolean> {
+    // Get the agent.
+    const agent = await agentDbService.getAgentIdentityById(agentId);
 
+    // Validate.
+    if (!agent) {
+        throw new Error(`Agent with ID ${agentId} does not exist.`);
+    }
+
+    // Get the project.
+    const project = await projectDbService.getProjectById(agent.projectId);
+
+    // Validate.
+    if (!project) {
+        throw new Error(`Project for agent with ID ${agent._id} (project ID ${agent.projectId}) does not exist.`);
+    }
+
+    // Return the check.
+    return project.creatorId.equals(userId);
+}

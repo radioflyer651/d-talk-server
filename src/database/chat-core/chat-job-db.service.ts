@@ -4,6 +4,9 @@ import { ObjectId } from "mongodb";
 import { UpsertDbItem } from "../../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { ChatJobConfiguration } from "../../model/shared-models/chat-core/chat-job-data.model";
+import { StoredMessage } from "@langchain/core/messages";
+import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
+import { setMessageDisabledValue } from "../../model/shared-models/chat-core/utils/messages.utils";
 
 export class ChatJobDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
@@ -58,5 +61,34 @@ export class ChatJobDbService extends DbService {
             { projectId: projectId },
             { deleteMany: true }
         );
+    }
+
+
+    /** Given a specified job ID, sets the disabled property of an instruction message's disabled property, given it's index in the instruction list. */
+    async setInstructionDisabled(jobId: ObjectId, messageIndex: number, newDisabledValue: boolean) {
+        return await this.dbHelper.makeCallWithCollection<undefined, ChatJobConfiguration>(DbCollectionNames.ChatJobs, async (db, collection) => {
+            // Get the job data.
+            const chatJob = await collection.findOne({ _id: jobId });
+
+            // If not found, then we have problems.
+            if (!chatJob) {
+                throw new Error(`Agent with the ID ${jobId} does not exist.`);
+            }
+
+            // Get the message from the appropriate list.
+            let message: PositionableMessage<StoredMessage>;
+            message = chatJob.instructions[messageIndex];
+
+            // If not found, then we have problems.
+            if (!message) {
+                throw new Error(`ChatJob does not have a message with index ${messageIndex} in the instructions list.`);
+            }
+
+            // Update the value.
+            setMessageDisabledValue(message.message, newDisabledValue);
+
+            // Save the value back.
+            await collection.updateOne({ _id: jobId }, { $set: { instructions: chatJob.instructions } });
+        });
     }
 }

@@ -1,15 +1,10 @@
-// Express router for agent configuration endpoints
 import express from 'express';
-// MongoDB ObjectId for working with document IDs
 import { ObjectId } from 'mongodb';
-
-// Utility to extract the user ID from the request (authentication)
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-// Database service for agent configuration CRUD
 import { agentDbService } from '../app-globals';
-// Type for agent configuration
 import { ChatAgentIdentityConfiguration } from '../model/shared-models/chat-core/agent-configuration.model';
 import { NewDbItem } from '../model/shared-models/db-operation-types.model';
+import { userHasAccessToAgentsProject } from '../utils/user-access.utils';
 
 export const agentConfigsServer = express.Router();
 
@@ -124,6 +119,42 @@ agentConfigsServer.delete('/agent-configuration/:id', async (req, res) => {
         }
     } catch (error) {
         res.status(500).json({ error: 'Failed to delete agent identity' });
+    }
+});
+
+// Set instruction or identity message disabled state for an agent
+agentConfigsServer.patch('/agent-configuration/:id/message-disabled', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const agentId = new ObjectId(req.params.id);
+        const { messageType, messageIndex, newDisabledValue } = req.body ?? {};
+
+        // Validate input
+        const validType = messageType === 'instruction' || messageType === 'identity';
+        const validIndex = typeof messageIndex === 'number' && Number.isInteger(messageIndex) && messageIndex >= 0;
+        const validDisabled = typeof newDisabledValue === 'boolean';
+        if (!validType || !validIndex || !validDisabled) {
+            res.status(400).json({ error: 'Invalid request body' });
+            return;
+        }
+
+        // Check user access to the agent's project
+        const hasAccess = await userHasAccessToAgentsProject(agentId, userId);
+        if (!hasAccess) {
+            res.status(403).json({ error: 'Forbidden: No access to agent\'s project' });
+            return;
+        }
+
+        // Update disabled state
+        await agentDbService.setInstructionDisabled(agentId, messageType, messageIndex, newDisabledValue);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update message disabled state' });
     }
 });
 

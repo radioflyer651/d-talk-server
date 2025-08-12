@@ -4,7 +4,6 @@ import { ObjectId } from "mongodb";
 import { UpsertDbItem } from "../../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
-import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-core/agent-configuration.model";
 
 export class AgentInstanceDbService extends DbService {
     constructor(dbHelper: MongoHelper) {

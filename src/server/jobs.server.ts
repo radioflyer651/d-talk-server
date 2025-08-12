@@ -144,3 +144,40 @@ jobsServer.delete('/job/:id', async (req, res) => {
         res.status(500).json({ error: 'Failed to delete job' });
     }
 });
+
+// Set instruction or identity message disabled state for a job
+jobsServer.patch('/job/:id/message-disabled', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const jobId = new ObjectId(req.params.id);
+
+        // Ensure job exists and user has access to its project
+        const job = await chatJobDbService.getChatJobById(jobId);
+        if (!job) {
+            res.status(404).json({ error: 'Job not found' });
+            return;
+        }
+        if (!job.projectId || !(await userHasProjectAccess(userId, job.projectId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+
+        const { messageIndex, newDisabledValue } = req.body ?? {};
+        const validIndex = typeof messageIndex === 'number' && Number.isInteger(messageIndex) && messageIndex >= 0;
+        const validDisabled = typeof newDisabledValue === 'boolean';
+        if (!validIndex || !validDisabled) {
+            res.status(400).json({ error: 'Invalid request body' });
+            return;
+        }
+
+        await chatJobDbService.setInstructionDisabled(jobId, messageIndex, newDisabledValue);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to update message disabled state' });
+    }
+});

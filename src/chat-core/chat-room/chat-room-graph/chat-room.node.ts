@@ -133,7 +133,7 @@ export async function addPreChatMessages(state: typeof ChatState.State) {
     }
     const contributors = getSortedContributors(state.lifetimeContributors, 'forward');
 
-    const chatCallInfo: ChatCallInfo = { replyNumber: state.replyCount, callMessages: state.callMessages, messageHistory: state.messageHistory };
+    const chatCallInfo: ChatCallInfo = { replyNumber: state.replyCount, callMessages: state.callMessages, messageHistory: state.messageHistory, data: {} };
 
     let preChatMessages: PositionableMessage<BaseMessage>[] = [];
     // Collect pre-chat messages from all contributors

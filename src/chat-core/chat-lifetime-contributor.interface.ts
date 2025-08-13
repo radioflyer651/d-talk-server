@@ -61,4 +61,6 @@ export interface ChatCallInfo {
     replyNumber: number;
     callMessages: BaseMessage[];
     messageHistory: BaseMessage[];
+    /** Arbitrary data object used by lifetime implementors to help track arbitrary states. */
+    data: Record<string, any>;
 }

@@ -9,7 +9,7 @@ function isStoredMessage(target: any): target is StoredMessage {
     return typeof target === 'object' && 'data' in target;
 }
 
-function getKwargs(message: StoredMessage | BaseMessage): Record<string, any> {
+export function getKwargs(message: StoredMessage | BaseMessage): Record<string, any> {
     let additional_kwargs: Record<string, any>;
 
     if (isStoredMessage(message)) {

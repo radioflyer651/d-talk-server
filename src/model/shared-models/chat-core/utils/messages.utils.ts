@@ -89,3 +89,37 @@ export function setMessageDisabledValue(message: BaseMessage | StoredMessage, ne
     const params = getDtalkParams(message);
     params.disabled = newVal;
 }
+
+/** Returns the date/time that a specified message was created, if it was stored on the message. */
+export function getMessageDateTime(message: BaseMessage | StoredMessage): Date | undefined {
+    // Get the params.
+    const params = getDtalkParams(message);
+
+    // Can't do much if the value is missing.
+    if (!params.dateTime) {
+        return undefined;
+    }
+
+    // Return the converted value.
+    try {
+        return new Date(params.dateTime);
+    } catch (err) {
+        return undefined;
+    }
+}
+
+/** Sets the date/time on a specified message. */
+export function setMessageDateTime(message: BaseMessage | StoredMessage, dateTime: Date) {
+    // Get the parameters.
+    const params = getDtalkParams(message);
+
+    // Set the date/time value.
+    params.dateTime = dateTime.toISOString();
+}
+
+/** Sets the date/time on a specifed message if it doesn't already have one. */
+export function setMessageDateTimeIfMissing(message: BaseMessage | StoredMessage, dateTime: Date) {
+    if (!getMessageDateTime(message)) {
+        setMessageDateTime(message, dateTime);
+    }
+}

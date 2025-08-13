@@ -8,7 +8,7 @@ import { User } from "../../model/shared-models/user.model";
 import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
-import { setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { setMessageDateTimeIfMissing, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
@@ -172,6 +172,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
                 const name = user.displayName ?? user.userName;
                 const newMessage = new HumanMessage(message, { id: createIdForMessage(), name: name });
                 setSpeakerOnMessage(newMessage, { speakerType: 'user', speakerId: user._id.toString(), name: name });
+                setMessageDateTimeIfMissing(newMessage, new Date());
                 this.messages.push(newMessage);
 
                 // Trigger the event so observers pick it up.

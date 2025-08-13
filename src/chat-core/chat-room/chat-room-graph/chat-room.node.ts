@@ -6,7 +6,7 @@ import { ChatCallState, ChatState } from "./chat-room.state";
 import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 import { cleanToolMessagesForChat } from "../../utilities/clean-tool-messages-for-chat.utils";
 import { formatChatMessages } from "../../../utils/format-chat-messages.utils";
-import { isMessageDisabled } from "../../../model/shared-models/chat-core/utils/messages.utils";
+import { isMessageDisabled, setMessageDateTime } from '../../../model/shared-models/chat-core/utils/messages.utils';
 import { CustomChatFormatting } from '../../../model/shared-models/chat-core/model-service-params.model';
 
 /** Returns a sorted version of the lifetime contributor list. */
@@ -372,6 +372,9 @@ export async function chatCall(state: typeof ChatState.State) {
     }
 
     setMessageId(result);
+
+    // Set the date/time on the message.
+    setMessageDateTime(result, new Date());
 
     // Add the result to the message stacks.
     state.callMessages.push(result);

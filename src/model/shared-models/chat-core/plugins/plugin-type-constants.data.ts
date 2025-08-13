@@ -1,6 +1,7 @@
 import { createChatDirectoryPermissions } from "../documents/chat-document-permissions.model";
 import { CreateTextDocumentsPluginParams } from "./create-text-documents-plugin.params";
 import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
+import { LabeledMemory2PluginParams } from "./labeled-memory-plugin2.params";
 
 export const ROOM_INFO_PLUGIN_TYPE_ID = 'room-info-plugin';
 export const OTHER_AGENTS_INVISIBLE_PLUGIN = 'other-agents-invisible';
@@ -13,6 +14,7 @@ export const LABEL_AGENT_SPEAKERS_PLUGIN_TYPE_ID = 'label-agent-speakers';
 export const IGNORE_SPECIFIC_AGENT_PLUGIN_TYPE_ID = 'ignore-specific-agent';
 export const WEB_SEARCH_PLUGIN_TYPE_ID = 'web-search-plugin';
 export const LABELED_MEMORY_PLUGIN_TYPE_ID = 'labeled-memory-plugin';
+export const LABELED_MEMORY2_PLUGIN_TYPE_ID = 'labeled-memory2-plugin';
 export const CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID = 'create-text-documents-plugin';
 export const RANDOM_CHOICE_PLUGIN_TYPE_ID = 'random-choice-plugin';
 export const MANAGE_DOCUMENT_FOLDER_PLUGIN_TYPE_ID = 'manage-document-folder';
@@ -127,6 +129,26 @@ export const pluginInformation: PluginInfo[] = [
                 serviceParams: undefined as any, // This has to be filled in by the editor.
             },
             keyMeanings: [],
+            canWrite: true,
+        })
+    },
+    {
+        pluginType: LABELED_MEMORY2_PLUGIN_TYPE_ID,
+        displayName: 'Labeled Memory 2',
+        description: '(IMPROVED) Allows agents to have labeled memory for better context in conversations.',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => (<LabeledMemory2PluginParams>{
+            memoryCollectionName: 'memories',
+            memoryKey: '',
+            memoryNamespace: '',
+            memorySetInstructions: 'To remember information about ...',
+            projectId: undefined as any, // This has to be filled in by the editor.
+            modelServiceParams: {
+                llmService: '',
+                serviceParams: undefined as any, // This has to be filled in by the editor.
+            },
             canWrite: true,
         })
     },

@@ -18,6 +18,7 @@ import { RandomChoicePluginResolver } from "./chat-core/plugin-implementations/p
 import { ManageDocumentFolderPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/manage-document-folder-plugin-resolver";
 import { CurrentTimeAndDatePluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/current-time-and-date-plugin-resolver";
 import { TextDocumentResolver } from "./chat-core/document/resolvers/text-document.resolver";
+import { LabeledMemory2PluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/labeled-memory2-plugin-resolver";
 
 
 export let pluginTypeResolvers: IPluginTypeResolver<any>[] = [];
@@ -34,6 +35,7 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new IgnoreSpecificAgentPluginResolver(),
         new WebSearchPluginResolver(config.tavilyConfiguration.apiKey),
         new LabeledMemoryPluginResolver(dbHelper, modelResolver),
+        new LabeledMemory2PluginResolver(dbHelper, modelResolver),
         new CreateTextDocumentsPluginResolver(chatDocumentDbService),
         new RandomChoicePluginResolver(),
         new ManageDocumentFolderPluginResolver(chatDocumentDbService, textDocumentResolver),

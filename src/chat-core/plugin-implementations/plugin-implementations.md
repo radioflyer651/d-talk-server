@@ -20,8 +20,15 @@ The plugin system allows you to extend chat agent and chat room functionality by
 
    ```typescript
    export class MyCustomPlugin extends AgentPluginBase {
-       readonly type = MY_CUSTOM_PLUGIN_TYPE_ID;
-       // ...implement lifecycle methods as needed...
+      constructor(
+         params: PluginInstanceReference | PluginSpecification
+      ) {
+         super(params);
+      }
+   
+      agentUserManual?: string | undefined;
+      readonly type = MY_CUSTOM_PLUGIN_TYPE_ID;
+      // ...implement lifecycle methods as needed...
    }
    ```
 

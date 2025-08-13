@@ -288,7 +288,8 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
                     }
 
                     const node = ev.metadata.langgraph_node as string | undefined;
-                    if (node && !node.startsWith('t_')) {
+                    // if (node && !node.startsWith('t_')) {
+                    if (node && node === 'chat-call' ) {
                         // Stream the value out to listeners.
                         if (ev.event === 'on_chat_model_stream') {
                             const chunk = ev.data.chunk as AIMessageChunk;

@@ -23,6 +23,7 @@ import { IDocumentProvider } from "../document/document-provider.interface";
 import { ChatDocumentReference } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
 import { IChatRoomSaverService } from "./chat-room-saver-service.interface";
 import { MessageGroupingState } from "../utilities/message-grouping-state.utils";
+import { getChatRoomLongRunningTasks } from "./chat-room-long-running-tasks.service";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
@@ -201,6 +202,22 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
         }
     }
 
+    /** Collects and stores all long running tasks from a specified set of plugins. */
+    protected collectLongRunningTasks(plugins: AgentPluginBase[]): void {
+        // Get the long running task service.
+        const taskService = getChatRoomLongRunningTasks();
+
+        plugins.forEach(p => {
+            // Get the long running tasks for this item.
+            const tasks = p.getLongRunningTasks();
+
+            // Store them.
+            tasks.forEach(t => {
+                taskService.addNewTask(t);
+            });
+        });
+    }
+
     /** After a user message is received, this is the process for executing each chat job. */
     protected async executeTurnsForChatMessage(): Promise<void> {
         // Execute the jobs for this chat room.
@@ -289,7 +306,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
 
                     const node = ev.metadata.langgraph_node as string | undefined;
                     // if (node && !node.startsWith('t_')) {
-                    if (node && node === 'chat-call' ) {
+                    if (node && node === 'chat-call') {
                         // Stream the value out to listeners.
                         if (ev.event === 'on_chat_model_stream') {
                             const chunk = ev.data.chunk as AIMessageChunk;
@@ -357,6 +374,9 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
             this.updateDataForStorage();
             const conversationUpdateP = this.chatRoomSaverService.updateChatRoomConversation(this);
             await Promise.all([agentUpdateP, jobUpdateP, conversationUpdateP]);
+
+            // Store the long running tasks from the plugins.
+            this.collectLongRunningTasks(plugins);
 
         } catch (err) {
             this.logError({

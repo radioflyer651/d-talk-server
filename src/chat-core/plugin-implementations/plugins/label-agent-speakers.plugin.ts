@@ -31,7 +31,7 @@ export class LabelAgentSpeakersPlugin extends AgentPluginBase implements IChatLi
                 const speaker = getSpeakerFromMessage(h);
                 if (speaker) {
                     if (this.agent?.data._id.equals(speaker.speakerId)) {
-                        newHistory.push(new SystemMessage(`THe following message is from you (${speaker.name}, ID: ${speaker.speakerId}).`));
+                        newHistory.push(new SystemMessage(`The following message is from you (${speaker.name}, ID: ${speaker.speakerId}).`));
                     } else {
                         newHistory.push(new SystemMessage(`The following message is from (ID: ${speaker.speakerId}) ${speaker.name}`));
                     }

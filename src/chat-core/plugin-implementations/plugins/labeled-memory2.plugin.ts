@@ -13,6 +13,8 @@ import { StructuredToolInterface, tool } from '@langchain/core/tools';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
 import { z } from 'zod';
 import { MessagePositionTypes, PositionableMessage } from '../../../model/shared-models/chat-core/positionable-message.model';
+import { LongRunningTask } from '../../chat-room/long-running-tasks.service';
+import { copyBaseMessages } from '../../../utils/copy-base-message.utils';
 
 export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifetimeContributor {
     constructor(
@@ -67,11 +69,11 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
             If nothing in memory is relevant, respond with an empty message.
         `;
         const instructions = `
-            Consider the following information and consider the information in the conversation this far.  Is there anything in the below memories that would be imporant to know for a meaninful conversation?
+            Consider the following information and consider the information in the conversation this far.  Is there anything in the below memories that would be important to know for a meaningful conversation?
             Current Memories:
             ${this.currentMemories}
             ---
-            You must reply with a list of facts from memory.  It should be in markdown format, and a bulletted list.  Use complete sentences, indicating who, what, why, where, when, how - as appropriate.
+            You must reply with a list of facts from memory.  It should be in markdown format, and a bulleted list.  Use complete sentences, indicating who, what, why, where, when, how - as appropriate.
     `;
 
         const messageHistory = [...info.callMessages.filter(x => !(x instanceof SystemMessage))];
@@ -158,7 +160,11 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
         return [saveMemoryTool, setPropertyTool, deletePropertyTool];
     }
 
-    async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
+    /** Contains the task runner for updating memory, so it can be completed after the chat call is done. */
+    private chatCompletionTask: LongRunningTask | undefined;
+    private finalMessages?: BaseMessage[];
+
+    private async createNewMemories(finalMessages: BaseMessage[]) {
         // Get the tools for this operation.
         const tools = await this.getMemoryTools();
 
@@ -202,6 +208,23 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
                 await tool.invoke(tc.args);
             }
         }
+    }
+
+    async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
+        // Copy the final messages for later use.
+        this.finalMessages = copyBaseMessages(finalMessages);
+    }
+
+    override getLongRunningTasks(): LongRunningTask[] {
+        // We must do this here, and NOT in the chatComplete call, because that's part of the LangGraph,
+        //  and when the graph completes, it will cancel any LLMs running under that context.
+        const memoryPromise = this.createNewMemories(this.finalMessages!);
+
+        // Create the long running task.
+        this.chatCompletionTask = new LongRunningTask('Create New Memories', memoryPromise, 60000);
+
+        // Return the task.
+        return [this.chatCompletionTask];
     }
 
     async initialize(): Promise<void> {

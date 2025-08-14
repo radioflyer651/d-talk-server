@@ -5,6 +5,7 @@ import { IChatLifetimeContributor } from "../chat-lifetime-contributor.interface
 import { Agent } from "../agent/agent.service";
 import { ChatRoom } from "../chat-room/chat-room.service";
 import { ChatJob } from "../chat-room/chat-job.service";
+import { LongRunningTask } from "../chat-room/long-running-tasks.service";
 
 export interface PluginAttachmentTarget {
     /** The set of plugins used in this chat job. */
@@ -58,6 +59,11 @@ export abstract class AgentPluginBase implements IChatLifetimeContributor {
     /** Higher priorities have actions occur closer to the LLM chat call, and lower numbers
      *   occur prior to the chat call. */
     priority: number = 0;
+
+    /** When overridden, returns all long running tasks that the chat room service should allow to complete. */
+    getLongRunningTasks(): LongRunningTask[] {
+        return [];
+    }
 
     /** Returns a reference to this plugin. */
     getReference(): PluginInstanceReference {

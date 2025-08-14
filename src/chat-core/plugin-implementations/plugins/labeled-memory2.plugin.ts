@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { MessagePositionTypes, PositionableMessage } from '../../../model/shared-models/chat-core/positionable-message.model';
 import { LongRunningTask } from '../../chat-room/long-running-tasks.service';
 import { copyBaseMessages } from '../../../utils/copy-base-message.utils';
+import { LifetimeContributorPriorityTypes } from '../../lifetime-contributor-priorities.enum';
 
 export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifetimeContributor {
     constructor(
@@ -46,6 +47,8 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
     declare specification: PluginSpecification<LabeledMemory2PluginParams>;
 
     readonly type = LABELED_MEMORY2_PLUGIN_TYPE_ID;
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.WithHighestContext;
 
     private async getCurrentMemories(): Promise<string> {
         const params = this.specification.configuration;

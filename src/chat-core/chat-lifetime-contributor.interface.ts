@@ -2,12 +2,13 @@ import { BaseMessage, AIMessage } from "@langchain/core/messages";
 import { PositionableMessage } from "../model/shared-models/chat-core/positionable-message.model";
 import { DynamicTool, StructuredToolInterface, Tool } from "@langchain/core/tools";
 import { ToolNode } from "@langchain/langgraph/dist/prebuilt/tool_node";
+import { LifetimeContributorPriorityTypes } from "./lifetime-contributor-priorities.enum";
 
 export interface IChatLifetimeContributor {
 
     /** Higher priorities have actions occur closer to the LLM chat call, and lower numbers
      *   occur prior to the chat call. */
-    priority?: number;
+    priority?: LifetimeContributorPriorityTypes;
 
     /**
      * Not part of the life-time, but when implemented, provides tools that may

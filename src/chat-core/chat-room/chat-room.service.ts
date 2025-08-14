@@ -24,6 +24,7 @@ import { ChatDocumentReference } from "../../model/shared-models/chat-core/docum
 import { IChatRoomSaverService } from "./chat-room-saver-service.interface";
 import { MessageGroupingState } from "../utilities/message-grouping-state.utils";
 import { getChatRoomLongRunningTasks } from "./chat-room-long-running-tasks.service";
+import { LifetimeContributorPriorityTypes } from "../lifetime-contributor-priorities.enum";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
@@ -41,6 +42,8 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
 
     /** Events that occur during the chat. */
     readonly events = this._events.asObservable();
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.Room;
 
     dispose() {
         this._events.complete();

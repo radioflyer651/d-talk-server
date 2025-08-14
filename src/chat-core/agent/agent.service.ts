@@ -13,6 +13,7 @@ import { IDisposable } from "../disposable.interface";
 import { CustomChatFormatting } from "../../model/shared-models/chat-core/model-service-params.model";
 import { IDocumentProvider } from "../document/document-provider.interface";
 import { ChatDocumentReference } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
+import { LifetimeContributorPriorityTypes } from "../lifetime-contributor-priorities.enum";
 
 export class Agent implements IChatLifetimeContributor, IDisposable, PluginAttachmentTarget, IDocumentProvider {
     // The configuration for this agent instance
@@ -61,6 +62,8 @@ export class Agent implements IChatLifetimeContributor, IDisposable, PluginAttac
 
     /** The configuration related to this agent instance. */
     identity!: ChatAgentIdentityConfiguration;
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.Agent;
 
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
         // Resulting message list.

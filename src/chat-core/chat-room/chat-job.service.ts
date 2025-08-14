@@ -9,6 +9,7 @@ import { createIdForMessage } from "../utilities/set-message-id.util";
 import { IDisposable } from "../disposable.interface";
 import { IDocumentProvider } from "../document/document-provider.interface";
 import { ChatDocumentReference } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
+import { LifetimeContributorPriorityTypes } from "../lifetime-contributor-priorities.enum";
 
 
 export class ChatJob implements IChatLifetimeContributor, IDisposable, PluginAttachmentTarget, IDocumentProvider {
@@ -36,6 +37,8 @@ export class ChatJob implements IChatLifetimeContributor, IDisposable, PluginAtt
     set agentId(value: ObjectId | undefined) {
         this.instanceData.agentId = value;
     }
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.Job;
 
     positionableMessages: PositionableMessage<BaseMessage>[] = [];
 

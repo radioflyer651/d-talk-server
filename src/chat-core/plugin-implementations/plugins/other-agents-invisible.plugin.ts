@@ -5,11 +5,14 @@ import { PluginInstanceReference } from "../../../model/shared-models/chat-core/
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
 import { copyBaseMessages } from "../../../utils/copy-base-message.utils";
 import { getSpeakerFromMessage } from "../../../model/shared-models/chat-core/utils/messages.utils";
+import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-priorities.enum";
 
 
 export class OtherAgentsInvisiblePlugin extends AgentPluginBase {
     readonly type: string = OTHER_AGENTS_INVISIBLE_PLUGIN;
     agentUserManual?: string | undefined;
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.BeforeContextBuild;
 
     constructor(params: PluginInstanceReference<undefined> | PluginSpecification<undefined>) {
         super(params);

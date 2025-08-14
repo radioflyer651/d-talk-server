@@ -7,6 +7,7 @@ import { getSpeakerFromMessage } from "../../../model/shared-models/chat-core/ut
 import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
 import { MessagePositionTypes, PositionableMessage } from "../../../model/shared-models/chat-core/positionable-message.model";
+import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-priorities.enum";
 
 /**
  * Plugin: Label Agent Speakers
@@ -22,6 +23,8 @@ export class LabelAgentSpeakersPlugin extends AgentPluginBase implements IChatLi
 
     private readonly doNotInclude = ` This header information is provided to you for your convenience.  Do NOT append lines like this to your response.`;
     private readonly doNotIncludeWithDashes = this.doNotInclude + `\n----------------------\n\n`;
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.AppendMetaData;
 
     async modifyCallMessages(messageHistory: BaseMessage[]): Promise<BaseMessage[]> {
         const newHistory: BaseMessage[] = [];

@@ -6,6 +6,7 @@ import { MessagePositionTypes, PositionableMessage } from '../../../model/shared
 import { PluginInstanceReference } from '../../../model/shared-models/chat-core/plugin-instance-reference.model';
 import { PluginSpecification } from '../../../model/shared-models/chat-core/plugin-specification.model';
 import { getKwargs, getMessageDateTime } from '../../../model/shared-models/chat-core/utils/messages.utils';
+import { LifetimeContributorPriorityTypes } from '../../lifetime-contributor-priorities.enum';
 
 const MESSAGE_CREATION_MARKER = 'createdByCurrentTimeDatePlugin';
 
@@ -17,6 +18,7 @@ export class CurrentTimeAndDatePlugin extends AgentPluginBase implements IChatLi
         super(params);
     }
 
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.AppendMetaData;
 
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
         // Exit if this plugin has been called on this history stack already.

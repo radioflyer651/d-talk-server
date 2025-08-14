@@ -11,6 +11,7 @@ import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { TextDocumentResolver } from "../../document/resolvers/text-document.resolver";
 import { BaseMessage, SystemMessage } from "@langchain/core/messages";
 import { MessagePositionTypes, PositionableMessage } from "../../../model/shared-models/chat-core/positionable-message.model";
+import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-priorities.enum";
 
 export class ManageDocumentFolderPlugin extends AgentPluginBase implements IChatLifetimeContributor {
     constructor(
@@ -20,6 +21,8 @@ export class ManageDocumentFolderPlugin extends AgentPluginBase implements IChat
     ) {
         super(params);
     }
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.Normal;
 
     get agentUserManual(): string {
         const permissions = this.specification!.configuration;

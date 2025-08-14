@@ -5,6 +5,7 @@ import { MessagePositionTypes, PositionableMessage } from "../../../model/shared
 import { ROOM_INFO_PLUGIN_TYPE_ID } from "../../../model/shared-models/chat-core/plugins/plugin-type-constants.data";
 import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
+import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-priorities.enum";
 
 
 export class RoomInfoPlugin extends AgentPluginBase {
@@ -14,6 +15,8 @@ export class RoomInfoPlugin extends AgentPluginBase {
     constructor(params: PluginInstanceReference | PluginSpecification) {
         super(params);
     }
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.Normal;
 
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
         // Get the OTHER agents in the room.  Only those attached to a job though, because those are the only ones able to respond.

@@ -5,6 +5,7 @@ import { PluginInstanceReference } from "../../../model/shared-models/chat-core/
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
 import { StructuredToolInterface, tool } from "@langchain/core/tools";
 import { z } from "zod";
+import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-priorities.enum";
 
 export class RandomChoicePlugin extends AgentPluginBase implements IChatLifetimeContributor {
     constructor(
@@ -12,6 +13,8 @@ export class RandomChoicePlugin extends AgentPluginBase implements IChatLifetime
     ) {
         super(params);
     }
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.Normal;
 
     agentUserManual = 'When asked to choose randomly, use the random_value tool to pick randomly for you.';
 

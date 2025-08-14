@@ -8,6 +8,7 @@ import { ObjectId } from "mongodb";
 import { BaseMessage } from "@langchain/core/messages";
 import { copyBaseMessages } from "../../../utils/copy-base-message.utils";
 import { getSpeakerFromMessage } from "../../../model/shared-models/chat-core/utils/messages.utils";
+import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-priorities.enum";
 
 /**
  * Plugin: Ignore Specific Agent
@@ -21,6 +22,8 @@ export class IgnoreSpecificAgentPlugin extends AgentPluginBase implements IChatL
 
     agentUserManual?: string | undefined;
     readonly type = IGNORE_SPECIFIC_AGENT_PLUGIN_TYPE_ID;
+
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.WithLeastContext;
 
     getAgentFromAgentInstance(instanceId: string | undefined) {
         return this.chatRoom.agents.find(a => a.data._id.toString() === instanceId);

@@ -3,6 +3,7 @@ import { AgentPluginBase } from "../../agent-plugin/agent-plugin-base.service";
 import { DEBUG_PLUGIN } from "../../../model/shared-models/chat-core/plugins/plugin-type-constants.data";
 import { PluginInstanceReference } from "../../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
+import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-priorities.enum";
 
 export class DebugPlugin extends AgentPluginBase {
     readonly type: string = DEBUG_PLUGIN;
@@ -12,7 +13,7 @@ export class DebugPlugin extends AgentPluginBase {
         super(params);
     }
 
-    priority: number = 5;
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.Last;
 
     /**
      * Called at the end of the chat session, allowing the contributor to finalize or clean up resources.

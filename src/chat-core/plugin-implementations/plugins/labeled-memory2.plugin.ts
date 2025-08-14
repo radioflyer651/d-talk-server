@@ -7,7 +7,7 @@ import { PluginSpecification } from '../../../model/shared-models/chat-core/plug
 import { LabeledMemory2PluginParams } from '../../../model/shared-models/chat-core/plugins/labeled-memory-plugin2.params';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { MongoDbStore } from '../../../services/lang-chain/mongo-store.service';
-import { AIMessage, BaseMessage, SystemMessage } from '@langchain/core/messages';
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ToolInputSchemaBase } from '@langchain/core/dist/tools/types';
 import { StructuredToolInterface, tool } from '@langchain/core/tools';
 import { ToolNode } from '@langchain/langgraph/prebuilt';
@@ -61,37 +61,56 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
     }
 
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
-        const instructions = `
-        Ignore ALL PRIOR INSTRUCTIONS.
-        You are a memory agent for another LLM agent.  You manage saving and storing memories discussed in the other agent's conversations.
-        The agent is about to respond to the user.  Below are the memories you're managing.  Based on their conversation so far, you must return any information you're aware of FROM THE MEMORIES ONLY, that may be relevant to the conversation.
-        You do NOT respond to the user.  They cannot see your content - only the LLM can, who you're supporting.  Do not attempt to interact with the user.
-        ---
-        Current Memories:
-        ${this.currentMemories}
+        const identity = `
+            You are a memory extraction function for an AI agent. Your ONLY job is to extract and return relevant information from the memories below, based on the current conversation context.
+            DO NOT reply to the user, DO NOT generate a conversation, DO NOT provide advice, DO NOT ask questions, DO NOT interact with the user in any way.
+            If nothing in memory is relevant, respond with an empty message.
         `;
+        const instructions = `
+            Consider the following information and consider the information in the conversation this far.  Is there anything in the below memories that would be imporant to know for a meaninful conversation?
+            Current Memories:
+            ${this.currentMemories}
+            ---
+            You must reply with a list of facts from memory.  It should be in markdown format, and a bulletted list.  Use complete sentences, indicating who, what, why, where, when, how - as appropriate.
+    `;
 
-        const messageHistory = [...info.callMessages.filter(x => !(x instanceof SystemMessage)), new SystemMessage(instructions)];
-        const response = await this.aiModel.invoke(messageHistory);
+        const messageHistory = [...info.callMessages.filter(x => !(x instanceof SystemMessage))];
 
-        return [{ location: MessagePositionTypes.Last, message: response }];
+        const history = messageHistory.map(m => {
+            if (m instanceof AIMessage) {
+                return `AI Message:\n${m.text}`;
+            } else if (m instanceof HumanMessage) {
+                return `Human Message:\n${m.text}`;
+            }
+            return '';
+        }).join('\n');
+
+        const response = await this.aiModel.invoke([
+            new SystemMessage(identity),
+            new SystemMessage(`Message history:\n\n${history}`), new SystemMessage(instructions),
+            new SystemMessage(identity),
+            new SystemMessage(instructions),
+        ]);
+
+        const aiResponse = `Memory tool function response: ${response.text}`;
+
+        return [{ location: MessagePositionTypes.Last, message: new SystemMessage(aiResponse) }];
     }
 
-    /** Returns the tools needed to save new memories.
-     *   TODO: Revise this so it can be more fine-grained on each property of the memory.  This could get big.
-     */
+    /** Returns the tools needed to save new memories, including property-level operations. */
     private async getMemoryTools(): Promise<(ToolNode<any> | StructuredToolInterface<ToolInputSchemaBase, any, any>)[]> {
         const params = this.specification.configuration;
         const suffix = `${params.memoryCollectionName}_${params.memoryNamespace.replaceAll('/', '__')}_${params.memoryKey}`;
+
+        // Overwrite entire memory value
         const saveMemorySchema = {
             name: `save_memories_${suffix}`,
-            description: `Resplaces (or creates) the stored memory for reference ${this.memoryIdentifier}.`,
+            description: `Replaces (or creates) the stored memory for reference ${this.memoryIdentifier}.`,
             schema: z.object({
-                newValue: z.object({}).passthrough().describe(`The new memory object.  This is of whatever form you choose, and replaces the old memory value completely.`)
+                newValue: z.object({}).passthrough().describe(`The new memory object. This replaces the old memory value completely.`)
             })
         };
-
-        const toolDef = tool(
+        const saveMemoryTool = tool(
             async (options: z.infer<typeof saveMemorySchema.schema>) => {
                 const namespace = params.memoryNamespace.split('/');
                 await this.memoryService.put(namespace, params.memoryKey, options.newValue);
@@ -99,22 +118,65 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
             saveMemorySchema
         );
 
-        return [toolDef];
+        // Add or change a property
+        const setPropertySchema = {
+            name: `set_memory_property_${suffix}`,
+            description: `Adds or updates a property in the memory object for reference ${this.memoryIdentifier}.`,
+            schema: z.object({
+                property: z.string().describe('The property name to add or update.'),
+                value: z.any().describe('The value to set for the property.')
+            })
+        };
+        const setPropertyTool = tool(
+            async (options: z.infer<typeof setPropertySchema.schema>) => {
+                const namespace = params.memoryNamespace.split('/');
+                const memory = (await this.memoryService.get(namespace, params.memoryKey))?.value || {};
+                memory[options.property] = options.value;
+                await this.memoryService.put(namespace, params.memoryKey, memory);
+            },
+            setPropertySchema
+        );
+
+        // Delete a property
+        const deletePropertySchema = {
+            name: `delete_memory_property_${suffix}`,
+            description: `Deletes a property from the memory object for reference ${this.memoryIdentifier}.`,
+            schema: z.object({
+                property: z.string().describe('The property name to delete.')
+            })
+        };
+        const deletePropertyTool = tool(
+            async (options: z.infer<typeof deletePropertySchema.schema>) => {
+                const namespace = params.memoryNamespace.split('/');
+                const memory = (await this.memoryService.get(namespace, params.memoryKey))?.value || {};
+                delete memory[options.property];
+                await this.memoryService.put(namespace, params.memoryKey, memory);
+            },
+            deletePropertySchema
+        );
+
+        return [saveMemoryTool, setPropertyTool, deletePropertyTool];
     }
 
     async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
         // Get the tools for this operation.
         const tools = await this.getMemoryTools();
 
+        tools.forEach(t => {
+            t.name = t.name!.substr(0, 60);
+        });
+
         // Get the current memory set.
         const currentMemories = this.currentMemories;
 
         const instructions = `
-        You are an assistant to store memories for another chat agent.
+        You are an AI function to store memories for another chat agent.
         The memory reference you are working with is ${this.memoryIdentifier}.
         The previous message set is the conversation currently being conducted by the other chat agent.
         From this information, you must decide what memories to store/update.  Use the provided tools to perform your job.
+        Keep topics organized for memory with subtrees.
         IMPORTANT: DO NOT REPLY TO THE MESSAGE, ONLY MAKE A TOOL CALL, OR RESPOND WITH AN EMPTY RESPONSE.
+        IMPORTANT: WHen creating new memories, use COMPLETE SENTENCES for the information.
         ----
         The following are instructions regarding these memories:
         ${this.specification.configuration.memorySetInstructions}
@@ -130,10 +192,6 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
         const result = await this.aiModel.bindTools!(tools).invoke(history);
 
         if (result.tool_calls && result.tool_calls.length > 0) {
-            if (result.tool_calls.length !== 1) {
-                console.error(`Toolcall length is greater than 1!`, result.tool_calls);
-            }
-
             for (let tc of result.tool_calls) {
                 const tool = tools.find(t => t.name === tc.name);
                 if (!tool) {

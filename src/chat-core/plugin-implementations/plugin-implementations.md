@@ -42,8 +42,8 @@ The plugin system allows you to extend chat agent and chat room functionality by
        canImplementType(typeName: string): boolean {
            return typeName === MY_CUSTOM_PLUGIN_TYPE_ID;
        }
-       async createNewPlugin(spec, attachedTo) { /* ... */ }
-       hydratePlugin(instance, attachedTo) { /* ... */ }
+       async createNewPlugin(spec: PluginSpecification, attachedTo: PluginAttachmentTarget) { /* ... */ }
+       async hydratePlugin(instance: PluginInstanceReference, attachedTo: PluginAttachmentTarget) { /* ... */ }
    }
    ```
 

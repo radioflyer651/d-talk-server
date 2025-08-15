@@ -165,7 +165,7 @@ export async function inspectChatCallMessages(state: typeof ChatState.State) {
     // Let all contributors finalize or clean up after the chat is complete
     const promises = contributors
         .filter(c => typeof c.inspectChatCallMessages === 'function')
-        .map(c => c.inspectChatCallMessages!(state.callMessages.slice(), state.messageHistory.slice()));
+        .map(c => c.inspectChatCallMessages!(state.callMessages, state.messageHistory));
 
     // Wait for all chatComplete hooks to finish
     await Promise.all(promises);

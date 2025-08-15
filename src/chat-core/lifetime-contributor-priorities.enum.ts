@@ -9,5 +9,6 @@ export enum LifetimeContributorPriorityTypes {
     WithLeastContext = -1,
     Normal = 0,
     WithHighestContext = 1,
+    NearestToAgentCall = 2,
     Last = 900,
 }

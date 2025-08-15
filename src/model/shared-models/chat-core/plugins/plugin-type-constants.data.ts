@@ -4,6 +4,7 @@ import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
 import { LabeledMemory2PluginParams } from "./labeled-memory-plugin2.params";
 
 export const ROOM_INFO_PLUGIN_TYPE_ID = 'room-info-plugin';
+export const INNER_VOICE_PLUGIN_TYPE_ID = 'inner-voice-plugin';
 export const OTHER_AGENTS_INVISIBLE_PLUGIN = 'other-agents-invisible';
 export const DEBUG_PLUGIN = 'debug';
 export const ACT_DRUNK = 'act-drunk';
@@ -40,6 +41,15 @@ export const pluginInformation: PluginInfo[] = [
         attachesToChatRoom: true,
         attachesToJob: true,
         defaultParameterCreator: () => undefined
+    },
+    {
+        pluginType: INNER_VOICE_PLUGIN_TYPE_ID,
+        displayName: 'Inner Voice',
+        description: 'Provides an inner monologue for the agent, visible only to itself.',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => ({ messageList: [], callType: 'system' })
     },
     {
         pluginType: ACT_DRUNK,

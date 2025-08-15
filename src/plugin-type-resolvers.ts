@@ -17,6 +17,7 @@ import { ModelServiceResolver } from "./chat-core/agent/model-services/model-ser
 import { RandomChoicePluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/random-choice-plugin-resolver";
 import { ManageDocumentFolderPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/manage-document-folder-plugin-resolver";
 import { CurrentTimeAndDatePluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/current-time-and-date-plugin-resolver";
+import { InnerVoicePluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/inner-voice-plugin-resolver";
 import { TextDocumentResolver } from "./chat-core/document/resolvers/text-document.resolver";
 import { LabeledMemory2PluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/labeled-memory2-plugin-resolver";
 
@@ -40,5 +41,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new RandomChoicePluginResolver(),
         new ManageDocumentFolderPluginResolver(chatDocumentDbService, textDocumentResolver),
         new CurrentTimeAndDatePluginResolver(),
+        new InnerVoicePluginResolver(),
     ]);
 }

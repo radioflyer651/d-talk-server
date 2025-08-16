@@ -10,6 +10,7 @@ import { IDisposable } from "../disposable.interface";
 import { IDocumentProvider } from "../document/document-provider.interface";
 import { ChatDocumentReference } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
 import { LifetimeContributorPriorityTypes } from "../lifetime-contributor-priorities.enum";
+import { setMessageSource } from "../../model/shared-models/chat-core/utils/messages.utils";
 
 
 export class ChatJob implements IChatLifetimeContributor, IDisposable, PluginAttachmentTarget, IDocumentProvider {
@@ -57,6 +58,8 @@ export class ChatJob implements IChatLifetimeContributor, IDisposable, PluginAtt
         if (info.replyNumber === 0) {
             // Create a deep clone of the messages.
             const clones = this.positionableMessages.slice();
+
+            clones.forEach(c => setMessageSource(c.message, 'job'));
 
             // Update the IDs on the messages.
             clones.forEach(c => c.message.id = createIdForMessage());

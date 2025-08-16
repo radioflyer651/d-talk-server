@@ -66,6 +66,21 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
     }
 
     async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
+        if (info.replyNumber !== 0) {
+            return [];
+        }
+
+        if (this.specification.configuration.placeFullMemoryIntoContext) {
+            return [{
+                location: MessagePositionTypes.AfterAgentIdentity,
+                message: new SystemMessage(`Current memory for ${this.memoryIdentifier}\n${this.currentMemories}`)
+            }];
+        } else {
+            return this.addPreChatMessagesByAnalysis(info);
+        }
+    }
+
+    private async addPreChatMessagesByAnalysis(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
         const identity = `
             You are a memory extraction function for an AI agent. Your ONLY job is to extract and return relevant information from the memories below, based on the current conversation context.
             DO NOT reply to the user, DO NOT generate a conversation, DO NOT provide advice, DO NOT ask questions, DO NOT interact with the user in any way.
@@ -77,6 +92,8 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
             ${this.currentMemories}
             ---
             You must reply with a list of facts from memory.  It should be in markdown format, and a bulleted list.  Use complete sentences, indicating who, what, why, where, when, how - as appropriate.
+            Be sure to include date/times when saving information.  Avoid using words like "today" and "tomorrow" or relative time for reference, since that doesn't make sense in the future.
+            The current date/time is ${(new Date()).toISOString()}.
     `;
 
         const messageHistory = [...info.callMessages.filter(x => !(x instanceof SystemMessage))];
@@ -99,7 +116,7 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
 
         const aiResponse = `Memory tool function response: ${response.text}`;
 
-        return [{ location: MessagePositionTypes.Last, message: new SystemMessage(aiResponse) }];
+        return [{ location: MessagePositionTypes.AfterAgentIdentity, message: new SystemMessage(aiResponse) }];
     }
 
     /** Returns the tools needed to save new memories, including property-level operations. */

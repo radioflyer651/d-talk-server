@@ -8,7 +8,7 @@ import { User } from "../../model/shared-models/user.model";
 import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
-import { setMessageDateTimeIfMissing, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { setMessageDateTimeIfMissing, setMessageSource, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
@@ -398,6 +398,10 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
         const roomMessages = this.data.roomInstructions ?? [];
         const projectMessages = this.project.projectKnowledge ?? []; // This functionality should probably move to another location (making a project a lifetime contributor.)
         const allMessages = [...roomMessages, ...projectMessages];
+
+        // Set the source on the messages.
+        roomMessages.forEach(m => setMessageSource(m.message, 'chat-room'));
+        projectMessages.forEach(m => setMessageSource(m.message, 'project'));
 
         // If we don't have any roomInstructions, then there's nothing to do.
         if (allMessages.length < 1) {

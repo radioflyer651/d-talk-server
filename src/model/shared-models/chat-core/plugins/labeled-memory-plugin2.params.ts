@@ -18,6 +18,9 @@ export interface LabeledMemory2PluginParams {
      *   plugin can write new memories to the memory set, or if it's just read-only. */
     canWrite: boolean;
 
+    /** Boolean value indicating whether or not the full memory should be placed into chat context without analysis (MUCH faster.) */
+    placeFullMemoryIntoContext: boolean;
+
     /** A string indicating the purpose of this memory set.  This should be written in a way
      *   that allows the LLM to know why it might be reading OR writing data to/from this set. */
     memorySetInstructions: string;

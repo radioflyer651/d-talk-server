@@ -1,5 +1,6 @@
 import { createChatDirectoryPermissions } from "../documents/chat-document-permissions.model";
 import { CreateTextDocumentsPluginParams } from "./create-text-documents-plugin.params";
+import { InnerVoicePluginParams } from "./inner-voice-plugin.params";
 import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
 import { LabeledMemory2PluginParams } from "./labeled-memory-plugin2.params";
 
@@ -49,7 +50,20 @@ export const pluginInformation: PluginInfo[] = [
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,
-        defaultParameterCreator: () => ({ messageList: [], callType: 'system' })
+        defaultParameterCreator: () => (<InnerVoicePluginParams>{
+            messageList: [],
+            callType: 'system',
+            considerLastMessageInResponse: true,
+            responseToLastInnerVoiceMessage: true,
+            addDummyAiMessageBeforeInnerDialog: false,
+
+            excludeChatRoomMessages: false,
+            excludeJobMessages: false,
+            excludeAgentIdentityMessages: false,
+            excludeAgentInstructionMessages: false,
+            excludePluginMessages: false,
+            excludeProjectMessages: false,
+        })
     },
     {
         pluginType: ACT_DRUNK,
@@ -160,6 +174,7 @@ export const pluginInformation: PluginInfo[] = [
                 serviceParams: undefined as any, // This has to be filled in by the editor.
             },
             canWrite: true,
+            placeFullMemoryIntoContext: true,
         })
     },
     {

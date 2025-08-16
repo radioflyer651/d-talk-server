@@ -4,7 +4,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { BaseMessage } from "@langchain/core/messages";
-import { setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { setMessageSource, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-core/agent-configuration.model";
 import { hydratePositionableMessages } from "../../utils/positionable-message-hydration.utils";
 import { ChatRoom } from "../chat-room/chat-room.service";
@@ -69,8 +69,15 @@ export class Agent implements IChatLifetimeContributor, IDisposable, PluginAttac
         // Resulting message list.
         const result = [] as PositionableMessage<BaseMessage>[];
         if (info.replyNumber === 0) {
-            result.push(...hydratePositionableMessages(this.identity.identityStatements));
-            result.push(...hydratePositionableMessages(this.identity.baseInstructions));
+            result.push(...hydratePositionableMessages(this.identity.identityStatements.map(m => {
+                setMessageSource(m.message, 'agent-identity');
+                return m;
+            })));
+
+            result.push(...hydratePositionableMessages(this.identity.baseInstructions.map(m => {
+                setMessageSource(m.message, 'agent-instructions');
+                return m;
+            })));
         }
 
         // Return the results.

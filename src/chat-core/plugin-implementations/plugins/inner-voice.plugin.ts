@@ -3,12 +3,11 @@ import { PluginInstanceReference } from "../../../model/shared-models/chat-core/
 import { INNER_VOICE_PLUGIN_TYPE_ID } from "../../../model/shared-models/chat-core/plugins/plugin-type-constants.data";
 import { InnerVoicePluginParams } from "../../../model/shared-models/chat-core/plugins/inner-voice-plugin.params";
 import { PluginSpecification } from "../../../model/shared-models/chat-core/plugin-specification.model";
-import { ChatCallInfo, IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
+import { IChatLifetimeContributor } from "../../chat-lifetime-contributor.interface";
 import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-priorities.enum";
-import { BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { MessagePositionTypes, PositionableMessage } from '../../../model/shared-models/chat-core/positionable-message.model';
-import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { copyBaseMessages } from "../../../utils/copy-base-message.utils";
+import { getMessageSource, MessageSourceTypes } from '../../../model/shared-models/chat-core/utils/messages.utils';
 
 export class InnerVoicePlugin extends AgentPluginBase implements IChatLifetimeContributor {
     constructor(params: PluginInstanceReference<InnerVoicePluginParams> | PluginSpecification<InnerVoicePluginParams>) {
@@ -35,51 +34,35 @@ export class InnerVoicePlugin extends AgentPluginBase implements IChatLifetimeCo
         }
     }
 
-    // async addPreChatMessages(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {
-    //     const params = this.specification.configuration;
-    //     if (info.replyNumber === 0 && params.messageList.length > 0) {
-    //         // Get the chat model from the agent.
-    //         const model = this.agent.chatModel;
+    /** Removes all excluded source-type messages from a specified list of messages, and returns a filtered list. */
+    private removeExcludedSourceMessages(messages: BaseMessage[]) {
+        const params = this.specification.configuration;
+        const keepTypes: MessageSourceTypes[] = [];
 
-    //         // Create a copy of the chat history for our own chat calls.
-    //         const historyCopy = copyBaseMessages(info.callMessages);
+        if (!params.excludeAgentIdentityMessages) {
+            keepTypes.push('agent-identity');
+        }
+        if (!params.excludeAgentInstructionMessages) {
+            keepTypes.push('agent-instructions');
+        }
+        if (!params.excludeChatRoomMessages) {
+            keepTypes.push('chat-room');
+        }
+        if (!params.excludeJobMessages) {
+            keepTypes.push('job');
+        }
+        if (!params.excludePluginMessages) {
+            keepTypes.push('plugin');
+        }
+        if (!params.excludeProjectMessages) {
+            keepTypes.push('project');
+        }
 
-    //         // Remove the last item.  That's just how this will go.
-    //         historyCopy.pop();
-
-    //         // Create a list where we'll store the message calls we're about to make.
-    //         const messageCalls: BaseMessage[] = [];
-
-    //         // Make the chat calls.
-    //         for (let i = 0; i < params.messageList.length; i++) {
-    //             // Get the next message.
-    //             const message = this.createChatMessage(params.messageList[i]);
-
-    //             // Add this to the call messages and the eventual result.
-    //             historyCopy.push(message);
-    //             messageCalls.push(message);
-
-    //             // Make the call.
-    //             const reply = await model.invoke(historyCopy);
-
-    //             // Add the reply to the history and the eventual result.
-    //             historyCopy.push(reply);
-    //             messageCalls.push(reply);
-    //         }
-
-    //         // All resulting messages should be placed just before the last message.
-    //         return messageCalls.map(m => (<PositionableMessage<BaseMessage>>{
-    //             location: MessagePositionTypes.OffsetFromEnd,
-    //             offset: 1,
-    //             description: 'Inner Voice Message', // Why not??!!
-    //             message: m,
-    //         }));
-    //     }
-
-    //     // Nothing to return.
-    //     return [];
-    // }
-
+        return messages.filter(m => {
+            const source = getMessageSource(m);
+            return !source || keepTypes.includes(source);
+        });
+    }
 
     async inspectChatCallMessages(callMessages: BaseMessage[], chatHistory: BaseMessage[]): Promise<void> {
         const params = this.specification.configuration;
@@ -88,21 +71,40 @@ export class InnerVoicePlugin extends AgentPluginBase implements IChatLifetimeCo
             const model = this.agent.chatModel;
 
             // Create a copy of the chat history for our own chat calls.
-            const historyCopy = copyBaseMessages(callMessages);
+            let historyCopy = copyBaseMessages(callMessages);
 
-            // Remove the last item.  That's just how this will go.
-            historyCopy.pop();
+            // Remove the unwanted message types.
+            historyCopy = this.removeExcludedSourceMessages(historyCopy);
+
+            // Get the last message for later use.
+            const lastMessage = chatHistory[chatHistory.length - 1];
+            let lastMessageText = '';
+            if (lastMessage) {
+                lastMessageText = lastMessage.text;
+            }
+
+            // Copy the message list, and replace any replacement targets.
+            const messageList = params.messageList.map(m => m.replaceAll(/\{last-message\}/gi, lastMessageText));
+
+            // Remove the last item if required.
+            if (!params.considerLastMessageInResponse) {
+                historyCopy.pop();
+            }
+
+            if (params.addDummyAiMessageBeforeInnerDialog) {
+                historyCopy.push(new AIMessage(''));
+            }
 
             // Create a list where we'll store the message calls we're about to make.
             const messageCalls: BaseMessage[] = [];
 
-            const includeLastMessage = params.messageList.length === 1;
-            const lastMessageIndex = includeLastMessage ? params.messageList.length : params.messageList.length - 1;
+            const includeLastMessage = params.responseToLastInnerVoiceMessage;
+            const lastMessageIndex = includeLastMessage ? messageList.length : messageList.length - 1;
 
             // Make the chat calls.
             for (let i = 0; i < lastMessageIndex; i++) {
                 // Get the next message.
-                const message = this.createChatMessage(params.messageList[i]);
+                const message = this.createChatMessage(messageList[i]);
 
                 // Add this to the call messages and the eventual result.
                 historyCopy.push(message);
@@ -115,11 +117,13 @@ export class InnerVoicePlugin extends AgentPluginBase implements IChatLifetimeCo
                 historyCopy.push(reply);
                 messageCalls.push(reply);
 
-                // console.log(reply.text);
+                if (params.debug) {
+                    console.log(reply.text.replaceAll(/(\\+r)?(\\)+n/g, '\n'));
+                }
             }
 
             if (!includeLastMessage) {
-                const lastMessage = this.createChatMessage(params.messageList[params.messageList.length - 1]);
+                const lastMessage = this.createChatMessage(messageList[params.messageList.length - 1]);
                 messageCalls.push(lastMessage);
             }
 

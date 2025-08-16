@@ -4,6 +4,7 @@ import { ApplicationMessageInfo } from "../application-message-info.model";
 
 export const MESSAGE_SPEAKER_KEY = 'dtalk_speaker';
 export const DTALK_PARAMS_KEY = 'dtalk_params';
+export const MESSAGE_SOURCE_KEY = 'message-source';
 
 function isStoredMessage(target: any): target is StoredMessage {
     return typeof target === 'object' && 'data' in target;
@@ -122,4 +123,35 @@ export function setMessageDateTimeIfMissing(message: BaseMessage | StoredMessage
     if (!getMessageDateTime(message)) {
         setMessageDateTime(message, dateTime);
     }
+}
+
+/** Enumerates the sources that a message can come from. */
+export type MessageSourceTypes =
+    'project' |
+    'chat-room' |
+    'job' |
+    'agent-instructions' |
+    'agent-identity' |
+    'plugin';
+
+/** Given a specified message, returns the source that the message was generated from.
+ *   NOTE: This method is meant for server-side only.
+ */
+export function getMessageSource(message: BaseMessage | StoredMessage): MessageSourceTypes | undefined {
+    // Get the data.
+    const data = getKwargs(message);
+
+    // Return the value.
+    return data[MESSAGE_SOURCE_KEY];
+}
+
+/** Sets the message source type of a specified message.
+ *   NOTE: This method is meant for server-side use.
+ */
+export function setMessageSource(message: BaseMessage | StoredMessage, type: MessageSourceTypes) {
+    // Get the data.
+    const data = getKwargs(message);
+
+    // Set the value.
+    data[MESSAGE_SOURCE_KEY] = type;
 }

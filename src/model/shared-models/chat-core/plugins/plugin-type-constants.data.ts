@@ -56,6 +56,7 @@ export const pluginInformation: PluginInfo[] = [
             considerLastMessageInResponse: true,
             responseToLastInnerVoiceMessage: true,
             addDummyAiMessageBeforeInnerDialog: false,
+            useDefaultLlm: true,
 
             excludeChatRoomMessages: false,
             excludeJobMessages: false,
@@ -134,7 +135,7 @@ export const pluginInformation: PluginInfo[] = [
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,
-        defaultParameterCreator: () => ({})
+        defaultParameterCreator: () => undefined
     },
     {
         pluginType: LABELED_MEMORY_PLUGIN_TYPE_ID,
@@ -215,6 +216,6 @@ export const pluginInformation: PluginInfo[] = [
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,
-        defaultParameterCreator: () => ({})
+        defaultParameterCreator: () => undefined
     },
 ];

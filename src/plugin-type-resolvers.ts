@@ -41,6 +41,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new RandomChoicePluginResolver(),
         new ManageDocumentFolderPluginResolver(chatDocumentDbService, textDocumentResolver),
         new CurrentTimeAndDatePluginResolver(),
-        new InnerVoicePluginResolver(),
+        new InnerVoicePluginResolver(modelResolver),
     ]);
 }

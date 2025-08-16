@@ -8,9 +8,13 @@ import { LifetimeContributorPriorityTypes } from "../../lifetime-contributor-pri
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { copyBaseMessages } from "../../../utils/copy-base-message.utils";
 import { getMessageSource, MessageSourceTypes } from '../../../model/shared-models/chat-core/utils/messages.utils';
+import { ModelServiceResolver } from "../../agent/model-services/model-service-resolver";
 
 export class InnerVoicePlugin extends AgentPluginBase implements IChatLifetimeContributor {
-    constructor(params: PluginInstanceReference<InnerVoicePluginParams> | PluginSpecification<InnerVoicePluginParams>) {
+    constructor(
+        params: PluginInstanceReference<InnerVoicePluginParams> | PluginSpecification<InnerVoicePluginParams>,
+        readonly modelResolver: ModelServiceResolver
+    ) {
         super(params);
     }
 
@@ -64,11 +68,20 @@ export class InnerVoicePlugin extends AgentPluginBase implements IChatLifetimeCo
         });
     }
 
+    private async getAiModel() {
+        const params = this.specification.configuration;
+        if (params.useDefaultLlm) {
+            return this.agent.chatModel;
+        } else {
+            return await this.modelResolver.getModel(params.modelServiceParams!);
+        }
+    }
+
     async inspectChatCallMessages(callMessages: BaseMessage[], chatHistory: BaseMessage[]): Promise<void> {
         const params = this.specification.configuration;
         if (params.messageList.length > 0) {
             // Get the chat model from the agent.
-            const model = this.agent.chatModel;
+            const model = await this.getAiModel();
 
             // Create a copy of the chat history for our own chat calls.
             let historyCopy = copyBaseMessages(callMessages);
@@ -127,7 +140,7 @@ export class InnerVoicePlugin extends AgentPluginBase implements IChatLifetimeCo
                 messageCalls.push(lastMessage);
             }
 
-            // All resulting messages should be placed just before the last message.       
+            // All resulting messages should be placed just before the last message.
             callMessages.splice(callMessages.length - 1, 0, ...messageCalls);
         }
     }

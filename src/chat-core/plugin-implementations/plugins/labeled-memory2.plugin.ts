@@ -200,9 +200,13 @@ export class LabeledMemory2Plugin extends AgentPluginBase implements IChatLifeti
         The memory reference you are working with is ${this.memoryIdentifier}.
         The previous message set is the conversation currently being conducted by the other chat agent.
         From this information, you must decide what memories to store/update.  Use the provided tools to perform your job.
-        Keep topics organized for memory with subtrees.
-        IMPORTANT: DO NOT REPLY TO THE MESSAGE, ONLY MAKE A TOOL CALL, OR RESPOND WITH AN EMPTY RESPONSE.
-        IMPORTANT: WHen creating new memories, use COMPLETE SENTENCES for the information.
+        Keep topics organized for memory with subtrees.  While memories can be stored as strings, they can also be stored as nested objects/dictionaries with deeper subject graphs.
+        IMPORTANT!:
+          - DO NOT REPLY TO THE MESSAGE, ONLY MAKE A TOOL CALL, OR RESPOND WITH AN EMPTY RESPONSE.
+          - When creating new memories, use COMPLETE SENTENCES for the information.
+          - When considering memories to store, consider the speaker of the information, and whether or not it applies to the instructions you need to store information for.
+          - Context is very important.  Since conversations aren't continuous, make sure each memory is stored under a context of the conversation.
+            - Contexts can be shared across conversations, but they should all relate to the same information.
         ----
         The following are instructions regarding these memories:
         ${this.specification.configuration.memorySetInstructions}

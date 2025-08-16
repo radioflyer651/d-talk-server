@@ -59,9 +59,6 @@ Plugins may also provide special instructions and notifications to the agent, to
 ##### Plugin Notifications
 All components/feature that are able to be applied to agents will be able to provide information to the chat agent, so they are aware of these features.
 
-#### Long Term Memory
-At least one ore more Subconscious Agent will be implemented to monitor and store information during chat interactions, as well as recall long term memory.
-
 #### LLM Service Support
 Chat agents may be configured for various LLM providers using LangChain's abstractions.  Further, they will be able to use various models from those providers through configuration.
 

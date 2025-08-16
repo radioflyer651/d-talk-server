@@ -1,9 +1,16 @@
+import { ModelServiceParams } from "../model-service-params.model";
 
 /** Parameters for the InnerVoicePlugin. */
 export interface InnerVoicePluginParams {
     /** A list of chat messages to give to the AI and executed, one at a time.
      *   Each item in the list is meant to build up ai-generated context to use in a final answer. */
     messageList: string[];
+
+    /** Boolean value indicating whether or not to use the LLM from the agent.  Otherwise use the modelServiceParams. */
+    useDefaultLlm: boolean;
+
+    /** If useDefaultLlm is false, the specification for the AI Model to use when performing inner monolog.*/
+    modelServiceParams?: ModelServiceParams;
 
     /** Gets or sets the type of message that is expected for this set of AI calls. */
     callType: 'user' | 'system';

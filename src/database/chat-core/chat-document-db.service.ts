@@ -45,7 +45,7 @@ export class ChatDocumentDbService extends DbService {
     }
 
 
-    /** Delete a chat job by its ObjectId. */
+    /** Delete a document by its ObjectId. */
     async deleteDocumentsByProjectId(projectId: ObjectId): Promise<number> {
         return await this.dbHelper.deleteDataItems<IChatDocumentData>(
             DbCollectionNames.ChatDocuments,

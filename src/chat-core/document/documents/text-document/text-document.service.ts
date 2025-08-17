@@ -285,19 +285,20 @@ export class TextDocumentLifetimeContributor implements IChatLifetimeContributor
         return [];
     }
 
-    async peekToolCallMessages(messageHistory: BaseMessage[], callMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
+    // async peekToolCallMessages(messageHistory: BaseMessage[], callMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
         // Exit if nothing's changed.
-        if (!this.isDataChanged) {
-            return;
-        }
+        // if (!this.isDataChanged) {
+        //     return;
+        // }
 
         // Reset the flag in case another tool call is made.
-        this.isDataChanged = false;
+        // this.isDataChanged = false;
 
         // Remove the previous messages.
         // this.removeOwnMessages(callMessages);
 
+        // Doing this makes it so the LLM (at least ChatGPT) doesn't see the new tool result.  We can't do it.
         // Insert our updated instructions.
-        callMessages.push(new SystemMessage(this.getInstructions()));
-    }
+        // callMessages.push(new SystemMessage(this.getInstructions()));
+    // }
 }

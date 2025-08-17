@@ -43,6 +43,8 @@ export function createEditDocumentLinesTool(info: DocumentFunctionInfo) {
             });
             await document.commitToDb();
             info.onContentChanged();
+
+            return 'Successfully edited the document.';
         },
         editDocumentSchema
     );
@@ -66,6 +68,8 @@ export function createDeleteDocumentLinesTool(info: DocumentFunctionInfo) {
             document.deleteLines({ entityType: 'agent', id: info.agentId }, options.lines);
             await document.commitToDb();
             info.onContentChanged();
+
+            return 'Successfully edited the document.';
         },
         deleteLineSchema
     );
@@ -90,6 +94,8 @@ export function createEditDocumentContentTool(info: DocumentFunctionInfo) {
             document.updateContent({ entityType: 'agent', id: info.agentId }, options.newContent);
             await document.commitToDb();
             info.onContentChanged();
+
+            return 'Successfully edited the document.';
         },
         deleteLineSchema
     );
@@ -113,6 +119,8 @@ export function createEditDocumentNameTool(info: DocumentFunctionInfo) {
             document.updateName({ entityType: 'agent', id: info.agentId }, options.newName);
             await document.commitToDb();
             info.onContentChanged();
+            
+            return 'Successfully edited the document.';
         },
         schema
     );
@@ -136,6 +144,8 @@ export function createEditDocumentDescriptionTool(info: DocumentFunctionInfo) {
             document.updateDescription({ entityType: 'agent', id: info.agentId }, options.newDescription);
             await document.commitToDb();
             info.onContentChanged();
+
+            return 'Successfully edited the document.';
         },
         schema
     );
@@ -163,6 +173,8 @@ export function createAddDocumentCommentTool(info: DocumentFunctionInfo) {
             );
             await document.commitToDb();
             info.onContentChanged();
+            
+            return 'Successfully edited the document.';
         },
         schema
     );
@@ -191,6 +203,8 @@ export function createEditDocumentCommentTool(info: DocumentFunctionInfo) {
             );
             await document.commitToDb();
             info.onContentChanged();
+            
+            return 'Successfully edited the document.';
         },
         schema
     );
@@ -217,6 +231,8 @@ export function createDeleteDocumentCommentTool(info: DocumentFunctionInfo) {
             );
             await document.commitToDb();
             info.onContentChanged();
+            
+            return 'Successfully edited the document.';
         },
         schema
     );
@@ -245,6 +261,8 @@ export function createInsertDocumentLinesTool(info: DocumentFunctionInfo) {
             );
             await document.commitToDb();
             await info.onContentChanged();
+            
+            return 'Successfully edited the document.';
         },
         schema
     );
@@ -271,6 +289,8 @@ export function createAppendDocumentLinesTool(info: DocumentFunctionInfo) {
             );
             await document.commitToDb();
             await info.onContentChanged();
+            
+            return 'Successfully edited the document.';
         },
         schema
     );

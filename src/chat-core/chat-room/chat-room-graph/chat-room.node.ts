@@ -286,6 +286,11 @@ export async function callTools(state: typeof ChatState.State) {
         let toolResult: any;
         try {
             toolResult = await tool.invoke(toolCall.args);
+
+            if(!toolResult){
+                console.warn(`Tool ${toolCall.name} did NOT return a value to the LLM.  This can cause the LLM to make more calls.`)
+                toolResult = 'Success'
+            }
         } catch (err) {
             toolResult = `ERROR: An error occurred when executing ${toolCall.name}: ID: ${toolCall.id}.  ${err?.toString() ?? 'undefined'}`;
         }

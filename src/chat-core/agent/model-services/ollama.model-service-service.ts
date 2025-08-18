@@ -35,6 +35,7 @@ export class OllamaAiAgentService extends ModelServiceBase {
             ...validParams,
             model: modelData.modelName,
             numCtx: modelData.maxContext,
+            numGpu: modelData.cpuOnly ? 0 : undefined,
         };
 
         // Create and return the model.

@@ -30,8 +30,14 @@ export interface OllamaModelConfiguration {
     /** A description, if any, for this configuration. */
     description: string;
 
-    /** Gets or sets the custom formattinf for this configuration. */
+    /** Gets or sets the custom formatting for this configuration. */
     customFormatting: CustomChatFormatting;
+
+    /** Boolean value indicating that thinking should be turned off, for thinking models. */
+    disableThinking?: boolean;
+
+    /** Boolean value indicating that only CPU should be used for this model. */
+    cpuOnly?: boolean;
 }
 
 export function createOllamaConfiguration(): NewDbItem<OllamaModelConfiguration> {

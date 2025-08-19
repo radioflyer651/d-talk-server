@@ -9,7 +9,7 @@ export class UserMessagesIgnoredPlugin extends AgentPluginBase {
     readonly type = USER_MESSAGES_IGNORED_PLUGIN_TYPE_ID;
     agentUserManual?: string | undefined;
 
-    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.WithLeastContext;
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.BeforeContextBuild;
 
     constructor(params: PluginInstanceReference | PluginSpecification) {
         super(params);

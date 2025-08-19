@@ -12,7 +12,7 @@ export class OtherAgentMessagesAsUserPlugin extends AgentPluginBase {
     readonly type: string = OTHER_AGENT_MESSAGES_AS_USER;
     agentUserManual?: string | undefined;
 
-    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.BeforeContextBuild;
+    priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.WithLeastContext;
 
     constructor(params: PluginInstanceReference<undefined> | PluginSpecification<undefined>) {
         super(params);

@@ -232,4 +232,11 @@ export class ChatRoomDbService extends DbService {
         });
 
     }
+
+    /** Updates the name of a specified chat room. */
+    async updateChatRoomName(id: ObjectId, newName: string): Promise<void> {
+        return await this.dbHelper.makeCallWithCollection(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne({ _id: id }, { $set: { name: newName } });
+        });
+    }
 }

@@ -4,7 +4,7 @@ import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
 import { chatCoreService, chatRoomDbService, chatRoomHydratorService, projectDbService } from '../app-globals';
 import { ChatRoomData } from '../model/shared-models/chat-core/chat-room-data.model';
-import { isUserOwnerOfChatRoom } from '../utils/user-access.utils';
+import { isUserOwnerOfChatRoom, userHasAccessToChatRoom } from '../utils/user-access.utils';
 
 export const chatRoomsServer = express.Router();
 
@@ -527,3 +527,54 @@ chatRoomsServer.put('/chat-room/:roomId/document-permissions', async (req, res) 
     }
 });
 
+// Updates the name of a specified chat room.
+chatRoomsServer.post('/chat-room/:roomId/name', async (req, res) => {
+    try {
+        // Get the user from the request.
+        const userId = getUserIdFromRequest(req);
+
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        // Get the room ID.
+        const { roomId: roomIdStr } = req.params;
+
+        if (!ObjectId.isValid(roomIdStr)) {
+            res.status(400).json({ error: 'Room ID invalid.' });
+            return;
+        }
+
+        // Convert.
+        const roomId = new ObjectId(roomIdStr);
+
+        // Ensure the user has access to this chat room.
+        if (!userHasAccessToChatRoom(userId, roomId)) {
+            res.status(403).json({ error: 'User does not have access to the specified room.' });
+            return;
+        }
+
+        // Get the room.
+        const room = await chatRoomDbService.getChatRoomById(roomId);
+
+        if (!room) {
+            res.status(404).json({ error: 'Room does not exist.' });
+            return;
+        }
+
+        // Get the name from the body.
+        const body = req.body as { roomName: string; } | undefined;
+        if (!body || !body.roomName || body.roomName.trim() === '') {
+            res.status(400).json({ error: 'Room name invalid.' });
+            return;
+        }
+
+        // Update the room's name.
+        await chatRoomDbService.updateChatRoomName(roomId, body.roomName);
+
+        res.status(200).json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'An internal error occurred.' });
+    }
+});

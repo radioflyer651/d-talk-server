@@ -134,3 +134,5 @@ Global files which hold most of the global instances of items, and provides appl
       - NOTE: Some libraries (i.e. `mongodb`) have special types implemented on the browser project to allow the use of those libraries between the two projects.
   - The type `ObjectId` is used in the server and the client.  A type alias for `ObjectId` is used on the client, making it a `string` type.
   - Folders named `chat-core` hold source files specific to chat and LLM functionality, and unique to the application's functionality.
+  - Plugin Creation instructions are int he `.github/instructions/plugins.instructions.md` file.
+    - Reference this file when updating or creating new plugins.

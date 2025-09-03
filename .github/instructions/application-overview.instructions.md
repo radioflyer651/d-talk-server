@@ -37,6 +37,8 @@ The main components of functionality are as follows:
     - Only the `TextDocument` is currently implemented, which contains general text.
     - Can be used for collaborative creation between users and agents, or as general purpose storage for context building.
     - Interacted with, by ChatAgents, through plugins.
+    - `IChatDocumentData` type for any "document" type: `src\model\shared-models\chat-core\documents\chat-document.model.ts`
+    - Functional Service: `src/chat-core/document/chat-document.service.ts`
 
 ## Chat Lifecycle
 The following is a general set of actions that occur when a user sends a chat message:

@@ -19,9 +19,16 @@ The main components of functionality are as follows:
   - ChatRoom: This represents a single chat session, composed of a "conversation", which is the chat history, one or more chat jobs, which each are controlled by an a chat agent.
     - When the user sends a chat message, each chat job is run, allowing the related chat agent to respond to the message.
     - Functional Service: `src/chat-core/chat-room/chat-room.service.ts`
+    - Data Model: `src/model/shared-models/chat-core/chat-room-data.model.ts`
   - ChatAgent: An "agent" with an identity and general instructions.  A chat agent has a configuration of what LLM to use.
+    - Agents are configured in 2 parts.  The first is a configuration defined by the project.  The second is an instance of that configuration, defined for a ChatRoom.
+      - Configuration Model: `src/model/shared-models/chat-core/chat-room-data.model.ts`
+      - Instance Model: `src/model/shared-models/chat-core/agent-instance-configuration.model.ts`
     - Functional Service: `src/chat-core/agent/agent.service.ts`
-  - ChatJob/Task: A chat job, or task, represents a "turn" to interact with the chat conversation, within a chat room.  
+  - ChatJob/Task: A chat job, or task, represents a "turn" to interact with the chat conversation, within a chat room.
+    - ChatJobs are defined in two parts.  The first is a configuration, defined for the project.  The second is an instance of that configuration, defined for a ChatRoom.
+      - Configuration Model: `src/model/shared-models/chat-core/chat-job-data.model.ts`
+      - Instance Model: `src/model/shared-models/chat-core/chat-job-instance.model.ts`
     - Each chat job is run for every message received by the user.
     - Each chat job has a chat agent associated with it.  It is the chat agent that performs the work fo the chat job.
     - Functional Service: `src/chat-core/chat-room/chat-job.service.ts`
@@ -37,7 +44,7 @@ The main components of functionality are as follows:
     - Only the `TextDocument` is currently implemented, which contains general text.
     - Can be used for collaborative creation between users and agents, or as general purpose storage for context building.
     - Interacted with, by ChatAgents, through plugins.
-    - `IChatDocumentData` type for any "document" type: `src\model\shared-models\chat-core\documents\chat-document.model.ts`
+    - `IChatDocumentData` type for any "document" type: `src/model/shared-models/chat-core/documents/chat-document.model.ts`
     - Functional Service: `src/chat-core/document/chat-document.service.ts`
 
 ## Chat Lifecycle
@@ -50,7 +57,6 @@ The following is a general set of actions that occur when a user sends a chat me
     - Each ChatJob is run with all chat history, including the incoming chat message, and running history of each ChatJob as it completes.
     - ChatJobs are run sequentially, only one ChatJob adding to the context at a time.
     - See the Chat Lifetime section below for more information on this process.
-  - 
 
 ## Chat Lifetime (`IChatLifetimeContributor` interface)
   - The `IChatLifetimeContributor` can be found at `src/chat-core/chat-lifetime-contributor.interface.ts`.

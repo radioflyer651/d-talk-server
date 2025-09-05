@@ -237,6 +237,6 @@ export const pluginInformation: PluginInfo[] = [
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,
-    defaultParameterCreator: () => ({ maxCharacters: 4000 }),
+        defaultParameterCreator: () => ({ maxCharacters: 4000 }),
     },
 ];

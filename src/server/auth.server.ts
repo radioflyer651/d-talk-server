@@ -12,6 +12,9 @@ export const authRouter = express.Router();
 
 // User registration endpoint
 authRouter.post('/register', async (req: Request, res: Response) => {
+    res.status(503).send({ message: 'Registration is turned off at the code level.' });
+    return;
+
     try {
         const registration = req.body as UserRegistration;
 

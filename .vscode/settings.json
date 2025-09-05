@@ -9,5 +9,6 @@
     ],
     "cSpell.words": [
         "Configurators"
-    ]
+    ],
+    "chat.promptFiles": true
 }

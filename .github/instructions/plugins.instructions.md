@@ -64,6 +64,8 @@ export const MY_CUSTOM_PLUGIN_TYPE_ID = 'some-type-name-plugin';
    
       agentUserManual?: string | undefined;
       readonly type = MY_CUSTOM_PLUGIN_TYPE_ID;
+
+      declare specification: PluginSpecification<CONFIG_TYPE_NAME>;
       
       priority: LifetimeContributorPriorityTypes = LifetimeContributorPriorityTypes.Normal;
 
@@ -82,13 +84,13 @@ export const MY_CUSTOM_PLUGIN_TYPE_ID = 'some-type-name-plugin';
         return typeName === MY_CUSTOM_PLUGIN_TYPE_ID;
     }
 
-    async createNewPlugin(specification: PluginSpecification, attachedTo: PluginAttachmentTarget): Promise<MyCustomPlugin> {
+    async createNewPlugin(specification: PluginSpecification<CONFIG_TYPE_NAME>, attachedTo: PluginAttachmentTarget): Promise<MyCustomPlugin> {
         const result = new MyCustomPlugin(specification);
         result.attachedTo = attachedTo;
         return result;
     }
 
-    async hydratePlugin(pluginInstance: PluginInstanceReference, attachedTo: PluginAttachmentTarget): Promise<MyCustomPlugin> {
+    async hydratePlugin(pluginInstance: PluginInstanceReference<CONFIG_TYPE_NAME>, attachedTo: PluginAttachmentTarget): Promise<MyCustomPlugin> {
         const result = new MyCustomPlugin(pluginInstance);
         result.attachedTo = attachedTo;
         return result;

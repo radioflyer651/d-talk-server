@@ -114,3 +114,36 @@ export const MY_CUSTOM_PLUGIN_TYPE_ID = 'some-type-name-plugin';
 - **OtherAgentsInvisiblePlugin:** (`chat-core/plugin-implementations/plugins/other-agents-invisible.plugin.ts`) Filters out messages from other agents before the chat call.
 
 See the `plugins/` and `plugin-resolver-services/` directories for more examples.
+
+## Tools
+  - When multiple tools are returned, be sure things are organized.
+  - If needed, it's possible to create several methods to generate different tools, and return them as an array.
+  - If there are a lot of tools (4 or more), generate a new file to create those tools, and reference that.
+  - When creating tools, use the following format as a template for a single tool.
+
+```typescript
+import { z } from "zod";
+import { StructuredToolInterface, tool } from "@langchain/core/tools";
+// ...
+    getTools() {
+      const toolSchema = {
+          name: 'tool_name',
+          description: `A complete description of what the tool does.`,
+          schema: z.object({
+              parameter1: z.string().describe(`This is what the first parameter does.`),
+              parameter2: z.number().int().describe(`This is what the second parameter does.`)
+          })
+      };
+
+      return [
+        tool(
+          async (options: z.infer<typeof toolSchema.schema>) => {
+            // Logic of the function.  Something must always be returned.
+            //  If no actual return value is needed, then return a string indicating the success (or failure) of the operation.
+          },
+          toolSchema
+        )
+      ]
+    }
+
+```

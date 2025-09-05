@@ -1,5 +1,8 @@
 import { createChatDirectoryPermissions } from "../documents/chat-document-permissions.model";
 import { CreateTextDocumentsPluginParams } from "./create-text-documents-plugin.params";
+
+// Arithmetic Plugin
+export const ARITHMETIC_PLUGIN_TYPE_ID = 'arithmetic-plugin';
 import { InnerVoicePluginParams } from "./inner-voice-plugin.params";
 import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
 import { LabeledMemory2PluginParams } from "./labeled-memory-plugin2.params";
@@ -35,6 +38,15 @@ export interface PluginInfo {
 
 /** Contains the information about what specific plugins can be attached to. (This is more used in the UI than the server.) */
 export const pluginInformation: PluginInfo[] = [
+    {
+        pluginType: ARITHMETIC_PLUGIN_TYPE_ID,
+        displayName: 'Arithmetic',
+        description: 'Provides tools for simple arithmetic operations (add, subtract, multiply, divide).',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => undefined
+    },
     {
         pluginType: ROOM_INFO_PLUGIN_TYPE_ID,
         displayName: `Knows Room Agents`,

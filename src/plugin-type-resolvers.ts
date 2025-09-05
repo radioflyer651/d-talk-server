@@ -1,3 +1,4 @@
+import { ArithmeticPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/arithmetic-plugin-resolver";
 import { IPluginTypeResolver } from "./chat-core/agent-plugin/i-plugin-type-resolver";
 import { ActDrunkPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/act-drunk.plugin-resolver";
 import { DebugPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/dbug.plugin-resolver";
@@ -42,5 +43,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new ManageDocumentFolderPluginResolver(chatDocumentDbService, textDocumentResolver),
         new CurrentTimeAndDatePluginResolver(),
         new InnerVoicePluginResolver(modelResolver),
+        new ArithmeticPluginResolver(),
     ]);
 }

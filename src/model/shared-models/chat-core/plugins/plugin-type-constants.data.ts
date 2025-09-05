@@ -1,12 +1,12 @@
 import { createChatDirectoryPermissions } from "../documents/chat-document-permissions.model";
 import { CreateTextDocumentsPluginParams } from "./create-text-documents-plugin.params";
-
-// Arithmetic Plugin
-export const ARITHMETIC_PLUGIN_TYPE_ID = 'arithmetic-plugin';
+import { ShortenedChatHistoryPluginConfig } from "./shortened-chat-history-plugin-config.model";
 import { InnerVoicePluginParams } from "./inner-voice-plugin.params";
 import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
 import { LabeledMemory2PluginParams } from "./labeled-memory-plugin2.params";
 
+export const SHORTENED_CHAT_HISTORY_PLUGIN_TYPE_ID = 'shortened-chat-history-plugin';
+export const ARITHMETIC_PLUGIN_TYPE_ID = 'arithmetic-plugin';
 export const ROOM_INFO_PLUGIN_TYPE_ID = 'room-info-plugin';
 export const INNER_VOICE_PLUGIN_TYPE_ID = 'inner-voice-plugin';
 export const OTHER_AGENTS_INVISIBLE_PLUGIN = 'other-agents-invisible';
@@ -229,5 +229,14 @@ export const pluginInformation: PluginInfo[] = [
         attachesToChatRoom: true,
         attachesToJob: true,
         defaultParameterCreator: () => undefined
+    },
+    {
+        pluginType: SHORTENED_CHAT_HISTORY_PLUGIN_TYPE_ID,
+        displayName: 'Shortened Chat History',
+        description: 'Limits the number of permanent chat history messages sent to the LLM. Only the most recent N messages are kept, where N is configurable.',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+    defaultParameterCreator: () => ({ maxCharacters: 4000 }),
     },
 ];

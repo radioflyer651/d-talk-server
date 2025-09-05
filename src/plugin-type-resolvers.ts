@@ -22,6 +22,8 @@ import { InnerVoicePluginResolver } from "./chat-core/plugin-implementations/plu
 import { TextDocumentResolver } from "./chat-core/document/resolvers/text-document.resolver";
 import { LabeledMemory2PluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/labeled-memory2-plugin-resolver";
 
+import { ShortenedChatHistoryPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/shortened-chat-history-plugin-resolver";
+
 
 export let pluginTypeResolvers: IPluginTypeResolver<any>[] = [];
 
@@ -44,5 +46,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new CurrentTimeAndDatePluginResolver(),
         new InnerVoicePluginResolver(modelResolver),
         new ArithmeticPluginResolver(),
+        new ShortenedChatHistoryPluginResolver(),
     ]);
 }

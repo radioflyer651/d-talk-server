@@ -1,6 +1,8 @@
 
 /** Provides an abstract way of defining the order that lifetime contributors get processed. */
 export enum LifetimeContributorPriorityTypes {
+    /** For processors that shrink the chat history, keeping it manageable. */
+    MessageReducers = -7,
     Room = -6,
     Agent = -5,
     Job = -4,

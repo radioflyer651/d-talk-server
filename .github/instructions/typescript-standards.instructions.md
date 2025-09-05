@@ -12,4 +12,5 @@ The following rules must be followed when generating new TypeScript content.
   ```
   - Avoid using type `any` whenever possible.  If used, explain why in a comment.
   - Always use appropriate types for variables and parameters.
-  
+  - When creating data types, use `interfaces`, and avoid using `classes` when possible.
+    - Any data that will be shared between the client and server MUST be an `interface`.

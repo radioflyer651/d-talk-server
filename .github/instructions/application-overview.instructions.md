@@ -129,6 +129,7 @@ Global files which hold most of the global instances of items, and provides appl
   - All Database Services implement the `DbService` base class (`src/database/db-service.ts`).
   - The `MongoHelper` is the primary abstraction for MongoDB database interactions.  (`src/mongo-helper.ts`)
     - All Database Services use this implementation for database operations.
+  - Use the `ChatRoomDbService` (`src/database/chat-core/chat-room-db.service.ts`) for pattern examples when creating new services or looking for applicable patterns.
 
 ## Node Servers
   - All Express servers are stored in the `src/server` folder.

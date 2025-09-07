@@ -1,19 +1,16 @@
 import express, { Request, Response } from 'express';
 import bcrypt from "bcryptjs";
 import { generateToken } from '../auth/jwt';
-import { authService, authDbService } from '../app-globals';
+import { authDbService } from '../app-globals';
 import { LoginRequest } from '../model/shared-models/login-request.model';
-import { ObjectId } from "mongodb";
-import { UserSecrets } from "../model/shared-models/user-secrets.model";
 import { UserRegistration } from '../model/shared-models/user-registration.model';
 
 export const authRouter = express.Router();
 
-
 // User registration endpoint
 authRouter.post('/register', async (req: Request, res: Response) => {
-    res.status(503).send({ message: 'Registration is turned off at the code level.' });
-    return;
+    // res.status(503).send({ message: 'Registration is turned off at the code level.' });
+    // return;
 
     try {
         const registration = req.body as UserRegistration;

@@ -10,6 +10,7 @@ applyTo: '**'
   - The application stack is primarily: Node, TypeScript, and MongoDB.
   - Some LangChain is used in the application.
   - The Factory Pattern is used heavily throughout the application.
+  - Reference the [TypeScript Standards](./typescript-standards.instructions.md) when generating code.
 
 ## Application Purpose
 The application is a general-purpose multi-agent chat application.  It's made to be customizable, with the ability easily add to features to chat agents.

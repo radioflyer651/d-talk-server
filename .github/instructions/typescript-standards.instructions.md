@@ -19,6 +19,14 @@ The following rules must be followed when generating new TypeScript content.
   - Avoid using `null` in code, except where it's already defined.  Use `undefined` instead.
   - Avoid using functions like `String()` and `Number()`.  Use the commonly used methods, like `.toString()`, and `parseInt()`.
   - Class constructors must be the first member in the class definition.
+  - Never use default exports.  Export items individually.  Ex:
+  ```typescript
+  export const thisExample = 12;
+  
+  export class SomeClass{
+    
+  }
+  ```
 
 ## Commenting
   - At a minimum, each "block" of functionality within the code must have an inline comment indicating what that block is doing.  (i.e. sorting a list, collecting parent nodes, etc.)

@@ -20,7 +20,7 @@ export class VoiceFileReferenceDbService extends DbService {
 
     /** Get a VoiceFileReference by its ObjectId. */
     async getVoiceFileReferenceById(id: ObjectId): Promise<VoiceFileReference | undefined> {
-        return await this.dbHelper.findDataItem<VoiceFileReference, { _id: ObjectId }>(
+        return await this.dbHelper.findDataItem<VoiceFileReference, { _id: ObjectId; }>(
             DbCollectionNames.VoiceFileReferences,
             { _id: id },
             { findOne: true }
@@ -39,7 +39,7 @@ export class VoiceFileReferenceDbService extends DbService {
 
     /** Delete a VoiceFileReference by its ObjectId. */
     async deleteVoiceFileReference(id: ObjectId): Promise<number> {
-        return await this.dbHelper.deleteDataItems<VoiceFileReference, { _id: ObjectId }>(
+        return await this.dbHelper.deleteDataItems<VoiceFileReference, { _id: ObjectId; }>(
             DbCollectionNames.VoiceFileReferences,
             { _id: id },
             { deleteMany: false }
@@ -47,7 +47,7 @@ export class VoiceFileReferenceDbService extends DbService {
     }
 
     /** Delete all VoiceFileReference documents for a given chatRoomId. */
-    async deleteAllByChatRoomId(chatRoomId: string): Promise<number> {
+    async deleteAllByChatRoomId(chatRoomId: ObjectId): Promise<number> {
         return await this.dbHelper.deleteDataItems<VoiceFileReference>(
             DbCollectionNames.VoiceFileReferences,
             { chatRoomId },

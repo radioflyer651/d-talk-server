@@ -25,6 +25,9 @@ import { OpenAiAgentService } from "./chat-core/agent/model-services/open-model-
 import { IChatRoomSaverService } from "./chat-core/chat-room/chat-room-saver-service.interface";
 import { ChatRoomSaverService } from "./chat-core/chat-room/chat-room-saver.service";
 import { VoiceChatService } from "./services/voice-chat-services/voice-chat.service";
+import { getVoiceChatProviders } from "./voice-chat-providers";
+import { VoiceFileReferenceDbService } from "./database/chat-core/voice-file-reference-db.service";
+import { AwsS3BucketService } from "./services/aws-s3-bucket.service";
 /** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
 
 /** The mongo helper used in all DB Services. */
@@ -40,6 +43,7 @@ export let chatRoomDbService: ChatRoomDbService;
 export let agentInstanceDbService: AgentInstanceDbService;
 export let chatDocumentDbService: ChatDocumentDbService;
 export let ollamaModelConfigDbService: OllamaModelConfigDbService;
+export let voiceChatReferenceDbService: VoiceFileReferenceDbService;
 
 // Chat-Core services.
 export let chatRoomSaver: IChatRoomSaverService;
@@ -55,6 +59,7 @@ export let voiceChatService: VoiceChatService;
 export let authService: AuthService;
 export let chatCoreService: ChatCoreService;
 export let socketServer: SocketServer;
+export let awsBucketService: AwsS3BucketService;
 
 /** Initializes the services used in the application. */
 export async function initializeServices(): Promise<void> {
@@ -75,10 +80,12 @@ export async function initializeServices(): Promise<void> {
     agentInstanceDbService = new AgentInstanceDbService(dbHelper);
     chatDocumentDbService = new ChatDocumentDbService(dbHelper);
     ollamaModelConfigDbService = new OllamaModelConfigDbService(dbHelper);
+    voiceChatReferenceDbService = new VoiceFileReferenceDbService(dbHelper);
 
     /* App Services. */
     authService = new AuthService(authDbService, loggingService);
     socketServer = new SocketServer(loggingService);
+    awsBucketService = new AwsS3BucketService(config);
 
     // Chat-Core
     chatRoomSaver = new ChatRoomSaverService(chatRoomDbService, chatJobDbService, agentDbService, projectDbService);
@@ -96,6 +103,7 @@ export async function initializeServices(): Promise<void> {
     ]);
     await initializeDocumentTypeResolvers(config);
     await initializePluginTypeResolvers(config, modelResolver, dbHelper, chatDocumentDbService, textDocumentResolver);
+    voiceChatService = new VoiceChatService(config, await getVoiceChatProviders(config), voiceChatReferenceDbService, awsBucketService);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
     documentResolver = new ChatDocumentResolutionService(documentTypeResolvers, chatDocumentDbService);
     agentServiceFactory = new AgentServiceFactory(modelResolver, pluginResolver, agentDbService, agentInstanceDbService);

@@ -421,7 +421,7 @@ chatRoomsServer.put('/chat-room/:roomId/conversation/message/:messageId', async 
             res.status(403).json({ error: 'Forbidden' });
             return;
         }
-        await chatRoomDbService.updateChatMessageInConversation(chatRoomId, messageId, newContent);
+        await chatRoomDbService.updateChatMessageContentInConversation(chatRoomId, messageId, newContent);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to update chat message' });

@@ -3,11 +3,14 @@ import { HumeVoiceChatService } from "./services/voice-chat-services/hume-voice-
 import { OpenAiVoiceChatService } from "./services/voice-chat-services/openai-voice-chat.service";
 import { IVoiceChatProvider } from "./services/voice-chat-services/voice-chat-provider.interface";
 
+export let humeVoiceChatService: HumeVoiceChatService;
+
 export async function getVoiceChatProviders(appConfig: IAppConfig) {
     const result: IVoiceChatProvider<any>[] = [];
 
     if (appConfig.humeCredentials) {
-        result.push(new HumeVoiceChatService(appConfig));
+        humeVoiceChatService = new HumeVoiceChatService(appConfig);
+        result.push(humeVoiceChatService);
     }
 
     if (appConfig.openAiConfig) {

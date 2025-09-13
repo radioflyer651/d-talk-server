@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import { UpsertDbItem, isNewDbItem } from "../../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { ChatRoom } from "../../chat-core/chat-room/chat-room.service";
+import { MESSAGE_VOICE_CHAT_ID_KEY } from "../../model/shared-models/chat-core/utils/messages.utils";
 
 export class ChatRoomDbService extends DbService {
     constructor(
@@ -141,7 +142,7 @@ export class ChatRoomDbService extends DbService {
     }
 
     /** Updates a chat message in a specified room, with a specified message ID, to have new specified content. */
-    async updateChatMessageInConversation(roomId: ObjectId, messageId: string, newContent: string): Promise<void> {
+    async updateChatMessageContentInConversation(roomId: ObjectId, messageId: string, newContent: string): Promise<void> {
         // Ensure the message ID is valid - we don't want any goofy mistakes here.
         if (messageId.trimEnd() === '') {
             throw new Error(`messageId cannot be empty.`);
@@ -185,6 +186,53 @@ export class ChatRoomDbService extends DbService {
         });
     };
 
+    /** Updates a chat message in a specified room, with a specified message ID, to have new specified content. */
+    async setVoiceMessageOnConversationMessage(roomId: ObjectId, messageId: string, voiceMessageId: ObjectId | undefined): Promise<void> {
+        // Ensure the message ID is valid - we don't want any goofy mistakes here.
+        if (messageId.trimEnd() === '') {
+            throw new Error(`messageId cannot be empty.`);
+        }
+
+        const voiceMessageIdKey = `conversation.$.data.additional_kwargs.${MESSAGE_VOICE_CHAT_ID_KEY}`;
+
+        await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne(
+                {
+                    _id: roomId,
+                    conversation: {
+                        $elemMatch:
+                            // For agent messages.
+                            { 'data.id': messageId },
+                    }
+                },
+                {
+                    $set: {
+                        [voiceMessageIdKey]: voiceMessageId
+                    }
+                }
+            );
+        });
+
+        await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne(
+                {
+                    _id: roomId,
+                    conversation: {
+                        $elemMatch: {
+                            // For user messages.
+                            'data.additional_kwargs.id': messageId
+                        }
+                    }
+                },
+                {
+                    $set: {
+                        [voiceMessageIdKey]: voiceMessageId
+                    }
+                }
+            );
+        });
+    };
+
     /**
      * Add a new log message to the logs array of a chat room by its ObjectId.
      * The log message can be any object (e.g., { message: string, timestamp: Date, ... }).
@@ -204,7 +252,7 @@ export class ChatRoomDbService extends DbService {
             { logs: updatedLogs },
             { updateOne: true }
         );
-    }
+    };
 
     /**
      * Set the 'disabled' property of a Chat Job Instance in a specified Chat Room.

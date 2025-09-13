@@ -1,15 +1,19 @@
 import { BaseMessage, StoredMessage } from "@langchain/core/messages";
 import { isMessageSpeaker, MessageSpeaker } from "../message-speaker.model";
 import { ApplicationMessageInfo } from "../application-message-info.model";
+import { ObjectId } from "mongodb";
 
 export const MESSAGE_SPEAKER_KEY = 'dtalk_speaker';
 export const DTALK_PARAMS_KEY = 'dtalk_params';
 export const MESSAGE_SOURCE_KEY = 'message-source';
+export const MESSAGE_VOICE_CHAT_ID_KEY = 'message_voice_chat_id';
+export const MESSAGE_ID_KEY = 'id';
 
 function isStoredMessage(target: any): target is StoredMessage {
     return typeof target === 'object' && 'data' in target;
 }
 
+/** Returns the additional_kwargs property from a BaseMessage or StoredMessage. */
 export function getKwargs(message: StoredMessage | BaseMessage): Record<string, any> {
     let additional_kwargs: Record<string, any>;
 
@@ -154,4 +158,63 @@ export function setMessageSource(message: BaseMessage | StoredMessage, type: Mes
 
     // Set the value.
     data[MESSAGE_SOURCE_KEY] = type;
+}
+
+/** Returns the ID of the voice message for a specified chat message. */
+export function getMessageVoiceId(message: BaseMessage | StoredMessage): ObjectId {
+    // Get the data.
+    const data = getKwargs(message);
+
+    // Set the value.
+    return data[MESSAGE_VOICE_CHAT_ID_KEY];
+
+}
+
+/** Sets the ID of the voice message for a specified chat message. */
+export function setMessageVoiceId(message: BaseMessage | StoredMessage, voiceMessageId: ObjectId) {
+    // Get the data.
+    const data = getKwargs(message);
+
+    // Set the value.
+    data[MESSAGE_VOICE_CHAT_ID_KEY] = voiceMessageId;
+
+}
+
+/** Returns the ID of a message, either stored on the message's data itself, or in its additional_kwargs property. */
+export function getMessageId(message: BaseMessage | StoredMessage): string | undefined {
+    if (isStoredMessage(message)) {
+        if (message.data.id) {
+            return message.data.id;
+        }
+    } else {
+        if (message.id) {
+            return message.id;
+        }
+    }
+
+    // There's no attached ID.  Check the kwargs.
+    const data = getKwargs(message);
+
+    // Return the value, whether it set or not.
+    return data[MESSAGE_ID_KEY];
+}
+
+/** Sets the ID of a message in the additional_kwargs, but does NOT change the id of the message itself (which may or may not exist - and takes precedent). */
+export function setMessageId(message: BaseMessage | StoredMessage, newId: string, errorOnIdExists = true) {
+    if (errorOnIdExists) {
+        let foundId: string | undefined;
+        if (isStoredMessage(message)) {
+            foundId = message.data.id;
+        } else {
+            foundId = message.id;
+        }
+
+        if (foundId) {
+            throw new Error(`Message already has an id, and cannot be set.`);
+        }
+    }
+
+    // Set the value.
+    const data = getKwargs(message);
+    data[MESSAGE_ID_KEY] = newId;
 }

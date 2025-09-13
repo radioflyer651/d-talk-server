@@ -44,9 +44,6 @@ export interface VoiceConfiguration {
     /** The name of the bucket to store voice data in. */
     bucketName: string;
 
-    /** The name of the model to use for voice generation. */
-    openAiModelName: string;
-
     /** The AWS region the bucket is located in. */
     bucketRegion: string;
 }

@@ -24,6 +24,7 @@ import { OllamaAiAgentService } from "./chat-core/agent/model-services/ollama.mo
 import { OpenAiAgentService } from "./chat-core/agent/model-services/open-model-service";
 import { IChatRoomSaverService } from "./chat-core/chat-room/chat-room-saver-service.interface";
 import { ChatRoomSaverService } from "./chat-core/chat-room/chat-room-saver.service";
+import { VoiceChatService } from "./services/voice-chat-services/voice-chat.service";
 /** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
 
 /** The mongo helper used in all DB Services. */
@@ -48,6 +49,7 @@ export let pluginResolver: AppPluginResolver;
 export let documentResolver: ChatDocumentResolutionService;
 export let jobHydratorService: JobHydrator;
 export let chatRoomHydratorService: ChatRoomHydratorService;
+export let voiceChatService: VoiceChatService;
 
 /* App Services. */
 export let authService: AuthService;

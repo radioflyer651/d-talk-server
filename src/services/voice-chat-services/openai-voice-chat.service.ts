@@ -25,7 +25,7 @@ export class OpenAiVoiceChatService extends OpenAiServiceBase implements IVoiceC
     async createAudioForMessage(message: string, voiceInstructions: string, speed: number | undefined, voice: string) {
         // Create the audio.
         const result = await this.openAi.audio.speech.create({
-            model: this.config.voiceConfiguration.openAiModelName,
+            model: 'gpt-4o-mini-tts',
             instructions: voiceInstructions,
             input: message,
             voice: voice,

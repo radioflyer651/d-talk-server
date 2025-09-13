@@ -5,14 +5,11 @@ import { IVoiceParameters } from "../../model/shared-models/chat-core/voice/voic
 import { AwsS3BucketService } from "../aws-s3-bucket.service";
 import { IVoiceChatProvider } from "./voice-chat-provider.interface";
 import { IAppConfig } from "../../model/app-config.model";
-import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
-
 
 export class VoiceChatService {
     constructor(
         protected appConfig: IAppConfig,
         private voiceChatProviders: IVoiceChatProvider<any>[],
-        private voiceFileDbService: VoiceFileReferenceDbService,
         private bucketDbService: VoiceFileReferenceDbService,
         private awsBucketService: AwsS3BucketService,
     ) {

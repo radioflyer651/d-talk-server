@@ -11,8 +11,11 @@ export class AuthService {
         private readonly dbService: AuthDbService,
         private readonly loggingService: LogDbService,
     ) {
-        if (!dbService) {
+        if (!this.dbService) {
             throw new Error("dbService cannot be null or undefined.");
+        }
+        if (!this.loggingService) {
+            throw new Error("loggingService cannot be null or undefined.");
         }
     }
 

@@ -111,6 +111,7 @@ Global files which hold most of the global instances of items, and provides appl
   - `src/setup-socket-services.ts`: Responsible for setting up socket.io services.
   - `app-config.json`: Holds the configuration for the application.
 
+Note that when working with `app-globals`, `plugin-type-resolvers`, `setup-socket-services`, and others of these files, its important to pay attention to the dependencies of each item, and ensure that they've been created before instantiating them.  Otherwise, you risk initializing a service with `undefined` dependencies.
 
 ## Sockets (Socket.IO)
   - Socket.IO is used for certain asynchronous interactions with the client.
@@ -127,6 +128,7 @@ Global files which hold most of the global instances of items, and provides appl
 
 ## Database Services
   - All Database Services implement the `DbService` base class (`src/database/db-service.ts`).
+  - All collections in a database have a name defined in the `src/model/db-collection-names.constants.ts` file.
   - The `MongoHelper` is the primary abstraction for MongoDB database interactions.  (`src/mongo-helper.ts`)
     - All Database Services use this implementation for database operations.
   - Use the `ChatRoomDbService` (`src/database/chat-core/chat-room-db.service.ts`) for pattern examples when creating new services or looking for applicable patterns.

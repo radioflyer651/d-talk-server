@@ -8,6 +8,13 @@ export class MongoDbStore extends BaseStore {
         private readonly dbHelper: MongoHelper,
     ) {
         super();
+        
+        if (!this.collectionName) {
+            throw new Error('collectionName must have a value.');
+        }
+        if (!this.dbHelper) {
+            throw new Error('dbHelper must have a value.');
+        }
     }
 
     batch = async <Op extends Operation[]>(operations: Op): Promise<OperationResults<Op>> => {

@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import { PluginInstanceReference } from "./plugin-instance-reference.model";
 import { ChatDocumentLinker } from "./documents/chat-document-reference.model";
+import { IVoiceParameters } from "./voice/voice-parameters-base.model";
 
 
 /** Represents a specific instance of a chat agent, from a specific identity. */
@@ -15,6 +16,9 @@ export interface AgentInstanceConfiguration extends ChatDocumentLinker {
 
     /** An optional name to give to this instance of an agent. */
     name?: string;
+
+    /** Contains the parameters needed to generate voice messages from text. */
+    voiceMessageParams?: IVoiceParameters;
 
     /** A list of plugin instances created for this agent. */
     plugins: PluginInstanceReference[];

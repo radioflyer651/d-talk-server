@@ -11,5 +11,6 @@ export enum DbCollectionNames {
     UserSecrets = 'user-secrets',
     AgentConfigurations = 'agent-configurations',
     ChatDocuments = 'chat-documents',
-    OllamaModelConfigurations = 'ollama-model-configurations'
+    OllamaModelConfigurations = 'ollama-model-configurations',
+    VoiceFileReferences = 'voice-file-references'
 }

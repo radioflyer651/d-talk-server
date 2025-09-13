@@ -18,7 +18,26 @@ export class ChatCoreService {
         readonly chatJobDbService: ChatJobDbService,
         readonly projectDbService: ProjectDbService,
         readonly documentDbService: ChatDocumentDbService,
-    ) { }
+    ) {
+        if (!this.agentDbService) {
+            throw new Error('agentDbService must have a value.');
+        }
+        if (!this.agentInstanceDbService) {
+            throw new Error('agentInstanceDbService must have a value.');
+        }
+        if (!this.chatRoomDbService) {
+            throw new Error('chatRoomDbService must have a value.');
+        }
+        if (!this.chatJobDbService) {
+            throw new Error('chatJobDbService must have a value.');
+        }
+        if (!this.projectDbService) {
+            throw new Error('projectDbService must have a value.');
+        }
+        if (!this.documentDbService) {
+            throw new Error('documentDbService must have a value.');
+        }
+    }
 
     /**
      * Creates a new AgentInstanceConfiguration for a specific chat room, adds it to the DB, and updates the chat room's agent references.

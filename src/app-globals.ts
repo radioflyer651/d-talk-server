@@ -103,7 +103,7 @@ export async function initializeServices(): Promise<void> {
     ]);
     await initializeDocumentTypeResolvers(config);
     await initializePluginTypeResolvers(config, modelResolver, dbHelper, chatDocumentDbService, textDocumentResolver);
-    voiceChatService = new VoiceChatService(config, await getVoiceChatProviders(config), voiceChatReferenceDbService, awsBucketService);
+    voiceChatService = new VoiceChatService(config, await getVoiceChatProviders(config), voiceChatReferenceDbService, awsBucketService, chatRoomDbService);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
     documentResolver = new ChatDocumentResolutionService(documentTypeResolvers, chatDocumentDbService);
     agentServiceFactory = new AgentServiceFactory(modelResolver, pluginResolver, agentDbService, agentInstanceDbService);

@@ -3,7 +3,6 @@ import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
 import { UpsertDbItem } from "../../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
-import { AgentInstanceConfiguration } from "../../model/shared-models/chat-core/agent-instance-configuration.model";
 import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-core/agent-configuration.model";
 import { PositionableMessage } from "../../model/shared-models/chat-core/positionable-message.model";
 import { StoredMessage } from "@langchain/core/messages";

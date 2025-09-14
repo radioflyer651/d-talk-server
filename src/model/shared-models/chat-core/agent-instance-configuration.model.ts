@@ -17,9 +17,6 @@ export interface AgentInstanceConfiguration extends ChatDocumentLinker {
     /** An optional name to give to this instance of an agent. */
     name?: string;
 
-    /** Contains the parameters needed to generate voice messages from text. */
-    voiceMessageParams?: IVoiceParameters;
-
     /** A list of plugin instances created for this agent. */
     plugins: PluginInstanceReference[];
 }

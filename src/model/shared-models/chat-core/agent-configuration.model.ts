@@ -5,6 +5,7 @@ import { PositionableMessage } from "./positionable-message.model";
 import { StoredMessage } from "@langchain/core/messages";
 import { IPluginConfigurationAttachmentType } from "./plugin-configuration-attachement-types.model";
 import { ChatDocumentLinker } from "./documents/chat-document-reference.model";
+import { IVoiceParameters } from "./voice/voice-parameters-base.model";
 
 /** The configurable items that make up a chat agent. */
 export interface ChatAgentIdentityConfiguration extends IPluginConfigurationAttachmentType, ChatDocumentLinker {
@@ -28,6 +29,9 @@ export interface ChatAgentIdentityConfiguration extends IPluginConfigurationAtta
 
     /** Gets or sets a description for this agent. */
     description: string;
+
+    /** Contains the parameters needed to generate voice messages from text. */
+    voiceMessageParams?: IVoiceParameters;
 
     /** This is provided as a system message to the agent.  This should inform the agent of its identity
      *   in a way of "You are XX and you are an expert with YY."  It should not include instructions, but

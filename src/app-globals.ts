@@ -25,7 +25,6 @@ import { OpenAiAgentService } from "./chat-core/agent/model-services/open-model-
 import { IChatRoomSaverService } from "./chat-core/chat-room/chat-room-saver-service.interface";
 import { ChatRoomSaverService } from "./chat-core/chat-room/chat-room-saver.service";
 import { VoiceChatService } from "./services/voice-chat-services/voice-chat.service";
-import { getVoiceChatProviders } from "./voice-chat-providers";
 import { VoiceFileReferenceDbService } from "./database/chat-core/voice-file-reference-db.service";
 import { AwsS3BucketService } from "./services/aws-s3-bucket.service";
 /** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
@@ -53,7 +52,6 @@ export let pluginResolver: AppPluginResolver;
 export let documentResolver: ChatDocumentResolutionService;
 export let jobHydratorService: JobHydrator;
 export let chatRoomHydratorService: ChatRoomHydratorService;
-export let voiceChatService: VoiceChatService;
 
 /* App Services. */
 export let authService: AuthService;
@@ -103,7 +101,6 @@ export async function initializeServices(): Promise<void> {
     ]);
     await initializeDocumentTypeResolvers(config);
     await initializePluginTypeResolvers(config, modelResolver, dbHelper, chatDocumentDbService, textDocumentResolver);
-    voiceChatService = new VoiceChatService(config, await getVoiceChatProviders(config), voiceChatReferenceDbService, awsBucketService, chatRoomDbService);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
     documentResolver = new ChatDocumentResolutionService(documentTypeResolvers, chatDocumentDbService);
     agentServiceFactory = new AgentServiceFactory(modelResolver, pluginResolver, agentDbService, agentInstanceDbService);

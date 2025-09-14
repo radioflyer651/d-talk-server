@@ -6,8 +6,11 @@ import { AwsS3BucketService } from "../aws-s3-bucket.service";
 import { IVoiceChatProvider } from "./voice-chat-provider.interface";
 import { IAppConfig } from "../../model/app-config.model";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
-import { getMessageId, getMessageVoiceId, setMessageVoiceId } from "../../model/shared-models/chat-core/utils/messages.utils";
-import { BaseMessage } from "@langchain/core/messages";
+import { getMessageId, getMessageVoiceId, getSpeakerFromMessage, setMessageVoiceId } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { BaseMessage, mapStoredMessageToChatMessage, StoredMessage } from "@langchain/core/messages";
+import { AgentInstanceDbService } from "../../database/chat-core/agent-instance-db.service";
+import { AgentDbService } from "../../database/chat-core/agent-db.service";
+import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
 
 export class VoiceChatService {
     constructor(
@@ -16,6 +19,9 @@ export class VoiceChatService {
         private voiceFileReferenceDbService: VoiceFileReferenceDbService,
         private awsBucketService: AwsS3BucketService,
         private chatRoomDbService: ChatRoomDbService,
+        private agentDbService: AgentDbService,
+        private agentInstanceDbService: AgentInstanceDbService,
+        private chatRoomSocketServer: ChatRoomSocketServer,
     ) {
 
     }
@@ -61,12 +67,11 @@ export class VoiceChatService {
         }
 
         // We don't have one already.  Generate and return a new value.
-        return this.createVoiceMessageForMessage(message, params, chatRoomId);
+        return this.createVoiceMessageForMessageParams(message, params, chatRoomId);
     }
 
     /** Generates a voice message, places it in an S3 bucket, and returns the URL to the MP3 message. */
-    async createVoiceMessageForMessage(message: BaseMessage, params: IVoiceParameters, chatRoomId: ObjectId): Promise<string> {
-
+    async createVoiceMessageForMessageParams(message: BaseMessage, params: IVoiceParameters, chatRoomId: ObjectId): Promise<string> {
         // Create the reference data.
         const storeDataId = new ObjectId();
         const storeData: VoiceFileReference = {
@@ -111,5 +116,67 @@ export class VoiceChatService {
 
         // Return the file path to the file.
         return this.awsBucketService.getDownloadUriForObject(storeData.awsBucketInfo);
+    }
+
+    /** Sends a voice message notification to the chat room through sockets. */
+    protected notifyRoomOfVoiceMessage(chatRoomId: ObjectId, message: BaseMessage | StoredMessage) {
+        this.chatRoomSocketServer.sendUpdateMessageToRoom(chatRoomId, message);
+    }
+
+    /** Generates a voice message for a specified message ID and chat room ID. */
+    async createVoiceMessageForMessage(messageId: string, chatRoomId: ObjectId): Promise<string> {
+        // Get the chat room.
+        const chatRoom = await this.chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoom) {
+            throw new Error(`Chat room with ID ${chatRoomId} does not exist.`);
+        }
+
+        // Find the message.
+        const message = chatRoom.conversation.find(m => getMessageId(m) === messageId);
+        if (!message) {
+            throw new Error(`Message with ID ${messageId} does not exist in chat room ${chatRoomId}.`);
+        }
+
+        // Check if we already have the voice message.
+        const existingVoiceId = getMessageVoiceId(message);
+        if (existingVoiceId) {
+            // We already have one.  Try to get it.
+            const item = await this.voiceFileReferenceDbService.getVoiceFileReferenceById(existingVoiceId);
+            if (item) {
+                // The room is probably not aware, so let's tell it about the message first.
+                this.notifyRoomOfVoiceMessage(chatRoomId, message);
+                return this.awsBucketService.getDownloadUriForObject(item.awsBucketInfo);
+            }
+        }
+
+        // Get the speaker/agent - we must have this to determine the voice.
+        const speaker = getSpeakerFromMessage(message);
+        if (!speaker || speaker.speakerType !== 'agent' || !speaker.speakerId) {
+            throw new Error(`Message with ID ${messageId} does not have a speaker (agent), so cannot determine voice parameters.`);
+        }
+
+        // Get the agent for the speaker.
+        const agentInstance = await this.agentInstanceDbService.getAgentById(new ObjectId(speaker.speakerId));
+        if (!agentInstance) {
+            throw new Error(`Agent with ID ${speaker.speakerId} does not exist, so cannot determine voice parameters.`);
+        }
+
+        // Get the agent configuration for the agent instance.
+        const agent = await this.agentDbService.getAgentIdentityById(new ObjectId(agentInstance.identity));
+        if (!agent) {
+            throw new Error(`Agent configuration with ID ${agentInstance.identity} does not exist, so cannot determine voice parameters.`);
+        }
+
+        // Get the voice parameters for the agent.
+        const voiceParams = agent.voiceMessageParams;
+        if (!voiceParams) {
+            throw new Error(`Agent with ID ${speaker.speakerId} does not have voice parameters, so cannot create a voice message.`);
+        }
+
+        // Hydrate the message.
+        const baseMessage = mapStoredMessageToChatMessage(message);
+
+        // Create the voice message.
+        return this.createVoiceMessageForMessageParams(baseMessage, voiceParams, chatRoomId);
     }
 }

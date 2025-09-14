@@ -22,7 +22,7 @@ async function run() {
     // Register our chat server.  Since it uses socket.io, it works a little differently.
     socketServer.registerWithServer(config, server);
 
-    await setupSocketServices(socketServer);
+    await setupSocketServices(socketServer, config);
 
     /** Initialize the system. */
     await systemInitialization();

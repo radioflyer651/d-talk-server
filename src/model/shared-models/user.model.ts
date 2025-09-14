@@ -6,4 +6,9 @@ export interface User {
     email: string;
     isAdmin?: boolean;
     displayName?: string;
+    permissions?: UserPermission;
+}
+
+export interface UserPermission {
+    canUseVoice: boolean;
 }

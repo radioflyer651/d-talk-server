@@ -136,6 +136,7 @@ Note that when working with `app-globals`, `plugin-type-resolvers`, `setup-socke
 
 ## Node Servers
   - All Express servers are stored in the `src/server` folder.
+  - Use the Chat Rooms Server (`src/server/chat-rooms.server.ts`) for pattern examples when writing server endpoints.
     
 ## Misc
   - The `ChatCoreService` (`src/services/chat-core.service.ts`) is the general service used to perform operations that span multiple top-level chat-based components.

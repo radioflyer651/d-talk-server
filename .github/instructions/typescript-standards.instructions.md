@@ -32,4 +32,8 @@ The following rules must be followed when generating new TypeScript content.
   - At a minimum, each "block" of functionality within the code must have an inline comment indicating what that block is doing.  (i.e. sorting a list, collecting parent nodes, etc.)
   - All comments (inline or otherwise), but be complete sentences and follow proper english grammar rules.
   - When generating new functions, properties, methods, etc. use JSDOC comments to annotate the item.
+  - Never include comments that are not meant to be committed to the codebase for long-term retention, with the following exception:
+    - ANY and ALL comments meant to be considered and/or addressed by the developer at the time of generation must be preceded by `TODO-Immediate: ` or `TODO-Information: `
+      - Use `TODO-Immediate: ` when the developer must address unfinished code or code used as a placeholder.
+      - Use `TODO-Information: ` for any notes the developer should know about the generated code before accepting it for use.
   

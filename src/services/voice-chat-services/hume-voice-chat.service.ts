@@ -22,12 +22,14 @@ export class HumeVoiceChatService implements IVoiceChatProvider<HumeVoiceParamet
     }
 
     async getVoiceMessage(message: string, configuration: HumeVoiceParameters): Promise<AwsStoreTypes | undefined> {
+        const voice = configuration.voice;
+
         const nodeStream = await this.humeClient.tts.synthesizeFile({
             format: { type: 'mp3' },
             utterances: [
                 {
                     text: message,
-                    description: configuration.voiceInstructions
+                    voice: { id: voice.id!, provider: voice.provider! }
                 }
             ],
         });
@@ -37,6 +39,22 @@ export class HumeVoiceChatService implements IVoiceChatProvider<HumeVoiceParamet
 
     /** Lists the voice names in Hume. */
     async listVoices(voiceType: HumeVoiceTypes): Promise<ReturnVoice[]> {
-        return (await this.humeClient.tts.voices.list({ provider: voiceType })).data;
+        const result = [] as ReturnVoice[];
+        let response = await this.humeClient.tts.voices.list({ provider: voiceType, pageSize: 100 });
+        let isFirstPage = true;
+
+        do {
+            if (!isFirstPage) {
+                response = await response.getNextPage();
+            }
+            isFirstPage = false;
+
+            for await (const item of response) {
+                result.push(item);
+            }
+        } while (response.hasNextPage());
+
+        return result;
+        //return (await this.humeClient.tts.voices.list({ provider: voiceType, ascendingOrder: true, pageSize: 100 })).data;
     }
 }

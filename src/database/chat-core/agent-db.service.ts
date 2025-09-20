@@ -45,13 +45,17 @@ export class AgentDbService extends DbService {
     }
 
     /** Update a chat agent identity configuration by its ObjectId. */
-    async updateAgentIdentity(identityId: ObjectId, update: Partial<ChatAgentIdentityConfiguration>): Promise<number> {
-        return await this.dbHelper.updateDataItems<ChatAgentIdentityConfiguration>(
-            DbCollectionNames.AgentConfigurations,
-            { _id: identityId },
-            update,
-            { updateOne: true }
-        );
+    async updateAgentIdentity(identityId: ObjectId, update: Partial<ChatAgentIdentityConfiguration>): Promise<void> {
+        await this.dbHelper.makeCallWithCollection(DbCollectionNames.AgentConfigurations, async (db, col) => {
+            await col.replaceOne({ _id: identityId }, update);
+        });
+
+        // return await this.dbHelper.updateDataItems<ChatAgentIdentityConfiguration>(
+        //     DbCollectionNames.AgentConfigurations,
+        //     { _id: identityId },
+        //     update,
+        //     { updateOne: true }
+        // );
     }
 
     /** Delete a chat agent identity configuration by its ObjectId. */

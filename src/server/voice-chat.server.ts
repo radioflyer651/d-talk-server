@@ -50,15 +50,15 @@ voiceChatRouter.post('/message-voice', async (req: Request, res: Response) => {
     }
 });
 
-// Placeholder route for health check or initial setup
-voiceChatRouter.get('/', (req: Request, res: Response) => {
-    res.json({ message: 'Voice Chat API is up and running.' });
-});
-
 /**
  * GET /voices
  * Returns a list of available voices from the Hume voice chat service.
  * Requires the user to be authenticated.
+ */
+/**
+ * GET /hume/voices?voiceType=HUME_AI|CUSTOM_VOICE
+ * Returns a list of available voices from the Hume voice chat service.
+ * Accepts a query parameter 'voiceType' (HUME_AI or CUSTOM_VOICE).
  */
 voiceChatRouter.get('/hume/voices', async (req: Request, res: Response) => {
     // Get the user ID from the request (authentication required)
@@ -87,10 +87,13 @@ voiceChatRouter.get('/hume/voices', async (req: Request, res: Response) => {
         return;
     }
 
+    // Accept voiceType from query, default to 'HUME_AI'
+    const voiceType = (req.query.voiceType === 'CUSTOM_VOICE') ? 'CUSTOM_VOICE' : 'HUME_AI';
+
     try {
-        // Fetch the list of voices from the Hume service (default to 'HUME_AI')
-        const voices = await humeVoiceChatService.listVoices('HUME_AI');
-        res.json({ voices });
+        // Fetch the list of voices from the Hume service
+        const voices = await humeVoiceChatService.listVoices(voiceType);
+        res.json(voices);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch voices' });
     }

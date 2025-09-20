@@ -7,3 +7,12 @@ export interface OpenAiVoiceParameters {
     voice: string;
     speed: number;
 }
+
+export function getDefaultOpenaiVoiceParameters(): OpenAiVoiceParameters {
+    return {
+        parameterType: OPEN_AI_VOICE_TYPE,
+        instructions: '',
+        speed: 1,
+        voice: 'coral'
+    };
+}

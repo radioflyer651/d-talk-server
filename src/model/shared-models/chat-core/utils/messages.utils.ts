@@ -187,8 +187,9 @@ export function getMessageId(message: BaseMessage | StoredMessage): string | und
             return message.data.id;
         }
     } else {
-        if (message.id) {
-            return message.id;
+        // Conversion to any for client-side.
+        if ((message as any).id) {
+            return (message as any).id;
         }
     }
 
@@ -206,7 +207,8 @@ export function setMessageId(message: BaseMessage | StoredMessage, newId: string
         if (isStoredMessage(message)) {
             foundId = message.data.id;
         } else {
-            foundId = message.id;
+            // Conversion to any for client-side.
+            foundId = (message as any).id;
         }
 
         if (foundId) {

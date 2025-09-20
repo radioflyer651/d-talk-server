@@ -88,11 +88,7 @@ agentConfigsServer.put('/agent-configuration', async (req, res) => {
 
         // Update the agent identity in the database
         const result = await agentDbService.updateAgentIdentity(identityId, update);
-        if (result > 0) {
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Agent identity not found or not updated' });
-        }
+        res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to update agent identity' });
     }

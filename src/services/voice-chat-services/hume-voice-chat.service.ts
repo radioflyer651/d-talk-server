@@ -34,7 +34,12 @@ export class HumeVoiceChatService implements IVoiceChatProvider<HumeVoiceParamet
             ],
         });
 
-        return nodeStream;
+        const chunks: Buffer[] = [];
+        for await (const chunk of nodeStream) {
+            chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+        }
+
+        return Buffer.concat(chunks);
     }
 
     /** Lists the voice names in Hume. */

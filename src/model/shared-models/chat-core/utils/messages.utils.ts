@@ -7,6 +7,7 @@ export const MESSAGE_SPEAKER_KEY = 'dtalk_speaker';
 export const DTALK_PARAMS_KEY = 'dtalk_params';
 export const MESSAGE_SOURCE_KEY = 'message-source';
 export const MESSAGE_VOICE_CHAT_ID_KEY = 'message_voice_chat_id';
+export const MESSAGE_VOICE_CHAT_URL_KEY = 'message_voice_chat_url';
 export const MESSAGE_ID_KEY = 'id';
 
 function isStoredMessage(target: any): target is StoredMessage {
@@ -178,6 +179,20 @@ export function setMessageVoiceId(message: BaseMessage | StoredMessage, voiceMes
     // Set the value.
     data[MESSAGE_VOICE_CHAT_ID_KEY] = voiceMessageId;
 
+}
+
+/** Returns the Voice Message URL for a specified chat message. */
+export function getMessageVoiceUrl(message: BaseMessage | StoredMessage): string | undefined {
+    // Get the data.
+    const data = getKwargs(message);
+    return data[MESSAGE_VOICE_CHAT_URL_KEY];
+}
+
+/** Sets the Voice Message URL for a specified chat message. */
+export function setMessageVoiceUrl(message: BaseMessage | StoredMessage, voiceMessageUrl: string | undefined) {
+    // Get the data.
+    const data = getKwargs(message);
+    data[MESSAGE_VOICE_CHAT_URL_KEY] = voiceMessageUrl;
 }
 
 /** Returns the ID of a message, either stored on the message's data itself, or in its additional_kwargs property. */

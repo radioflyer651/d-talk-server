@@ -9,6 +9,7 @@ import { MESSAGE_CHUNK_MESSAGE, MessageChunkMessage } from "../../model/shared-m
 import { ENTER_CHAT_ROOM, EnterChatRoomMessage, EXIT_CHAT_ROOM, ExitChatRoomMessage, getChatRoomRoomName } from "../../model/shared-models/chat-core/socket-messaging/general-messaging.socket-model";
 import { BaseMessage, mapChatMessagesToStoredMessages, StoredMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
+import { ChatMessageUpdatedMessage, MESSAGE_UPDATED_MESSAGE } from "../../model/shared-models/chat-core/socket-messaging/chat-message-updated-message.socket-model";
 
 
 export class ChatRoomSocketServer extends SocketServiceBase {
@@ -51,7 +52,7 @@ export class ChatRoomSocketServer extends SocketServiceBase {
         }
 
         // Set the message to the client.
-        this.socketServer.sendMessageToRoom(getChatRoomRoomName(roomId), MESSAGE_CHUNK_MESSAGE, { chatRoomId: roomId, message: storedMessage });
+        this.socketServer.sendMessageToRoom(getChatRoomRoomName(roomId), MESSAGE_UPDATED_MESSAGE, { chatRoomId: roomId, message: storedMessage } as ChatMessageUpdatedMessage);
     }
 
 }

@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb";
 import { UpsertDbItem, isNewDbItem } from "../../model/shared-models/db-operation-types.model";
 import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { ChatRoom } from "../../chat-core/chat-room/chat-room.service";
-import { MESSAGE_VOICE_CHAT_ID_KEY } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { MESSAGE_VOICE_CHAT_ID_KEY, MESSAGE_VOICE_CHAT_URL_KEY } from "../../model/shared-models/chat-core/utils/messages.utils";
 
 export class ChatRoomDbService extends DbService {
     constructor(
@@ -186,7 +186,7 @@ export class ChatRoomDbService extends DbService {
         });
     };
 
-    /** Updates a chat message in a specified room, with a specified message ID, to have new specified content. */
+    /** Updates a chat message in a specified room, with a specified message ID, with the new voice message object's id for that chat room message. */
     async setVoiceMessageOnConversationMessage(roomId: ObjectId, messageId: string, voiceMessageId: ObjectId | undefined): Promise<void> {
         // Ensure the message ID is valid - we don't want any goofy mistakes here.
         if (messageId.trimEnd() === '') {
@@ -227,6 +227,53 @@ export class ChatRoomDbService extends DbService {
                 {
                     $set: {
                         [voiceMessageIdKey]: voiceMessageId
+                    }
+                }
+            );
+        });
+    };
+
+    /** Updates a chat message in a specified room, with a specified message ID, to with the url to the voice message for that item. */
+    async setVoiceMessageUrlOnConversationMessage(roomId: ObjectId, messageId: string, voiceMessageUrl: string | undefined): Promise<void> {
+        // Ensure the message ID is valid - we don't want any goofy mistakes here.
+        if (messageId.trimEnd() === '') {
+            throw new Error(`messageId cannot be empty.`);
+        }
+
+        const voiceMessageUrlKey = `conversation.$.data.additional_kwargs.${MESSAGE_VOICE_CHAT_URL_KEY}`;
+
+        await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne(
+                {
+                    _id: roomId,
+                    conversation: {
+                        $elemMatch:
+                            // For agent messages.
+                            { 'data.id': messageId },
+                    }
+                },
+                {
+                    $set: {
+                        [voiceMessageUrlKey]: voiceMessageUrl
+                    }
+                }
+            );
+        });
+
+        await this.dbHelper.makeCallWithCollection<undefined, ChatRoomData>(DbCollectionNames.ChatRooms, async (db, collection) => {
+            await collection.updateOne(
+                {
+                    _id: roomId,
+                    conversation: {
+                        $elemMatch: {
+                            // For user messages.
+                            'data.additional_kwargs.id': messageId
+                        }
+                    }
+                },
+                {
+                    $set: {
+                        [voiceMessageUrlKey]: voiceMessageUrl
                     }
                 }
             );

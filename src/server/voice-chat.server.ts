@@ -24,7 +24,7 @@ voiceChatRouter.post('/message-voice', async (req: Request, res: Response) => {
         return;
     }
 
-    const { chatRoomId, messageId } = req.body || {};
+    const { chatRoomId, messageId, forceRegeneration } = req.body || {};
     if (!chatRoomId || !messageId) {
         res.status(400).json({ error: 'chatRoomId and messageId are required.' });
         return;
@@ -43,10 +43,12 @@ voiceChatRouter.post('/message-voice', async (req: Request, res: Response) => {
     }
 
     try {
-        const url = await voiceChatService.createVoiceMessageForMessage(messageId, chatRoomId);
+        const url = await voiceChatService.createVoiceMessageForMessage(messageId, chatRoomId, !!forceRegeneration);
         res.json({ url });
     } catch (error) {
         res.status(500).json({ error: (error as Error).message || 'Failed to get voice message.' });
+
+        throw error;
     }
 });
 

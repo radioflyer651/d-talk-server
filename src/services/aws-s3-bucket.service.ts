@@ -1,7 +1,8 @@
-import { DeleteObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { IAppConfig, VoiceConfiguration } from '../model/app-config.model';
 import { AwsBucketObjectReference } from '../model/shared-models/chat-core/aws-bucket-object-reference.model';
 import { AwsStoreTypes } from '../model/shared-models/storeable-types.model';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 
 /** Provides operations for interacting with AWS' S3 bucket services. */
@@ -55,12 +56,17 @@ export class AwsS3BucketService {
      * @param reference The AWS bucket object reference.
      * @returns The URI as a string.
      */
-    getDownloadUriForObject(reference: AwsBucketObjectReference): string {
+    async getDownloadUriForObject(reference: AwsBucketObjectReference): Promise<string> {
         if (!reference.bucket || !reference.key) {
             throw new Error('Both bucket and key must be provided in the reference.');
         }
 
-        // Standard S3 URI format for public objects
-        return `https://${reference.bucket}.s3.amazonaws.com/${encodeURIComponent(reference.key)}`;
+        const command = new GetObjectCommand({
+            Bucket: reference.bucket,
+            Key: reference.key,
+        });
+
+        // Default expiration: 1 hour
+        return await getSignedUrl(this.s3Client, command, {});
     }
 }

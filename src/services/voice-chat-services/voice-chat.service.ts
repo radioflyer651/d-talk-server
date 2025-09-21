@@ -6,11 +6,25 @@ import { AwsS3BucketService } from "../aws-s3-bucket.service";
 import { IVoiceChatProvider } from "./voice-chat-provider.interface";
 import { IAppConfig } from "../../model/app-config.model";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
-import { getMessageId, getMessageVoiceId, getSpeakerFromMessage, setMessageVoiceId } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { getMessageId, getMessageVoiceId, getSpeakerFromMessage, setMessageVoiceId, setMessageVoiceUrl } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { BaseMessage, mapStoredMessageToChatMessage, StoredMessage } from "@langchain/core/messages";
 import { AgentInstanceDbService } from "../../database/chat-core/agent-instance-db.service";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
 import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
+
+import * as fs from 'fs/promises';
+import * as path from 'path';
+
+const tempFilesFolder = path.join(__dirname, '../../../temp-files');
+
+function createTempFilePath() {
+    // Generate a random file name with no extension.
+    const randomFileName = Math.random().toString(36).substring(2) + Date.now().toString();
+
+    // Return the full path using the tempFilesFolder as the root.
+    return path.join(tempFilesFolder, randomFileName + '.wav');
+}
+
 
 export class VoiceChatService {
     constructor(
@@ -34,17 +48,28 @@ export class VoiceChatService {
     /** Returns the raw body of the voice MP3 file for a specified message. 
      *   This does no additional processing of the message. */
     async getVoiceMessageForMessageRaw(message: string, params: IVoiceParameters) {
-        // Get the provider.
-        const provider = this.getChatProviderForMessage(params);
+        try {
+            // Get the provider.
+            const provider = this.getChatProviderForMessage(params);
 
-        // Validate.
-        if (!provider) {
-            throw new Error(`No provider found for the parameter of type ${params.parameterType}`);
+            // Validate.
+            if (!provider) {
+                throw new Error(`No provider found for the parameter of type ${params.parameterType}`);
+            }
+
+            // Return the voice message.
+            const result = await provider.getVoiceMessage(message, params);
+
+            // TODO: TEMP CODE - Save to a file.
+            // const tempFilePath = createTempFilePath();
+            // const rr = result!;
+            // await fs.writeFile(tempFilePath, rr.valueOf() as Buffer<ArrayBufferLike>, 'binary');
+
+            return (result?.valueOf() as Buffer<ArrayBufferLike>);
+        } catch (err) {
+
+            throw err;
         }
-
-        // Return the voice message.
-        const result = await provider.getVoiceMessage(message, params);
-        return result?.valueOf() as Buffer<ArrayBufferLike>;
     }
 
     /** Attempts to create, or get an existing, url for the voice chat message of a specified base message. */
@@ -114,8 +139,15 @@ export class VoiceChatService {
         }
         this.chatRoomDbService.setVoiceMessageOnConversationMessage(chatRoomId, messageId, storeDataId);
 
-        // Return the file path to the file.
-        return this.awsBucketService.getDownloadUriForObject(storeData.awsBucketInfo);
+        // Get the download URL for the audio file.
+        const downloadUrl = await this.awsBucketService.getDownloadUriForObject(storeData.awsBucketInfo);
+
+        // Set this on the voice message, and update the database (again).
+        setMessageVoiceUrl(message, downloadUrl);
+        await this.chatRoomDbService.setVoiceMessageUrlOnConversationMessage(chatRoomId, messageId, downloadUrl);
+
+        // Send the URl back to the caller.
+        return downloadUrl;
     }
 
     /** Sends a voice message notification to the chat room through sockets. */
@@ -124,7 +156,7 @@ export class VoiceChatService {
     }
 
     /** Generates a voice message for a specified message ID and chat room ID. */
-    async createVoiceMessageForMessage(messageId: string, chatRoomId: ObjectId): Promise<string> {
+    async createVoiceMessageForMessage(messageId: string, chatRoomId: ObjectId, forceRegeneration: boolean): Promise<string> {
         // Get the chat room.
         const chatRoom = await this.chatRoomDbService.getChatRoomById(chatRoomId);
         if (!chatRoom) {
@@ -137,15 +169,17 @@ export class VoiceChatService {
             throw new Error(`Message with ID ${messageId} does not exist in chat room ${chatRoomId}.`);
         }
 
-        // Check if we already have the voice message.
-        const existingVoiceId = getMessageVoiceId(message);
-        if (existingVoiceId) {
-            // We already have one.  Try to get it.
-            const item = await this.voiceFileReferenceDbService.getVoiceFileReferenceById(existingVoiceId);
-            if (item) {
-                // The room is probably not aware, so let's tell it about the message first.
-                this.notifyRoomOfVoiceMessage(chatRoomId, message);
-                return this.awsBucketService.getDownloadUriForObject(item.awsBucketInfo);
+        if (!forceRegeneration) {
+            // Check if we already have the voice message.
+            const existingVoiceId = getMessageVoiceId(message);
+            if (existingVoiceId) {
+                // We already have one.  Try to get it.
+                const item = await this.voiceFileReferenceDbService.getVoiceFileReferenceById(existingVoiceId);
+                if (item) {
+                    // The room is probably not aware, so let's tell it about the message first.
+                    this.notifyRoomOfVoiceMessage(chatRoomId, message);
+                    return this.awsBucketService.getDownloadUriForObject(item.awsBucketInfo);
+                }
             }
         }
 
@@ -176,7 +210,13 @@ export class VoiceChatService {
         // Hydrate the message.
         const baseMessage = mapStoredMessageToChatMessage(message);
 
-        // Create the voice message.
-        return this.createVoiceMessageForMessageParams(baseMessage, voiceParams, chatRoomId);
+        // Create the voice message, and get the URL for the audio file.
+        const downloadUri = await this.createVoiceMessageForMessageParams(baseMessage, voiceParams, chatRoomId);
+
+        // Send the updated message to the front end, if any are listening.
+        this.notifyRoomOfVoiceMessage(chatRoomId, message);
+
+        // Return the URL to the audio file.
+        return downloadUri;
     }
 }

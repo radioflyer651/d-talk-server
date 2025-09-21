@@ -93,6 +93,7 @@ authRouter.post('/login', async (req: Request, res: Response) => {
             userId: user._id,
             name: user.userName,
             isAdmin: user.isAdmin,
+            permissions: user.permissions,
         });
 
         res.json({ token });

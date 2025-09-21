@@ -1,4 +1,5 @@
 import { ReturnVoice, VoiceProvider } from "hume/api/resources/tts";
+import { ModelServiceParams } from "../model-service-params.model";
 
 export const HUME_VOICE_TYPE = 'hume';
 
@@ -6,6 +7,10 @@ export interface HumeVoiceParameters {
     parameterType: typeof HUME_VOICE_TYPE;
     voiceProvider: VoiceProvider;
     voice: ReturnVoice;
+
+    aiActingInstructions?: {
+        modelParams: ModelServiceParams;
+    };
 }
 
 export function getDefaultHumeVoiceParameters(): HumeVoiceParameters {

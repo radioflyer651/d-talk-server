@@ -22,7 +22,7 @@ export class OpenAiVoiceChatService extends OpenAiServiceBase implements IVoiceC
     }
 
     /** Gets a voice implementation of a specified text string, and returns it. */
-    async createAudioForMessage(message: string, voiceInstructions: string, speed: number | undefined, voice: string) {
+    async createAudioForMessage(message: string, voiceInstructions: string, speed: number | undefined, voice: string, actingInstructions?: string) {
         // Create the audio.
         const result = await this.openAi.audio.speech.create({
             model: 'gpt-4o-mini-tts',
@@ -37,8 +37,8 @@ export class OpenAiVoiceChatService extends OpenAiServiceBase implements IVoiceC
         return result;
     }
 
-    async getVoiceMessage(message: string, configuration: OpenAiVoiceParameters): Promise<AwsStoreTypes | undefined> {
-        const result = await this.createAudioForMessage(message, configuration.instructions, configuration.speed, configuration.voice);
+    async getVoiceMessage(message: string, configuration: OpenAiVoiceParameters, actingInstructions?: string): Promise<AwsStoreTypes | undefined> {
+        const result = await this.createAudioForMessage(message, actingInstructions ?? '', configuration.speed, configuration.voice);
         return result.blob();
     }
 }

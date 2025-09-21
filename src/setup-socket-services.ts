@@ -1,4 +1,4 @@
-import { chatRoomDbService, agentServiceFactory, pluginResolver, jobHydratorService, agentDbService, authDbService, agentInstanceDbService, chatRoomHydratorService, chatDocumentDbService, projectDbService, voiceChatReferenceDbService, awsBucketService } from "./app-globals";
+import { chatRoomDbService, agentServiceFactory, pluginResolver, jobHydratorService, agentDbService, authDbService, agentInstanceDbService, chatRoomHydratorService, chatDocumentDbService, projectDbService, voiceChatReferenceDbService, awsBucketService, modelResolver } from "./app-globals";
 import { ChattingService } from "./chat-core/chatting/chatting.service";
 import { textDocumentResolver } from "./document-type-resolvers";
 import { IAppConfig } from "./model/app-config.model";
@@ -18,7 +18,7 @@ export let voiceChatService: VoiceChatService;
 export async function setupSocketServices(socketServer: SocketServer, config: IAppConfig): Promise<void> {
     // adminSocketService = new AdminSocketService(socketServer);
     // await adminSocketService.initialize();
-    
+
     chatRoomSocketServer = new ChatRoomSocketServer(socketServer,
         chatRoomDbService,
         agentServiceFactory,
@@ -48,5 +48,6 @@ export async function setupSocketServices(socketServer: SocketServer, config: IA
         chatRoomHydratorService);
 
     // Stupid socket servers have to be initialized here because they need the chatting service.
-    voiceChatService = new VoiceChatService(config, await getVoiceChatProviders(config), voiceChatReferenceDbService, awsBucketService, chatRoomDbService, agentDbService, agentInstanceDbService, chatRoomSocketServer);
+    voiceChatService = new VoiceChatService(config, await getVoiceChatProviders(config), voiceChatReferenceDbService,
+        awsBucketService, chatRoomDbService, agentDbService, agentInstanceDbService, chatRoomSocketServer, modelResolver);
 }

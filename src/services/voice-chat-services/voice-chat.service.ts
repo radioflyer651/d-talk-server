@@ -7,23 +7,27 @@ import { IVoiceChatProvider } from "./voice-chat-provider.interface";
 import { IAppConfig } from "../../model/app-config.model";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
 import { getMessageId, getMessageVoiceId, getSpeakerFromMessage, setMessageVoiceId, setMessageVoiceUrl } from "../../model/shared-models/chat-core/utils/messages.utils";
-import { BaseMessage, mapStoredMessageToChatMessage, StoredMessage } from "@langchain/core/messages";
+import { BaseMessage, mapStoredMessagesToChatMessages, mapStoredMessageToChatMessage, StoredMessage } from "@langchain/core/messages";
 import { AgentInstanceDbService } from "../../database/chat-core/agent-instance-db.service";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
 import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
+import { ModelServiceResolver } from "../../chat-core/agent/model-services/model-service-resolver";
+import { AiActingInstructionsService } from "./ai-acting-instructions.service";
+import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data.model";
+import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-core/agent-configuration.model";
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
+// import * as fs from 'fs/promises';
+// import * as path from 'path';
 
-const tempFilesFolder = path.join(__dirname, '../../../temp-files');
+// const tempFilesFolder = path.join(__dirname, '../../../temp-files');
 
-function createTempFilePath() {
-    // Generate a random file name with no extension.
-    const randomFileName = Math.random().toString(36).substring(2) + Date.now().toString();
+// function createTempFilePath() {
+//     // Generate a random file name with no extension.
+//     const randomFileName = Math.random().toString(36).substring(2) + Date.now().toString();
 
-    // Return the full path using the tempFilesFolder as the root.
-    return path.join(tempFilesFolder, randomFileName + '.wav');
-}
+//     // Return the full path using the tempFilesFolder as the root.
+//     return path.join(tempFilesFolder, randomFileName + '.wav');
+// }
 
 
 export class VoiceChatService {
@@ -36,8 +40,36 @@ export class VoiceChatService {
         private agentDbService: AgentDbService,
         private agentInstanceDbService: AgentInstanceDbService,
         private chatRoomSocketServer: ChatRoomSocketServer,
+        private modelResolver: ModelServiceResolver,
     ) {
-
+        // Check for undefined/null dependencies
+        if (!this.appConfig) {
+            throw new Error('appConfig must have a value.');
+        }
+        if (!this.voiceChatProviders) {
+            throw new Error('voiceChatProviders must have a value.');
+        }
+        if (!this.voiceFileReferenceDbService) {
+            throw new Error('voiceFileReferenceDbService must have a value.');
+        }
+        if (!this.awsBucketService) {
+            throw new Error('awsBucketService must have a value.');
+        }
+        if (!this.chatRoomDbService) {
+            throw new Error('chatRoomDbService must have a value.');
+        }
+        if (!this.agentDbService) {
+            throw new Error('agentDbService must have a value.');
+        }
+        if (!this.agentInstanceDbService) {
+            throw new Error('agentInstanceDbService must have a value.');
+        }
+        if (!this.chatRoomSocketServer) {
+            throw new Error('chatRoomSocketServer must have a value.');
+        }
+        if (!this.modelResolver) {
+            throw new Error('modelResolver must have a value.');
+        }
     }
 
     /** Finds the IVoiceChatProvider that can provide voice for a specified message. */
@@ -45,9 +77,37 @@ export class VoiceChatService {
         return this.voiceChatProviders.find(p => p.canHandleParameterType(messageParams.parameterType));
     }
 
+    /** Generates acting instructions for voice generation, using an AI LLM model. */
+    private async generateAiActingInstructions(message: StoredMessage, chatRoom: ChatRoomData, voiceParameters: IVoiceParameters, agent: ChatAgentIdentityConfiguration) {
+        // Validate the instructions.
+        if (!voiceParameters.aiActingInstructions) {
+            throw new Error(`Agent has no acting instructions.`);
+        }
+
+        return AiActingInstructionsService.generateAiActingInstructionsStatic(
+            voiceParameters.aiActingInstructions, this.modelResolver, message.data.content, getMessageId(message),
+            mapStoredMessagesToChatMessages(chatRoom.conversation), agent
+        );
+    }
+
+    private async getActingInstructions(configuration: IVoiceParameters, message: StoredMessage, chatRoom: ChatRoomData, agent: ChatAgentIdentityConfiguration): Promise<string | undefined> {
+        if (configuration.aiActingInstructions) {
+            return await this.generateAiActingInstructions(message, chatRoom, configuration, agent);
+
+        } else if (configuration.staticActingInstructions) {
+            if (configuration.staticActingInstructions.trim() === '') {
+                return undefined;
+            }
+
+            return configuration.staticActingInstructions.trim();
+        } else {
+            return undefined;
+        }
+    }
+
     /** Returns the raw body of the voice MP3 file for a specified message. 
      *   This does no additional processing of the message. */
-    async getVoiceMessageForMessageRaw(message: string, params: IVoiceParameters) {
+    async getVoiceMessageForMessageRaw(message: string, params: IVoiceParameters, actingInstructions?: string) {
         try {
             // Get the provider.
             const provider = this.getChatProviderForMessage(params);
@@ -58,7 +118,7 @@ export class VoiceChatService {
             }
 
             // Return the voice message.
-            const result = await provider.getVoiceMessage(message, params);
+            const result = await provider.getVoiceMessage(message, params, actingInstructions);
 
             // TODO: TEMP CODE - Save to a file.
             // const tempFilePath = createTempFilePath();
@@ -73,7 +133,7 @@ export class VoiceChatService {
     }
 
     /** Attempts to create, or get an existing, url for the voice chat message of a specified base message. */
-    async getVoiceMessageForMessage(message: BaseMessage, params: IVoiceParameters, chatRoomId: ObjectId): Promise<string | undefined> {
+    async getVoiceMessageForMessage(message: BaseMessage, params: IVoiceParameters, chatRoomId: ObjectId, actingInstructions?: string): Promise<string | undefined> {
         // Check if we already have a message, and return it if we do.
         const existingId = getMessageVoiceId(message);
         if (existingId) {
@@ -92,11 +152,11 @@ export class VoiceChatService {
         }
 
         // We don't have one already.  Generate and return a new value.
-        return this.createVoiceMessageForMessageParams(message, params, chatRoomId);
+        return this.createVoiceMessageForMessageParams(message, params, chatRoomId, actingInstructions);
     }
 
     /** Generates a voice message, places it in an S3 bucket, and returns the URL to the MP3 message. */
-    async createVoiceMessageForMessageParams(message: BaseMessage, params: IVoiceParameters, chatRoomId: ObjectId): Promise<string> {
+    async createVoiceMessageForMessageParams(message: BaseMessage, params: IVoiceParameters, chatRoomId: ObjectId, actingInstructions?: string): Promise<string> {
         // Create the reference data.
         const storeDataId = new ObjectId();
         const storeData: VoiceFileReference = {
@@ -115,7 +175,7 @@ export class VoiceChatService {
         this.voiceFileReferenceDbService.upsertVoiceFileReference(storeData);
 
         // Get the file content.
-        const content = await this.getVoiceMessageForMessageRaw(message.text, params);
+        const content = await this.getVoiceMessageForMessageRaw(message.text, params, actingInstructions);
 
         // If none, we have issue.
         if (!content) {
@@ -210,8 +270,11 @@ export class VoiceChatService {
         // Hydrate the message.
         const baseMessage = mapStoredMessageToChatMessage(message);
 
+        // Get the acting instructions for this generation.
+        const actingInstructions = await this.getActingInstructions(voiceParams, message, chatRoom, agent);
+
         // Create the voice message, and get the URL for the audio file.
-        const downloadUri = await this.createVoiceMessageForMessageParams(baseMessage, voiceParams, chatRoomId);
+        const downloadUri = await this.createVoiceMessageForMessageParams(baseMessage, voiceParams, chatRoomId, actingInstructions);
 
         // Send the updated message to the front end, if any are listening.
         this.notifyRoomOfVoiceMessage(chatRoomId, message);

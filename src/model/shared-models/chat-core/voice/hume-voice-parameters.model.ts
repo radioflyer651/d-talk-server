@@ -1,16 +1,14 @@
 import { ReturnVoice, VoiceProvider } from "hume/api/resources/tts";
-import { ModelServiceParams } from "../model-service-params.model";
+import { IVoiceParameters } from "./voice-parameters-base.model";
 
 export const HUME_VOICE_TYPE = 'hume';
 
-export interface HumeVoiceParameters {
+export interface HumeVoiceParameters extends IVoiceParameters {
     parameterType: typeof HUME_VOICE_TYPE;
     voiceProvider: VoiceProvider;
     voice: ReturnVoice;
-
-    aiActingInstructions?: {
-        modelParams: ModelServiceParams;
-    };
+    /** The speed 1 to 10, for how fast the voice will talk. */
+    speed?: number;
 }
 
 export function getDefaultHumeVoiceParameters(): HumeVoiceParameters {

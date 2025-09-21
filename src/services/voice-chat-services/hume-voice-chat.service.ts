@@ -3,12 +3,14 @@ import { IAppConfig } from "../../model/app-config.model";
 import { HUME_VOICE_TYPE, HumeVoiceParameters } from "../../model/shared-models/chat-core/voice/hume-voice-parameters.model";
 import { IVoiceChatProvider } from "./voice-chat-provider.interface";
 import { AwsStoreTypes } from "../../model/shared-models/storeable-types.model";
-import { ReturnVoice } from "hume/api/resources/tts";
+import { PostedUtterance, ReturnVoice } from "hume/api/resources/tts";
 
 export type HumeVoiceTypes = 'HUME_AI' | 'CUSTOM_VOICE';
 
 export class HumeVoiceChatService implements IVoiceChatProvider<HumeVoiceParameters> {
-    constructor(private appConfig: IAppConfig) {
+    constructor(
+        private appConfig: IAppConfig,
+    ) {
         this.humeClient = new HumeClient({
             apiKey: this.appConfig.humeCredentials.apiKey,
             secretKey: this.appConfig.humeCredentials.secretKey,
@@ -21,17 +23,21 @@ export class HumeVoiceChatService implements IVoiceChatProvider<HumeVoiceParamet
         return typeName === HUME_VOICE_TYPE;
     }
 
-    async getVoiceMessage(message: string, configuration: HumeVoiceParameters): Promise<AwsStoreTypes | undefined> {
+    async getVoiceMessage(message: string, configuration: HumeVoiceParameters, actingInstructions?: string): Promise<AwsStoreTypes | undefined> {
         const voice = configuration.voice;
+
+        const utterance: PostedUtterance = {
+            text: message,
+            voice: { id: voice.id!, provider: voice.provider! },
+            description: actingInstructions,
+        };
+        if (typeof configuration.speed === 'number') {
+            utterance.speed = configuration.speed;
+        }
 
         const nodeStream = await this.humeClient.tts.synthesizeFile({
             format: { type: 'mp3' },
-            utterances: [
-                {
-                    text: message,
-                    voice: { id: voice.id!, provider: voice.provider! }
-                }
-            ],
+            utterances: [utterance],
         });
 
         const chunks: Buffer[] = [];

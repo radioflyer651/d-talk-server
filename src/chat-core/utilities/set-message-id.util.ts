@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb";
 
 /** Returns a unique string ID used for BaseMessage objects. */
 export function createIdForMessage(): string {
-    return new ObjectId().toString();
+    return 'cmsg_' + new ObjectId().toString();
 }
 
 /** If a specified BaseMessage does not have an id value, sets the value. */

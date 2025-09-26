@@ -29,7 +29,7 @@ export class HumeVoiceChatService implements IVoiceChatProvider<HumeVoiceParamet
         const utterance: PostedUtterance = {
             text: message,
             voice: { id: voice.id!, provider: voice.provider! },
-            description: actingInstructions,
+            description: actingInstructions?.slice(950),
         };
         if (typeof configuration.speed === 'number') {
             utterance.speed = configuration.speed;

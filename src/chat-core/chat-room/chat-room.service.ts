@@ -8,7 +8,7 @@ import { User } from "../../model/shared-models/user.model";
 import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
-import { setMessageDateTimeIfMissing, setMessageSource, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { setMessageDateTimeIfMissing, setMessageId, setMessageSource, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
@@ -350,6 +350,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
                     const nm = new AIMessage(m);
                     nm.name = agent.myName ?? '';
                     nm.id = createIdForMessage();
+                    setMessageId(nm, nm.id, false);
                     if (!nm.additional_kwargs) {
                         nm.additional_kwargs = {};
                     }

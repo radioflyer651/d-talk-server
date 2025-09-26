@@ -26,6 +26,7 @@ export class AiActingInstructionsService {
       - Keep your reply short - no more than 2 sentences.
       - State the emotion and tone of the voice.
       - If applicable to the situation, include any structural elements for the speech pattern.
+      - **IMPORTANT** DO NOT include text from the conversation into these instructions.
 
     **Now, generate the "acting instructions" for the generation, based on the context of your conversation.**`;
 

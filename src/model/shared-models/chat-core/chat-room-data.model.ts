@@ -23,6 +23,9 @@ export interface ChatRoomData extends ChatDocumentLinker {
      *   user chat messages at the moment. */
     isBusy: boolean;
 
+    /** A description of what this chat room's purpose/goals are. */
+    description?: string;
+
     /** A set of agent IDs that can contribute to jobs in the chat room. */
     agents: AgentReference[];
 

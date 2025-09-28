@@ -463,6 +463,41 @@ chatRoomsServer.delete('/chat-room/:roomId/conversation/message/:messageId', asy
     }
 });
 
+// Delete a chat message and all messages after it from a conversation
+chatRoomsServer.delete('/chat-room/:roomId/conversation/message/:messageId/and-after', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const chatRoomId = new ObjectId(req.params.roomId);
+        const messageId = req.params.messageId;
+        // Fetch the chat room
+        const chatRoomData = await chatRoomDbService.getChatRoomById(chatRoomId);
+        if (!chatRoomData) {
+            res.status(404).json({ error: 'Chat room not found' });
+            return;
+        }
+        // Check user access (owner or participant)
+        if (!chatRoomData.userId.equals(userId) && !(chatRoomData.userParticipants || []).some((id: ObjectId) => id.equals(userId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+
+        // Create the service.
+        const chatRoom = await chatRoomHydratorService.hydrateChatRoom(chatRoomData);
+        if (!chatRoom) {
+            throw new Error(`No chat room was able to be created for id ${chatRoomId.toString()}`);
+        }
+        // Delete the message and all messages after it.
+        await chatRoom.deleteMessageAndAfter(messageId);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete chat message and messages after it' });
+    }
+});
+
 // Update the roomInstructions property of a chat room
 chatRoomsServer.put('/chat-room/:roomId/instructions', async (req, res) => {
     try {

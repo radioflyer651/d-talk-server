@@ -8,7 +8,7 @@ import { User } from "../../model/shared-models/user.model";
 import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
-import { setMessageDateTimeIfMissing, setMessageId, setMessageSource, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { getMessageId, setMessageDateTimeIfMissing, setMessageId, setMessageSource, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
@@ -160,6 +160,23 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
 
         // Delete these messages.
         this.messages.splice(firstMessage.messageIndex, lastMessage.messageIndex - firstMessage.messageIndex + 1);
+
+        // Save the messages to the DB.
+        await this.saveConversation();
+    }
+
+    /** Deletes a specified message int he chat history, and all messages after it. */
+    async deleteMessageAndAfter(messageId: string) {
+        // Get the message's index.
+        const messageIndex = this.messages.findIndex(m => getMessageId(m) === messageId);
+
+        // If not found, then we have problems.
+        if (messageIndex < 0) {
+            throw new Error(`Could not find message with ID: ${messageId}`);
+        }
+
+        // Remove these messages.
+        this.messages.splice(messageIndex);
 
         // Save the messages to the DB.
         await this.saveConversation();

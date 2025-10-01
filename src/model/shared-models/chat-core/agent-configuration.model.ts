@@ -29,6 +29,9 @@ export interface ChatAgentIdentityConfiguration extends IPluginConfigurationAtta
 
     /** Gets or sets a description for this agent. */
     description: string;
+    
+    /** Boolean value indicating whether or not chat messages produced by this agent should be hidden in the UI. */
+    hideMessages?: boolean;
 
     /** Contains the parameters needed to generate voice messages from text. */
     voiceMessageParams?: IVoiceParameters;

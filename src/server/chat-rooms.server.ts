@@ -2,7 +2,7 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-import { chatCoreService, chatRoomDbService, chatRoomHydratorService, projectDbService } from '../app-globals';
+import { chatCoreService, chatJobDbService, chatRoomDbService, chatRoomHydratorService, projectDbService } from '../app-globals';
 import { ChatRoomData } from '../model/shared-models/chat-core/chat-room-data.model';
 import { isUserOwnerOfChatRoom, userHasAccessToChatRoom } from '../utils/user-access.utils';
 
@@ -358,6 +358,52 @@ chatRoomsServer.put('/chat-room/:roomId/job-instance/:jobId/disabled', async (re
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: 'Failed to set job instance disabled status' });
+    }
+});
+
+// Set the 'messagesHidden' property of a chat job configuration
+chatRoomsServer.put('/chat-room/job-instance/:jobId/messages-hidden', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+
+        const jobId = req.params.jobId;
+        const { messagesHidden } = req.body;
+
+        if (typeof messagesHidden !== 'boolean') {
+            res.status(400).json({ error: 'Missing or invalid field: messagesHidden' });
+            return;
+        }
+
+        // Fetch the job configuration to get the project ID
+        const jobConfig = await chatJobDbService.getChatJobById(new ObjectId(jobId));
+        if (!jobConfig) {
+            res.status(404).json({ error: 'Job configuration not found' });
+            return;
+        }
+
+        // Fetch the project and check access
+        const project = await projectDbService.getProjectById(jobConfig.projectId);
+        if (!project) {
+            res.status(404).json({ error: 'Project not found' });
+            return;
+        }
+
+        // Check user access to the project (must be owner)
+        if (!project.creatorId.equals(userId)) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+
+        // Update the job's messagesHidden property
+        await chatJobDbService.setChatJobMessagesHidden(new ObjectId(jobId), messagesHidden);
+
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to set job messages hidden status' });
     }
 });
 

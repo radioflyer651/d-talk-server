@@ -325,7 +325,6 @@ export class ChatRoomDbService extends DbService {
                 }
             );
         });
-
     }
 
     /** Updates the name of a specified chat room. */

@@ -26,6 +26,9 @@ export interface ChatJobConfiguration extends ChatDocumentLinker {
     /** The instructions to be given to the agent for them to fulfil the job. */
     instructions: PositionableMessage<StoredMessage>[];
 
+    /** Boolean value indicating whether or not chat messages produced under this job should be hidden in the UI. */
+    hideMessages?: boolean;
+
     /** A set of plugins that can be used for this job. 
      *   Only plugins that have no contexts can be used in
      *   chat jobs. */

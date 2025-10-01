@@ -8,6 +8,7 @@ export const DTALK_PARAMS_KEY = 'dtalk_params';
 export const MESSAGE_SOURCE_KEY = 'message-source';
 export const MESSAGE_VOICE_CHAT_ID_KEY = 'message_voice_chat_id';
 export const MESSAGE_VOICE_CHAT_URL_KEY = 'message_voice_chat_url';
+export const MESSAGE_TASK_ID_KEY = 'message_task_id';
 export const MESSAGE_ID_KEY = 'id';
 
 function isStoredMessage(target: any): target is StoredMessage {
@@ -179,6 +180,36 @@ export function setMessageVoiceId(message: BaseMessage | StoredMessage, voiceMes
     // Set the value.
     data[MESSAGE_VOICE_CHAT_ID_KEY] = voiceMessageId;
 
+}
+
+/** Returns the task ID for a specified chat message. */
+export function getMessageTaskId(message: BaseMessage | StoredMessage): string | undefined {
+    // Get the data.
+    const data = getKwargs(message);
+
+    // Return the value.
+    return data[MESSAGE_TASK_ID_KEY];
+}
+
+/** Sets the task ID for a specified chat message. */
+export function setMessageTaskId(message: BaseMessage | StoredMessage, taskId: ObjectId | string | undefined) {
+    // Recast to a string.
+    let stringId: string | undefined;
+    if (typeof taskId === 'object' && 'toHexString' in taskId) {
+        stringId = (taskId as any)['toHexString']();
+    } else if (typeof taskId === 'string') {
+        stringId = taskId;
+    } else {
+        if (taskId !== undefined) {
+            throw new Error(`Unexpected type of taskId.`);
+        }
+    }
+
+    // Get the data.
+    const data = getKwargs(message);
+
+    // Set the value.
+    data[MESSAGE_TASK_ID_KEY] = stringId;
 }
 
 /** Returns the Voice Message URL for a specified chat message. */

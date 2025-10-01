@@ -63,6 +63,16 @@ export class ChatJobDbService extends DbService {
         );
     }
 
+    /** Sets the hideMessages property on a specified ChatJob. */
+    async setChatJobMessagesHidden(jobId: ObjectId, messagesHidden: boolean) {
+        return await this.dbHelper.updateDataItems<ChatJobConfiguration>(
+            DbCollectionNames.ChatJobs,
+            { _id: jobId },
+            { hideMessages: messagesHidden },
+            { updateOne: true }
+        );
+    }
+
 
     /** Given a specified job ID, sets the disabled property of an instruction message's disabled property, given it's index in the instruction list. */
     async setInstructionDisabled(jobId: ObjectId, messageIndex: number, newDisabledValue: boolean) {

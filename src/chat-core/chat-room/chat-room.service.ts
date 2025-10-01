@@ -8,7 +8,7 @@ import { User } from "../../model/shared-models/user.model";
 import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
-import { getMessageId, setMessageDateTimeIfMissing, setMessageId, setMessageSource, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { getMessageId, getMessageTaskId, setMessageDateTimeIfMissing, setMessageId, setMessageSource, setMessageTaskId, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
@@ -281,6 +281,9 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
                 p.chatJob = job;
             });
 
+            // Determine if new messages produced by the related job or agent should be hidden.
+            const messageIsHidden = !!(job.data.hideMessages || agent.identity.hideMessages);
+
             // Get the documents.
             const documentContributorsP = this.documents?.map(d => d.getLifetimeContributors(this, job, agent)) ?? [];
             const documentContributors = (await Promise.all(documentContributorsP)).reduce((p, c) => [...p, ...c], []);
@@ -333,14 +336,17 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
                             newMessages[newMessages.length - 1] += chunk.content;
 
                             // Send the event out, so potentially a socket can send this message part to the UI.
-                            this._events.next(<ChatRoomMessageChunkEvent>{
-                                eventType: 'new-chat-message-chunk',
-                                chatRoomId: this.data._id,
-                                messageId: chunk.id!,
-                                chunk: chunk.text,
-                                speakerId: this._currentlyExecutingJob.agentId!,
-                                speakerName: this._agents.find(a => a.data._id.equals(this._currentlyExecutingJob!.agentId!))?.myName ?? ''
-                            });
+                            //  But only if the message isn't "hidden".
+                            if (!messageIsHidden) {
+                                this._events.next(<ChatRoomMessageChunkEvent>{
+                                    eventType: 'new-chat-message-chunk',
+                                    chatRoomId: this.data._id,
+                                    messageId: chunk.id!,
+                                    chunk: chunk.text,
+                                    speakerId: this._currentlyExecutingJob.agentId!,
+                                    speakerName: this._agents.find(a => a.data._id.equals(this._currentlyExecutingJob!.agentId!))?.myName ?? ''
+                                });
+                            }
 
                         } else if (ev.event === 'on_chat_model_start') {
                             newMessages.push('');
@@ -365,6 +371,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
 
                 const newAiMessages = newMessages.map(m => {
                     const nm = new AIMessage(m);
+                    setMessageTaskId(nm, job.data._id);
                     nm.name = agent.myName ?? '';
                     nm.id = createIdForMessage();
                     setMessageId(nm, nm.id, false);
@@ -465,6 +472,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
     async chatComplete(finalMessages: BaseMessage[], newMessages: BaseMessage[]): Promise<void> {
         // Emit all new messages.
         newMessages.forEach(m => {
+            setMessageTaskId(m, this._currentlyExecutingJob?.data._id);
             // Get the last message.
             this._events.next(<ChatRoomMessageEvent>{
                 agentId: this._currentlyExecutingJob!.agentId,

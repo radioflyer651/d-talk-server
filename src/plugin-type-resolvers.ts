@@ -23,6 +23,7 @@ import { TextDocumentResolver } from "./chat-core/document/resolvers/text-docume
 import { LabeledMemory2PluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/labeled-memory2-plugin-resolver";
 
 import { ShortenedChatHistoryPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/shortened-chat-history-plugin-resolver";
+import { HideMessagesFromOtherAgentsPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/hide-messages-from-other-agents.plugin-resolver";
 
 
 export let pluginTypeResolvers: IPluginTypeResolver<any>[] = [];
@@ -47,5 +48,6 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new InnerVoicePluginResolver(modelResolver),
         new ArithmeticPluginResolver(),
         new ShortenedChatHistoryPluginResolver(),
+        new HideMessagesFromOtherAgentsPluginResolver(),
     ]);
 }

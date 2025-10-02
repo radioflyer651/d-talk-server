@@ -24,6 +24,7 @@ export const CREATE_TEXT_DOCUMENTS_PLUGIN_TYPE_ID = 'create-text-documents-plugi
 export const RANDOM_CHOICE_PLUGIN_TYPE_ID = 'random-choice-plugin';
 export const MANAGE_DOCUMENT_FOLDER_PLUGIN_TYPE_ID = 'manage-document-folder';
 export const CURRENT_TIME_AND_DATE_PLUGIN_TYPE_ID = 'current-time-and-date-plugin';
+export const HIDE_MESSAGES_FROM_OTHER_AGENTS_PLUGIN_TYPE_ID = 'hide-messages-from-other-agents-plugin';
 
 export interface PluginInfo {
     pluginType: string;
@@ -225,6 +226,15 @@ export const pluginInformation: PluginInfo[] = [
         pluginType: CURRENT_TIME_AND_DATE_PLUGIN_TYPE_ID,
         displayName: 'Current Time Date',
         description: 'Adds the current time and date to the message list.',
+        attachesToAgent: true,
+        attachesToChatRoom: true,
+        attachesToJob: true,
+        defaultParameterCreator: () => undefined
+    },
+    {
+        pluginType: HIDE_MESSAGES_FROM_OTHER_AGENTS_PLUGIN_TYPE_ID,
+        displayName: 'Hide Messages From Other Agents',
+        description: 'Prevents other agents from seeing messages from this agent/job in the chat history.',
         attachesToAgent: true,
         attachesToChatRoom: true,
         attachesToJob: true,

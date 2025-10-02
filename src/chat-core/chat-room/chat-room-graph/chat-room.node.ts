@@ -8,6 +8,7 @@ import { cleanToolMessagesForChat } from "../../utilities/clean-tool-messages-fo
 import { formatChatMessages } from "../../../utils/format-chat-messages.utils";
 import { isMessageDisabled, setMessageDateTime } from '../../../model/shared-models/chat-core/utils/messages.utils';
 import { CustomChatFormatting } from '../../../model/shared-models/chat-core/model-service-params.model';
+import { HideMessagesFromOtherAgentsPlugin } from "../../plugin-implementations/plugins/hide-messages-from-other-agents.plugin";
 
 /** Returns a sorted version of the lifetime contributor list. */
 function getSortedContributors(contributors: IChatLifetimeContributor[], direction: 'forward' | 'reverse'): IChatLifetimeContributor[] {
@@ -287,9 +288,9 @@ export async function callTools(state: typeof ChatState.State) {
         try {
             toolResult = await tool.invoke(toolCall.args);
 
-            if(!toolResult){
-                console.warn(`Tool ${toolCall.name} did NOT return a value to the LLM.  This can cause the LLM to make more calls.`)
-                toolResult = 'Success'
+            if (!toolResult) {
+                console.warn(`Tool ${toolCall.name} did NOT return a value to the LLM.  This can cause the LLM to make more calls.`);
+                toolResult = 'Success';
             }
         } catch (err) {
             toolResult = `ERROR: An error occurred when executing ${toolCall.name}: ID: ${toolCall.id}.  ${err?.toString() ?? 'undefined'}`;

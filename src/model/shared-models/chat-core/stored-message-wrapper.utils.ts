@@ -1,6 +1,7 @@
 import { StoredMessage } from "@langchain/core/messages";
 import { StoredMessageAgentTypes } from "./stored-message-agent-types.data";
-import { getDtalkParams, getSpeakerFromStoredMessage, MESSAGE_SPEAKER_KEY } from "./utils/messages.utils";
+import { getDtalkParams, getMessageTaskId, getSpeakerFromStoredMessage, MESSAGE_SPEAKER_KEY, setMessageTaskId } from "./utils/messages.utils";
+import { ObjectId } from "mongodb";
 
 export class StoredMessageWrapper {
     constructor(
@@ -75,6 +76,13 @@ export class StoredMessageWrapper {
         if (speaker) {
             speaker.speakerId = value;
         }
+    }
+
+    get taskId(): string | undefined {
+        return getMessageTaskId(this.message);
+    }
+    set taskId(value: string | undefined) {
+        setMessageTaskId(this.message, value);
     }
 
     /** Gets or sets a boolean value indicating whether or not this

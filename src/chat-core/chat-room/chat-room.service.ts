@@ -25,6 +25,7 @@ import { IChatRoomSaverService } from "./chat-room-saver-service.interface";
 import { MessageGroupingState } from "../utilities/message-grouping-state.utils";
 import { getChatRoomLongRunningTasks } from "./chat-room-long-running-tasks.service";
 import { LifetimeContributorPriorityTypes } from "../lifetime-contributor-priorities.enum";
+import { HideMessagesFromOtherAgentsPlugin } from "../plugin-implementations/plugins/hide-messages-from-other-agents.plugin";
 
 /*  NOTE: This service might be a little heavy, and should probably be reduced in scope at some point. */
 
@@ -265,7 +266,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
             }
 
             // Get the chat history.  We want a copy, so nothing's permanent until we want it to be.
-            const history = this.messages.slice();
+            let messageHistory = this.messages.slice();
 
             // Collect the plugins.
             const plugins: AgentPluginBase[] = [
@@ -309,7 +310,7 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
             const graphState: typeof ChatCallState.State = {
                 chatModel: agent.chatModel,
                 lifetimeContributors: contributors,
-                messageHistory: history,
+                messageHistory: messageHistory,
                 logStepsToConsole: false,
                 chatFormatting: agent.chatFormatting,
             };
@@ -416,6 +417,11 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
             // Reset the currently executing job.
             this._currentlyExecutingJob = undefined;
         }
+    }
+
+    async modifyCallMessages(messageHistory: BaseMessage[]): Promise<BaseMessage[]> {
+        // We have to do this plugin's job for it, because it only affects message stacks that it's NOT contributing to.
+        return HideMessagesFromOtherAgentsPlugin.modifyCallMessages_External(this._currentlyExecutingJob!.agentId!, messageHistory);
     }
 
     async addPreChatMessages?(info: ChatCallInfo): Promise<PositionableMessage<BaseMessage>[]> {

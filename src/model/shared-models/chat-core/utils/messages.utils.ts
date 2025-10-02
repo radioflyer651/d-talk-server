@@ -10,6 +10,7 @@ export const MESSAGE_VOICE_CHAT_ID_KEY = 'message_voice_chat_id';
 export const MESSAGE_VOICE_CHAT_URL_KEY = 'message_voice_chat_url';
 export const MESSAGE_TASK_ID_KEY = 'message_task_id';
 export const MESSAGE_ID_KEY = 'id';
+export const MESSAGE_VISIBLE_ONLY_TO_AGENT_KEY = 'visible_only_to_agent';
 
 function isStoredMessage(target: any): target is StoredMessage {
     return typeof target === 'object' && 'data' in target;
@@ -265,4 +266,22 @@ export function setMessageId(message: BaseMessage | StoredMessage, newId: string
     // Set the value.
     const data = getKwargs(message);
     data[MESSAGE_ID_KEY] = newId;
+}
+
+/** Returns the agent ID that a message is visible only to, if any. */
+export function getVisibleOnlyToAgent(message: BaseMessage | StoredMessage): string | undefined {
+    // Get the additional kwargs.
+    const data = getKwargs(message);
+
+    // Return the value, whether it's set or not.
+    return data[MESSAGE_VISIBLE_ONLY_TO_AGENT_KEY];
+}
+
+/** Sets the agent ID that a message should be visible only to. */
+export function setVisibleOnlyToAgent(message: BaseMessage | StoredMessage, agentId: string | undefined) {
+    // Get the additional kwargs.
+    const data = getKwargs(message);
+
+    // Set the value.
+    data[MESSAGE_VISIBLE_ONLY_TO_AGENT_KEY] = agentId;
 }

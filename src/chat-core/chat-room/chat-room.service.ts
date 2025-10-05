@@ -8,7 +8,7 @@ import { User } from "../../model/shared-models/user.model";
 import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
-import { getMessageId, getMessageTaskId, setMessageDateTimeIfMissing, setMessageId, setMessageSource, setMessageTaskId, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { getMessageId, setMessageDateTimeIfMissing, setMessageId, setMessageSource, setMessageTaskId, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";

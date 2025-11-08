@@ -38,6 +38,7 @@ export class HumeVoiceChatService implements IVoiceChatProvider<HumeVoiceParamet
         const nodeStream = await this.humeClient.tts.synthesizeFile({
             format: { type: 'mp3' },
             utterances: [utterance],
+            version: "1"
         });
 
         const chunks: Buffer[] = [];
@@ -46,8 +47,9 @@ export class HumeVoiceChatService implements IVoiceChatProvider<HumeVoiceParamet
         }
 
         return Buffer.concat(chunks);
-    }
+    } 
 
+     
     /** Lists the voice names in Hume. */
     async listVoices(voiceType: HumeVoiceTypes): Promise<ReturnVoice[]> {
         const result = [] as ReturnVoice[];

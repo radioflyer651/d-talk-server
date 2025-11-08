@@ -27,7 +27,7 @@
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^4.21.2",
-    "hume": "^0.13.4",
+    "hume": "^0.14.1",
     "jsonwebtoken": "^9.0.2",
     "langchain": "^0.3.28",
     "mongodb": "^6.15.0",

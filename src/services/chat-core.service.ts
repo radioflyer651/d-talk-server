@@ -232,6 +232,28 @@ export class ChatCoreService {
         await this.chatRoomDbService.updateChatRoom(chatRoomId, { jobs: chatRoom.jobs });
     }
 
+    /**
+     * Creates a minimal job configuration + instance and assigns it to the given agent in the given room.
+     * Used by the sub-agent plugin to give an ephemeral room a runnable job when none is specified.
+     */
+    async createDefaultJobInstanceForChatRoom(chatRoomId: ObjectId, agentInstanceId: ObjectId, projectId: ObjectId): Promise<ObjectId> {
+        // Create a bare-minimum job configuration in the DB.
+        const jobConfig = await this.chatJobDbService.upsertChatJob({
+            projectId,
+            order: 0,
+            name: 'default',
+            instructions: [],
+            plugins: [],
+            chatDocumentReferences: [],
+        } as any);
+
+        // Wire it into the room and assign the agent.
+        const jobInst = await this.createJobInstanceForChatRoom(chatRoomId, jobConfig._id);
+        await this.assignAgentToJobInstance(chatRoomId, agentInstanceId, jobInst.id);
+
+        return jobConfig._id;
+    }
+
     /** Moves a specified job, in a specified chat room, to a new position in the execution order. */
     async setJobInstanceOrder(chatRoomId: ObjectId, jobId: ObjectId, newPosition: number): Promise<void> {
         // Get the chat room.

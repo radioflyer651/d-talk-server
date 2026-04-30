@@ -34,7 +34,7 @@ export function createChatRoomGraph() {
         .addEdge('call-tools', 'peek-tool-call-messages')
         .addEdge('peek-tool-call-messages', 'chat-call')
         .addConditionalEdges('chat-call', shouldCallToolsDecider)
-        .addConditionalEdges('handle-reply', postChatReplyDecider)
+        .addConditionalEdges('handle-reply', postChatReplyDecider, ['chat-call', 'call-tools', 'chat-complete'])
         .addEdge('chat-complete', END);
 
     return graph.compile();

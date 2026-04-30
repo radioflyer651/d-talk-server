@@ -49,6 +49,7 @@ export async function startChatCall(state: typeof ChatCallState.State): Promise<
         newMessages: [],
         logStepsToConsole: state.logStepsToConsole,
         chatFormatting: state.chatFormatting,
+        suppressNativeToolBinding: false,
     };
 }
 
@@ -182,7 +183,10 @@ export async function inspectChatCallMessages(state: typeof ChatState.State) {
 /**
  * Handles the reply from the chat call by letting contributors process the reply and insert any new messages if needed.
  */
-export async function handleReply(state: typeof ChatState.State, reply: any) {
+export async function handleReply(state: typeof ChatState.State) {
+    // The last message in history is the AI reply produced by chatCall.
+    const reply = state.messageHistory[state.messageHistory.length - 1] as AIMessage;
+
     if (state.logStepsToConsole) {
         console.log(`[start] handleReply`, state, reply);
     }
@@ -251,8 +255,16 @@ export async function getTools(state: typeof ChatState.State) {
     const contributors = getSortedContributors(state.lifetimeContributors, 'forward');
 
     const toolPromises = contributors.filter(c => !!c.getTools).map(c => c.getTools!());
-    const toolList = (await Promise.all(toolPromises)).filter(x => !!x).reduce((p, c) => [...p, ...c], []);
+    let toolList = (await Promise.all(toolPromises)).filter(x => !!x).reduce((p, c) => [...p, ...c], []);
+
+    for (const contributor of contributors) {
+        if (typeof contributor.modifyTools === 'function') {
+            toolList = await contributor.modifyTools(toolList);
+        }
+    }
+
     state.tools = toolList;
+    state.suppressNativeToolBinding = contributors.some(c => c.suppressNativeToolBinding === true);
 
     if (state.logStepsToConsole) {
         console.log(`[end] getTools`, state);
@@ -265,8 +277,8 @@ export async function callTools(state: typeof ChatState.State) {
     if (state.logStepsToConsole) {
         console.log(`[start] callTools`, state);
     }
-    // Get the tool call.
-    const toolMessage = state.messageHistory[state.messageHistory.length - 1] as AIMessage;
+    // Get the tool call. Cast broadly — chatCall produces AIMessageChunk, not AIMessage.
+    const toolMessage = state.messageHistory[state.messageHistory.length - 1] as any;
 
     // Ensure we have tool calls.  Otherwise, we probably shouldn't be here.
     if (!toolMessage.tool_calls) {
@@ -274,7 +286,7 @@ export async function callTools(state: typeof ChatState.State) {
     }
 
     // Call the tools.
-    const toolCallPromises = toolMessage.tool_calls.map(async toolCall => {
+    const toolCallPromises = toolMessage.tool_calls.map(async (toolCall: any) => {
         // Find the tool for this call.
         const tool = state.tools.find(t => t.name === toolCall.name);
 
@@ -371,7 +383,7 @@ export async function chatCall(state: typeof ChatState.State) {
 
     // Make the LLM call.
     let result: AIMessageChunk;
-    if (llm.bindTools && tools.length > 0 && typeof callMessages !== 'string') {
+    if (llm.bindTools && tools.length > 0 && typeof callMessages !== 'string' && !state.suppressNativeToolBinding) {
         result = await llm.bindTools(tools).invoke(callMessages);
     } else {
         result = await llm.invoke(callMessages);

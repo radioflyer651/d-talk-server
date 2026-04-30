@@ -5,6 +5,7 @@ import { InnerVoicePluginParams } from "./inner-voice-plugin.params";
 import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
 import { LabeledMemory2PluginParams } from "./labeled-memory-plugin2.params";
 import { SubAgentPluginConfiguration } from "./sub-agent-plugin.params";
+import { PromptToolCallingPluginConfiguration } from "./prompt-tool-calling-plugin.params";
 
 export const SHORTENED_CHAT_HISTORY_PLUGIN_TYPE_ID = 'shortened-chat-history-plugin';
 export const ARITHMETIC_PLUGIN_TYPE_ID = 'arithmetic-plugin';
@@ -27,6 +28,7 @@ export const MANAGE_DOCUMENT_FOLDER_PLUGIN_TYPE_ID = 'manage-document-folder';
 export const CURRENT_TIME_AND_DATE_PLUGIN_TYPE_ID = 'current-time-and-date-plugin';
 export const HIDE_MESSAGES_FROM_OTHER_AGENTS_PLUGIN_TYPE_ID = 'hide-messages-from-other-agents-plugin';
 export const SUB_AGENT_PLUGIN_TYPE_ID = 'sub-agent-plugin';
+export const PROMPT_TOOL_CALLING_PLUGIN_TYPE_ID = 'prompt-tool-calling-plugin';
 
 export interface PluginInfo {
     pluginType: string;
@@ -250,6 +252,20 @@ export const pluginInformation: PluginInfo[] = [
         attachesToChatRoom: true,
         attachesToJob: true,
         defaultParameterCreator: () => ({ maxCharacters: 4000 }),
+    },
+    {
+        pluginType: PROMPT_TOOL_CALLING_PLUGIN_TYPE_ID,
+        displayName: 'Prompt Tool Calling',
+        description: 'Enables tool calling via injected prompts for models that do not support native function calling (e.g. some Ollama models). Injects tool schemas as a system message and parses the model\'s text reply for tool invocations.',
+        attachesToAgent: true,
+        attachesToChatRoom: false,
+        attachesToJob: true,
+        defaultParameterCreator: () => (<PromptToolCallingPluginConfiguration>{
+            toolCallOpenTag: '<tool_call>',
+            toolCallCloseTag: '</tool_call>',
+            maxRetries: 2,
+            includeExamples: true,
+        }),
     },
     {
         pluginType: SUB_AGENT_PLUGIN_TYPE_ID,

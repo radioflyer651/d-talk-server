@@ -17,6 +17,19 @@ export interface IChatLifetimeContributor {
     getTools?(): Promise<(ToolNode | StructuredToolInterface)[]>;
 
     /**
+     * Called after all contributors' getTools() results have been merged into a single list.
+     * Allows a contributor to inspect or replace the full tool list before it is bound to the LLM.
+     * Return the (potentially modified) tool list.
+     */
+    modifyTools?(tools: (ToolNode | StructuredToolInterface)[]): Promise<(ToolNode | StructuredToolInterface)[]>;
+
+    /**
+     * When true, the chatCall node will skip native tool binding (bindTools) for this session.
+     * Used by contributors that handle tool calling via prompt injection instead.
+     */
+    suppressNativeToolBinding?: boolean;
+
+    /**
      * Called once at the start of the chat session to allow the contributor to initialize any state or resources.
      */
     initialize?(): Promise<void>;

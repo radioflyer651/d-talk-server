@@ -44,16 +44,16 @@ export class SubAgentPlugin extends AgentPluginBase {
             timeoutMs: 120000,
         };
 
-        const allowedIds: string[] = config.allowedAgentIdentityIds ?? [];
-        const allowedDescription = allowedIds.length > 0
-            ? `Allowed agent identity IDs: ${allowedIds.join(', ')}.`
-            : 'No agents are currently configured as allowed. This tool will return an error if called.';
+        const allowedIds: string[] = (config.allowedAgentIdentityIds ?? []).map(id => id.toString());
+        const agentIdDescription = allowedIds.length > 0
+            ? `The exact ObjectId of the agent to spawn. You MUST use one of these exact values: ${allowedIds.join(', ')}`
+            : 'No agents are configured as allowed — this tool will always fail.';
 
         const spawnSchema = {
             name: 'spawn_subagent',
-            description: `Spawns a sub-agent in an ephemeral room to perform a delegated task synchronously. Returns a JSON result with the sub-agent's response. ${allowedDescription}`,
+            description: `Spawns a sub-agent in an ephemeral room to perform a delegated task synchronously. Returns a JSON result with the sub-agent's response.`,
             schema: z.object({
-                agentIdentityId: z.string().describe('ObjectId string of the agent identity to spawn. Must be one of the allowed identities.'),
+                agentIdentityId: z.string().describe(agentIdDescription),
                 taskDescription: z.string().describe('The task or question to send to the sub-agent as its initial message.'),
                 jobConfigurationIds: z.array(z.string()).optional().describe('Optional array of ChatJobConfiguration ObjectId strings to assign to the sub-agent.'),
             }),
@@ -70,14 +70,16 @@ export class SubAgentPlugin extends AgentPluginBase {
     }
 
     private async runSubAgent(
-        options: { agentIdentityId: string; taskDescription: string; jobConfigurationIds?: string[] },
+        options: { agentIdentityId: string; taskDescription: string; jobConfigurationIds?: string[]; },
         config: SubAgentPluginConfiguration,
     ): Promise<string> {
+        console.log(`We got the tools!`);
         const depthKey = this.chatRoom.data._id.toString();
 
         try {
-            // Validate allowlist
-            if (!config.allowedAgentIdentityIds.includes(options.agentIdentityId)) {
+            // Validate allowlist — normalize to strings since stored IDs may be ObjectId instances.
+            const allowedStrings = config.allowedAgentIdentityIds.map(id => id.toString());
+            if (!allowedStrings.includes(options.agentIdentityId)) {
                 return JSON.stringify(<SubAgentResult>{
                     success: false, subRoomId: '', agentIdentityId: options.agentIdentityId,
                     agentName: '', responseMessages: [], finalResponse: '',
@@ -152,7 +154,8 @@ export class SubAgentPlugin extends AgentPluginBase {
 
             console.log(`[SubAgentPlugin] Sub-room created | roomId=${subRoom._id} name="${subRoom.name}"`);
 
-            let agentInstance: { _id: ObjectId } | undefined;
+            let agentInstance: { _id: ObjectId; } | undefined;
+            let defaultJobConfigId: ObjectId | undefined;
             try {
                 // Add agent instance
                 agentInstance = await this.chatCoreService.createAgentInstanceForChatRoom(
@@ -176,6 +179,13 @@ export class SubAgentPlugin extends AgentPluginBase {
                             jobInst.id,
                         );
                     }
+                } else {
+                    // No jobs specified — create a minimal default job so the agent has a turn to execute.
+                    defaultJobConfigId = await this.chatCoreService.createDefaultJobInstanceForChatRoom(
+                        subRoom._id,
+                        agentInstance._id,
+                        subRoom.projectId,
+                    );
                 }
 
                 // Load user
@@ -239,6 +249,9 @@ export class SubAgentPlugin extends AgentPluginBase {
                     await this.chatRoomDbService.deleteChatRoom(subRoom._id).catch(() => undefined);
                     if (agentInstance) {
                         await this.agentInstanceDbService.deleteAgent(agentInstance._id).catch(() => undefined);
+                    }
+                    if (defaultJobConfigId) {
+                        await this.chatCoreService.chatJobDbService.deleteChatJob(defaultJobConfigId).catch(() => undefined);
                     }
                 }
             }

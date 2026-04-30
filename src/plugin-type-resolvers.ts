@@ -25,6 +25,7 @@ import { LabeledMemory2PluginResolver } from "./chat-core/plugin-implementations
 import { ShortenedChatHistoryPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/shortened-chat-history-plugin-resolver";
 import { HideMessagesFromOtherAgentsPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/hide-messages-from-other-agents.plugin-resolver";
 import { SubAgentPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/sub-agent-plugin-resolver";
+import { PromptToolCallingPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/prompt-tool-calling-plugin-resolver";
 import { AuthDbService } from "./database/auth-db.service";
 import { ChatCoreService } from "./services/chat-core.service";
 import { AgentDbService } from "./database/chat-core/agent-db.service";
@@ -56,6 +57,7 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new ArithmeticPluginResolver(),
         new ShortenedChatHistoryPluginResolver(),
         new HideMessagesFromOtherAgentsPluginResolver(),
+        new PromptToolCallingPluginResolver(),
         new SubAgentPluginResolver(
             () => chattingService,
             chatCoreService.chatRoomDbService,

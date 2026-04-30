@@ -29,6 +29,9 @@ export const ChatState = Annotation.Root({
     logStepsToConsole: Annotation<boolean>,
 
     chatFormatting: Annotation<CustomChatFormatting | undefined>,
+
+    /** When true, the chatCall node will not bind tools to the LLM (used by prompt-injected tool calling). */
+    suppressNativeToolBinding: Annotation<boolean>,
 });
 
 export const ChatCallState = Annotation.Root({

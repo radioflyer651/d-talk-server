@@ -96,6 +96,7 @@ export class SubAgentPlugin extends AgentPluginBase {
             }
 
             activeSpawnDepths.set(depthKey, currentDepth + 1);
+            console.log(`[SubAgentPlugin] Spawning sub-agent | parentRoom=${depthKey} depth=${currentDepth + 1}/${config.maxSpawnDepth} agentIdentityId=${options.agentIdentityId}`);
 
             // Load agent identity
             const identityId = new ObjectId(options.agentIdentityId);
@@ -129,6 +130,8 @@ export class SubAgentPlugin extends AgentPluginBase {
                 taskMessage = `[PARENT CONTEXT]\n${contextBlock}\n[END CONTEXT]\n\nTASK: ${options.taskDescription}`;
             }
 
+            console.log(`[SubAgentPlugin] Agent identity resolved | name="${identity.name}" task="${options.taskDescription.slice(0, 80)}${options.taskDescription.length > 80 ? '…' : ''}"`);
+
             // Create ephemeral sub-room
             const subRoom = await this.chatRoomDbService.upsertChatRoom({
                 name: `${config.subRoomNamePrefix}-${Date.now()}`,
@@ -147,6 +150,8 @@ export class SubAgentPlugin extends AgentPluginBase {
                 isEphemeral: true,
             } as any);
 
+            console.log(`[SubAgentPlugin] Sub-room created | roomId=${subRoom._id} name="${subRoom.name}"`);
+
             let agentInstance: { _id: ObjectId } | undefined;
             try {
                 // Add agent instance
@@ -155,6 +160,8 @@ export class SubAgentPlugin extends AgentPluginBase {
                     identityId,
                     identity.chatName ?? identity.name,
                 );
+
+                console.log(`[SubAgentPlugin] Agent instance added | instanceId=${agentInstance._id}`);
 
                 // Add job instances
                 if (options.jobConfigurationIds?.length) {
@@ -182,6 +189,8 @@ export class SubAgentPlugin extends AgentPluginBase {
                     });
                 }
 
+                console.log(`[SubAgentPlugin] Sending task to sub-agent | roomId=${subRoom._id}`);
+
                 // Execute sub-agent with timeout
                 const controller = new AbortController();
                 const timeoutHandle = setTimeout(() => controller.abort(), config.timeoutMs ?? 120000);
@@ -197,6 +206,8 @@ export class SubAgentPlugin extends AgentPluginBase {
                     clearTimeout(timeoutHandle);
                 }
 
+                console.log(`[SubAgentPlugin] Sub-agent completed | roomId=${subRoom._id} messages=${newMessages.length}`);
+
                 // Build result
                 const responseMessages = newMessages
                     .filter(m => m.getType() === 'ai' || m.getType() === 'tool')
@@ -211,6 +222,8 @@ export class SubAgentPlugin extends AgentPluginBase {
                     ? (typeof lastAi.content === 'string' ? lastAi.content : JSON.stringify(lastAi.content))
                     : '';
 
+                console.log(`[SubAgentPlugin] Final response | roomId=${subRoom._id} response="${finalResponse.slice(0, 120)}${finalResponse.length > 120 ? '…' : ''}"`);
+
                 return JSON.stringify(<SubAgentResult>{
                     success: true,
                     subRoomId: subRoom._id.toString(),
@@ -222,6 +235,7 @@ export class SubAgentPlugin extends AgentPluginBase {
             } finally {
                 // Cleanup ephemeral room
                 if (config.deleteRoomOnCompletion) {
+                    console.log(`[SubAgentPlugin] Cleaning up sub-room | roomId=${subRoom._id}`);
                     await this.chatRoomDbService.deleteChatRoom(subRoom._id).catch(() => undefined);
                     if (agentInstance) {
                         await this.agentInstanceDbService.deleteAgent(agentInstance._id).catch(() => undefined);
@@ -229,6 +243,7 @@ export class SubAgentPlugin extends AgentPluginBase {
                 }
             }
         } catch (err: any) {
+            console.error(`[SubAgentPlugin] Error | parentRoom=${depthKey}`, err);
             return JSON.stringify(<SubAgentResult>{
                 success: false, subRoomId: '', agentIdentityId: options.agentIdentityId,
                 agentName: '', responseMessages: [], finalResponse: '',

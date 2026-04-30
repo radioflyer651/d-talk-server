@@ -35,7 +35,6 @@ export class AgentDbService extends DbService {
         ) as ChatAgentIdentityConfiguration[];
     }
 
-
     /** Get all agent identity configurations for a given project. */
     async getAgentIdentitiesByProject(projectId: ObjectId): Promise<ChatAgentIdentityConfiguration[]> {
         return await this.dbHelper.findDataItem<ChatAgentIdentityConfiguration, { projectId: ObjectId; }>(
@@ -109,5 +108,41 @@ export class AgentDbService extends DbService {
             // Save the value back.
             await collection.updateOne({ _id: agentId }, { $set: { [messagePropertyName]: (agent as any)[messagePropertyName] } });
         });
+    }
+
+    /**
+     * Get all chat agent identity configurations with pagination.
+     *
+     * Returns a paginated set of agents and the total number of agents in the collection.
+     *
+     * @param skip The number of documents to skip from the beginning of the result set.
+     * @param take The maximum number of documents to return.
+     */
+    async getAllAgents(skip: number, take: number): Promise<{ data: ChatAgentIdentityConfiguration[]; totalCount: number; }> {
+        // Ensure reasonable numeric values are used for pagination.
+        const safeSkip = Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : 0;
+        const safeTake = Number.isFinite(take) && take > 0 ? Math.floor(take) : 10;
+
+        // Execute both data query and total count in parallel for efficiency.
+        return await this.dbHelper.makeCallWithCollection<{ data: ChatAgentIdentityConfiguration[]; totalCount: number; }, ChatAgentIdentityConfiguration>(
+            DbCollectionNames.AgentConfigurations,
+            async (db, collection) => {
+                // Get the requested page of agents.
+                const dataPromise = collection
+                    .find({})
+                    .skip(safeSkip)
+                    .limit(safeTake)
+                    .toArray();
+
+                // Get the total count of agents in the collection.
+                const countPromise = collection.countDocuments({});
+
+                // Await both operations concurrently.
+                const [data, totalCount] = await Promise.all([dataPromise, countPromise]);
+
+                // Return the paginated result shape.
+                return { data, totalCount };
+            }
+        );
     }
 }

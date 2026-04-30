@@ -1,15 +1,34 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-import { agentDbService } from '../app-globals';
+import { agentDbService, chatCloningService } from '../app-globals';
 import { ChatAgentIdentityConfiguration } from '../model/shared-models/chat-core/agent-configuration.model';
 import { NewDbItem } from '../model/shared-models/db-operation-types.model';
 import { userHasAccessToAgentsProject } from '../utils/user-access.utils';
 
 export const agentConfigsServer = express.Router();
 
-// TODO: We need to add more security for users who have project-rights to project-resources.
-//  Users shouldn't be able to access an agent if they don't have access to the project.
+// POST /clone-agent-identity/:id - Clone an agent identity by ID
+agentConfigsServer.post('/clone-agent-identity/:id', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const identityId = new ObjectId(req.params.id);
+        // Security: Check user access to the agent's project
+        const hasAccess = await userHasAccessToAgentsProject(identityId, userId);
+        if (!hasAccess) {
+            res.status(403).json({ error: "Forbidden: No access to agent's project" });
+            return;
+        }
+        const newId = await chatCloningService.cloneAgentIdentity(identityId);
+        res.status(201).json({ newId });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to clone agent identity' });
+    }
+});
 
 // Get all agent identities for a project
 agentConfigsServer.get('/agent-configurations/:projectId', async (req, res) => {

@@ -18,6 +18,42 @@ export class ChatJobDbService extends DbService {
         return await this.dbHelper.upsertDataItem<any>(DbCollectionNames.ChatJobs, job) as ChatJobConfiguration;
     }
 
+    /**
+     * Get all chat jobs with pagination.
+     *
+     * Returns a paginated set of chat jobs and the total number of jobs in the collection.
+     *
+     * @param skip The number of documents to skip from the beginning of the result set.
+     * @param take The maximum number of documents to return.
+     */
+    async getAllChatJobs(skip: number, take: number): Promise<{ data: ChatJobConfiguration[]; totalCount: number; }> {
+        // Ensure reasonable numeric values are used for pagination.
+        const safeSkip = Number.isFinite(skip) && skip > 0 ? Math.floor(skip) : 0;
+        const safeTake = Number.isFinite(take) && take > 0 ? Math.floor(take) : 10;
+
+        // Execute both data query and total count in parallel for efficiency.
+        return await this.dbHelper.makeCallWithCollection<{ data: ChatJobConfiguration[]; totalCount: number; }, ChatJobConfiguration>(
+            DbCollectionNames.ChatJobs,
+            async (db, collection) => {
+                // Get the requested page of chat jobs.
+                const dataPromise = collection
+                    .find({})
+                    .skip(safeSkip)
+                    .limit(safeTake)
+                    .toArray();
+
+                // Get the total count of chat jobs in the collection.
+                const countPromise = collection.countDocuments({});
+
+                // Await both operations concurrently.
+                const [data, totalCount] = await Promise.all([dataPromise, countPromise]);
+
+                // Return the paginated result shape.
+                return { data, totalCount };
+            }
+        );
+    }
+
     /** Get a chat job by its ObjectId. */
     async getChatJobById(jobId: ObjectId): Promise<ChatJobConfiguration | undefined> {
         return await this.dbHelper.findDataItem<ChatJobConfiguration, { _id: ObjectId; }>(

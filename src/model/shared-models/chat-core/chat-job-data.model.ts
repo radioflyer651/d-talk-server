@@ -1,7 +1,7 @@
 import { StoredMessage } from "@langchain/core/messages";
 import { ObjectId } from "mongodb";
 import { PluginSpecification } from "./plugin-specification.model";
-import { PositionableMessage } from "./positionable-message.model";
+import { PositionableMessageWithId } from "./positionable-message.model";
 import { ChatDocumentLinker } from "./documents/chat-document-reference.model";
 
 
@@ -24,7 +24,7 @@ export interface ChatJobConfiguration extends ChatDocumentLinker {
     name: string;
 
     /** The instructions to be given to the agent for them to fulfil the job. */
-    instructions: PositionableMessage<StoredMessage>[];
+    instructions: PositionableMessageWithId<StoredMessage>[];
 
     /** Boolean value indicating whether or not chat messages produced under this job should be hidden in the UI. */
     hideMessages?: boolean;

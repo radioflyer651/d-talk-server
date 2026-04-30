@@ -4,13 +4,16 @@ applyTo: '**'
 
 # Application D-Talk
 
+## Other References
+Read the [Instruction Reference](./instructions/instruction-reference.instructions.md) for information about other instruction files for the project, and when to use them.
+
 ## General
   - This application is named d-talk.
   - This is the server-side project for the application.
   - The application stack is primarily: Node, TypeScript, and MongoDB.
   - Some LangChain is used in the application.
   - The Factory Pattern is used heavily throughout the application.
-  - Reference the [TypeScript Standards](./typescript-standards.instructions.md) when generating code.
+  - Reference the [TypeScript Standards](./instructions/typescript-standards.instructions.md) when generating code.
 
 ## Application Purpose
 The application is a general-purpose multi-agent chat application.  It's made to be customizable, with the ability easily add to features to chat agents.

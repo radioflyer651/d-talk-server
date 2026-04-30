@@ -2,8 +2,10 @@
 import express from 'express';
 import { ObjectId } from 'mongodb';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-import { chatJobDbService, projectDbService } from '../app-globals';
+import { chatCloningService, projectDbService } from '../app-globals';
 import { ChatJobConfiguration } from '../model/shared-models/chat-core/chat-job-data.model';
+import { agentDbService, chatJobDbService } from '../app-globals';
+
 
 export const jobsServer = express.Router();
 
@@ -31,6 +33,32 @@ jobsServer.get('/jobs/:projectId', async (req, res) => {
         res.json(jobs);
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch jobs' });
+    }
+});
+
+// Clone a chat job configuration by job ID
+jobsServer.post('/job/:id/clone', async (req, res) => {
+    try {
+        const userId = getUserIdFromRequest(req);
+        if (!userId) {
+            res.status(401).json({ error: 'Unauthorized' });
+            return;
+        }
+        const jobId = new ObjectId(req.params.id);
+        const originalJob = await chatJobDbService.getChatJobById(jobId);
+        if (!originalJob) {
+            res.status(404).json({ error: 'Job not found' });
+            return;
+        }
+        if (!originalJob.projectId || !(await userHasProjectAccess(userId, originalJob.projectId))) {
+            res.status(403).json({ error: 'Forbidden' });
+            return;
+        }
+        // Clone the job configuration
+        const clonedJob = await chatCloningService.cloneChatJobConfiguration(jobId);
+        res.status(201).json(clonedJob);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to clone job', details: typeof error === 'object' && error && 'message' in error ? (error as any).message : String(error) });
     }
 });
 

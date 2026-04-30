@@ -24,11 +24,18 @@ import { LabeledMemory2PluginResolver } from "./chat-core/plugin-implementations
 
 import { ShortenedChatHistoryPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/shortened-chat-history-plugin-resolver";
 import { HideMessagesFromOtherAgentsPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/hide-messages-from-other-agents.plugin-resolver";
+import { SubAgentPluginResolver } from "./chat-core/plugin-implementations/plugin-resolver-services/sub-agent-plugin-resolver";
+import { AuthDbService } from "./database/auth-db.service";
+import { ChatCoreService } from "./services/chat-core.service";
+import { AgentDbService } from "./database/chat-core/agent-db.service";
+import { AgentInstanceDbService } from "./database/chat-core/agent-instance-db.service";
+import { ChatRoomDbService } from "./database/chat-core/chat-room-db.service";
+import { chattingService } from "./setup-socket-services";
 
 
 export let pluginTypeResolvers: IPluginTypeResolver<any>[] = [];
 
-export async function initializePluginTypeResolvers(config: IAppConfig, modelResolver: ModelServiceResolver, dbHelper: MongoHelper, chatDocumentDbService: ChatDocumentDbService, textDocumentResolver: TextDocumentResolver) {
+export async function initializePluginTypeResolvers(config: IAppConfig, modelResolver: ModelServiceResolver, dbHelper: MongoHelper, chatDocumentDbService: ChatDocumentDbService, textDocumentResolver: TextDocumentResolver, authDbService: AuthDbService, chatCoreService: ChatCoreService) {
     pluginTypeResolvers.push(...[
         new RoomInfoPluginResolver(),
         new ActDrunkPluginResolver(),
@@ -49,5 +56,13 @@ export async function initializePluginTypeResolvers(config: IAppConfig, modelRes
         new ArithmeticPluginResolver(),
         new ShortenedChatHistoryPluginResolver(),
         new HideMessagesFromOtherAgentsPluginResolver(),
+        new SubAgentPluginResolver(
+            () => chattingService,
+            chatCoreService.chatRoomDbService,
+            chatCoreService.agentDbService,
+            chatCoreService.agentInstanceDbService,
+            chatCoreService,
+            authDbService,
+        ),
     ]);
 }

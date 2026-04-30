@@ -105,7 +105,7 @@ export async function initializeServices(): Promise<void> {
         new OpenAiAgentService(),
     ]);
     await initializeDocumentTypeResolvers(config);
-    await initializePluginTypeResolvers(config, modelResolver, dbHelper, chatDocumentDbService, textDocumentResolver);
+    await initializePluginTypeResolvers(config, modelResolver, dbHelper, chatDocumentDbService, textDocumentResolver, authDbService, chatCoreService);
     pluginResolver = new AppPluginResolver(pluginTypeResolvers);
     documentResolver = new ChatDocumentResolutionService(documentTypeResolvers, chatDocumentDbService);
     agentServiceFactory = new AgentServiceFactory(modelResolver, pluginResolver, agentDbService, agentInstanceDbService);

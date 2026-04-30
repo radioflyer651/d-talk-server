@@ -51,5 +51,8 @@ export interface ChatRoomData extends ChatDocumentLinker {
      *   instances.  They'll never have a matching PluginSpecification to match up to,
      *   but their instances will still have a specification of their own.  (The nested instance is the ONLY instance in this case.)     */
     plugins: PluginInstanceReference[];
+
+    /** When true, this room was created by a plugin and will be automatically cleaned up after use. Clients may hide such rooms from the UI. */
+    isEphemeral?: boolean;
 }
 

@@ -4,6 +4,7 @@ import { ShortenedChatHistoryPluginConfig } from "./shortened-chat-history-plugi
 import { InnerVoicePluginParams } from "./inner-voice-plugin.params";
 import { LabeledMemoryPluginParams } from "./labeled-memory-plugin.params";
 import { LabeledMemory2PluginParams } from "./labeled-memory-plugin2.params";
+import { SubAgentPluginConfiguration } from "./sub-agent-plugin.params";
 
 export const SHORTENED_CHAT_HISTORY_PLUGIN_TYPE_ID = 'shortened-chat-history-plugin';
 export const ARITHMETIC_PLUGIN_TYPE_ID = 'arithmetic-plugin';
@@ -25,6 +26,7 @@ export const RANDOM_CHOICE_PLUGIN_TYPE_ID = 'random-choice-plugin';
 export const MANAGE_DOCUMENT_FOLDER_PLUGIN_TYPE_ID = 'manage-document-folder';
 export const CURRENT_TIME_AND_DATE_PLUGIN_TYPE_ID = 'current-time-and-date-plugin';
 export const HIDE_MESSAGES_FROM_OTHER_AGENTS_PLUGIN_TYPE_ID = 'hide-messages-from-other-agents-plugin';
+export const SUB_AGENT_PLUGIN_TYPE_ID = 'sub-agent-plugin';
 
 export interface PluginInfo {
     pluginType: string;
@@ -248,5 +250,22 @@ export const pluginInformation: PluginInfo[] = [
         attachesToChatRoom: true,
         attachesToJob: true,
         defaultParameterCreator: () => ({ maxCharacters: 4000 }),
+    },
+    {
+        pluginType: SUB_AGENT_PLUGIN_TYPE_ID,
+        displayName: 'Spawn Sub-Agent',
+        description: 'Allows an agent to spawn another agent in an ephemeral room to perform a delegated task synchronously.',
+        attachesToAgent: true,
+        attachesToChatRoom: false,
+        attachesToJob: true,
+        defaultParameterCreator: () => (<SubAgentPluginConfiguration>{
+            allowedAgentIdentityIds: [],
+            maxSpawnDepth: 3,
+            deleteRoomOnCompletion: true,
+            passContextToSubAgent: false,
+            contextMessageCount: 10,
+            subRoomNamePrefix: 'sub-room',
+            timeoutMs: 120000,
+        }),
     },
 ];

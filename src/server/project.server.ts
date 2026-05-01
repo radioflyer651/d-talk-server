@@ -1,9 +1,22 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import { z } from 'zod';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
 import { chatCoreService, projectDbService } from '../app-globals';
 import { ObjectId } from 'mongodb';
 import { Project } from '../model/shared-models/chat-core/project.model';
 import { NewDbItem } from '../model/shared-models/db-operation-types.model';
+import { validateBody } from './middleware/validate-body.middleware';
+
+const createProjectSchema = z.object({
+    name: z.string().min(1, 'Project name is required'),
+});
+
+const updateProjectSchema = z.object({
+    name: z.string().min(1).optional(),
+    description: z.string().optional(),
+    projectKnowledge: z.array(z.unknown()).optional(),
+    chatDocumentReferences: z.array(z.unknown()).optional(),
+}).passthrough();
 
 export const projectRouter = express.Router();
 
@@ -26,7 +39,7 @@ projectRouter.get('/project-listings', async (req, res) => {
     }
 });
 
-projectRouter.post('/project', async (req, res) => {
+projectRouter.post('/project', validateBody(createProjectSchema), async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
 
@@ -36,10 +49,6 @@ projectRouter.post('/project', async (req, res) => {
         }
 
         const { name } = req.body;
-        if (!name) {
-            res.status(400).json({ error: 'Project name is required' });
-            return;
-        }
 
         const newProject: NewDbItem<Project> = {
             creatorId: userId,
@@ -58,7 +67,7 @@ projectRouter.post('/project', async (req, res) => {
 });
 
 // Update a project's name by its ID (must belong to the authenticated user)
-projectRouter.put('/project/:id', async (req, res) => {
+projectRouter.put('/project/:id', validateBody(updateProjectSchema), async (req, res) => {
     try {
         const userId = getUserIdFromRequest(req);
 
@@ -71,10 +80,6 @@ projectRouter.put('/project/:id', async (req, res) => {
         const projectId = new ObjectId(req.params.id);
 
         const project = req.body as Project;
-        if (!project) {
-            res.status(400).json({ error: 'Project name is required' });
-            return;
-        }
 
         // Update the project in the database
         const result = await projectDbService.updateProject(projectId, project);

@@ -81,38 +81,18 @@ export class MongoHelper {
     }
 
     async makeCall<T>(callback: (db: mongo.Db) => Promise<T>): Promise<T> {
-        let makeConnection = !this.isConnected;
-        if (makeConnection) {
-            await this.connect();
+        if (!this.isConnected) {
+            throw new Error('MongoHelper: not connected. Call connect() before making database calls.');
         }
-
-        try {
-            return await callback(this.db!) as T;
-        } finally {
-            if (makeConnection) {
-                await this.disconnect();
-            }
-        }
+        return await callback(this.db!) as T;
     }
 
-
     async makeCallWithCollection<RET_TYPE, COL_TYPE extends Document = Document>(collectionName: string, callback: (db: mongo.Db, collection: mongo.Collection<COL_TYPE>) => Promise<RET_TYPE>): Promise<RET_TYPE> {
-        let makeConnection = !this.isConnected;
-        if (makeConnection) {
-            await this.connect();
+        if (!this.isConnected) {
+            throw new Error('MongoHelper: not connected. Call connect() before making database calls.');
         }
-
-        try {
-            // Get the collection.
-            const collection = this.db!.collection<COL_TYPE>(collectionName);
-
-            // Return the result from the callback.
-            return await callback(this.db!, collection) as RET_TYPE;
-        } finally {
-            if (makeConnection) {
-                await this.disconnect();
-            }
-        }
+        const collection = this.db!.collection<COL_TYPE>(collectionName);
+        return await callback(this.db!, collection) as RET_TYPE;
     }
 
     async updateDataItems<T extends Document = Document, Q extends Partial<Document> = Partial<T>>(collectionName: string, matchQuery: Q, update: Partial<T>, config?: { updateOne: boolean; }): Promise<number> {

@@ -28,7 +28,16 @@ import { VoiceFileReferenceDbService } from "./database/chat-core/voice-file-ref
 import { AwsS3BucketService } from "./services/aws-s3-bucket.service";
 import { DbUpdateServiceDb } from "./database/db-update-db.service";
 import { ChatCloningService } from "./chat-core/cloning/chat-cloning.service";
-/** If we were using dependency injection, this would be the DI services we'd inject in the necessary places. */
+/**
+ * Composition root — all services are constructed here with their dependencies passed
+ * via constructor arguments (manual dependency injection). This is the single place where
+ * the object graph is assembled. To add a new service: construct it in initializeServices()
+ * with its dependencies, then export the variable from this file.
+ *
+ * Note: a decorator-based DI framework (tsyringe, inversify) would require enabling
+ * `emitDecoratorMetadata` in tsconfig. Until that is done and a test suite exists to
+ * validate the refactor, keep wiring here.
+ */
 
 /** The mongo helper used in all DB Services. */
 export let dbHelper: MongoHelper;

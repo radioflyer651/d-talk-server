@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express, { Application, NextFunction, Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 import { authRouter } from './server/auth.server';
@@ -107,8 +107,18 @@ export async function initializeExpressApp() {
   app.use(ollamaModelConfigServer);
   app.use(voiceChatServer);
 
-  app.use((req, res) => {
+  app.use((_req, res) => {
     res.status(404).send('Not Found');
+  });
+
+  // Global error handler — must have 4 arguments for Express to treat it as an error handler.
+  app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+    const message = err instanceof Error ? err.message : 'Internal server error';
+    console.error(`Unhandled error on ${req.method} ${req.path}:`, err);
+    loggingService.logMessage({ level: 'error', message: `Unhandled error: ${message}`, data: { path: req.path, method: req.method } }).catch(() => { });
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Internal server error' });
+    }
   });
 
   return app;

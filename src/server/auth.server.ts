@@ -1,24 +1,31 @@
 import express, { Request, Response } from 'express';
 import bcrypt from "bcryptjs";
+import { z } from 'zod';
 import { generateToken } from '../auth/jwt';
 import { authDbService } from '../app-globals';
-import { LoginRequest } from '../model/shared-models/login-request.model';
-import { UserRegistration } from '../model/shared-models/user-registration.model';
+import { validateBody } from './middleware/validate-body.middleware';
+
+const loginSchema = z.object({
+    userName: z.string().min(1, 'Username is required'),
+    password: z.string().min(1, 'Password is required'),
+});
+
+const registrationSchema = z.object({
+    userName: z.string().min(1, 'Username is required'),
+    password1: z.string().min(8, 'Password must be at least 8 characters'),
+    email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    displayName: z.string().optional(),
+});
 
 export const authRouter = express.Router();
 
 // User registration endpoint
-authRouter.post('/register', async (req: Request, res: Response) => {
+authRouter.post('/register', validateBody(registrationSchema), async (req: Request, res: Response) => {
     // res.status(503).send({ message: 'Registration is turned off at the code level.' });
     // return;
 
     try {
-        const registration = req.body as UserRegistration;
-
-        if (!registration.userName || !registration.password1) {
-            res.status(400).json({ message: 'Username and password are required.' });
-            return;
-        }
+        const registration = req.body;
 
         // Check if user already exists in the User collection
         const existingUser = await authDbService.getUserByUserName(registration.userName);
@@ -58,14 +65,9 @@ authRouter.post('/register', async (req: Request, res: Response) => {
 });
 
 // User login endpoint
-authRouter.post('/login', async (req: Request, res: Response) => {
+authRouter.post('/login', validateBody(loginSchema), async (req: Request, res: Response) => {
     try {
-        const { userName, password } = req.body as LoginRequest;
-
-        if (!userName || !password) {
-            res.status(400).json({ message: 'Username and password are required.' });
-            return;
-        }
+        const { userName, password } = req.body;
 
         // Find user by userName
         const user = await authDbService.getUserByUserName(userName);

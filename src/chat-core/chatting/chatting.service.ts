@@ -74,15 +74,17 @@ export class ChattingService {
             newMessages.push(event.message);
         });
 
-        // Subscribe for message chunk events.
-        chatEvents$.pipe(
-            filter(e => e.eventType === 'new-chat-message-chunk')
-        ).subscribe(event => {
-            const socketMessage = { ...event as ChatRoomMessageChunkEvent } as MessageChunkMessage;
-            delete (socketMessage as any)['eventType']; // This isn't actually part of the MessageChunkMessage.
+        // Subscribe for message chunk events — suppressed for ephemeral rooms (e.g. sub-agent rooms).
+        if (!chatRoomData.isEphemeral) {
+            chatEvents$.pipe(
+                filter(e => e.eventType === 'new-chat-message-chunk')
+            ).subscribe(event => {
+                const socketMessage = { ...event as ChatRoomMessageChunkEvent } as MessageChunkMessage;
+                delete (socketMessage as any)['eventType']; // This isn't actually part of the MessageChunkMessage.
 
-            this.chatRoomSocketServer.sendNewChatMessageChunk(socketMessage);
-        });
+                this.chatRoomSocketServer.sendNewChatMessageChunk(socketMessage);
+            });
+        }
 
         // Make the chat call, and wait for it to complete.
         //  The data will be placed in the newMessages.

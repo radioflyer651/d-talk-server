@@ -47,6 +47,15 @@ export class ChatRoomDbService extends DbService {
         ) as ChatRoomData[];
     }
 
+    /** Find a single chat room by project and exact name. Returns undefined if not found. */
+    async getChatRoomByProjectAndName(projectId: ObjectId, name: string): Promise<ChatRoomData | undefined> {
+        return await this.dbHelper.findDataItem<ChatRoomData, { projectId: ObjectId; name: string; }>(
+            DbCollectionNames.ChatRooms,
+            { projectId, name },
+            { findOne: true }
+        ) as ChatRoomData | undefined;
+    }
+
     /** Update a chat room by its ObjectId. */
     async updateChatRoom(roomId: ObjectId, update: Partial<ChatRoomData>): Promise<number> {
         return await this.dbHelper.updateDataItems<ChatRoomData>(

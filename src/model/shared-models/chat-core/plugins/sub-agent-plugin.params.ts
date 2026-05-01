@@ -13,6 +13,10 @@ export interface SubAgentPluginConfiguration {
     subRoomNamePrefix: string;
     /** Milliseconds before aborting the sub-agent call. Default: 120000. */
     timeoutMs: number;
+    /** Optional instructions prepended to every task sent to the sub-agent. */
+    additionalInstructions?: string;
+    /** Optional instructions appended to the spawn_subagent tool description seen by the parent agent. */
+    toolInstructions?: string;
 }
 
 export interface SubAgentResult {

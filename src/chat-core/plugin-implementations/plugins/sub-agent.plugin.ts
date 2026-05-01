@@ -49,9 +49,14 @@ export class SubAgentPlugin extends AgentPluginBase {
             ? `The exact ObjectId of the agent to spawn. You MUST use one of these exact values: ${allowedIds.join(', ')}`
             : 'No agents are configured as allowed — this tool will always fail.';
 
+        const baseToolDescription = `Spawns a sub-agent in an ephemeral room to perform a delegated task synchronously. Returns a JSON result with the sub-agent's response.`;
+        const toolDescription = config.toolInstructions?.trim()
+            ? `${baseToolDescription}\n\n${config.toolInstructions.trim()}`
+            : baseToolDescription;
+
         const spawnSchema = {
             name: 'spawn_subagent',
-            description: `Spawns a sub-agent in an ephemeral room to perform a delegated task synchronously. Returns a JSON result with the sub-agent's response.`,
+            description: toolDescription,
             schema: z.object({
                 agentIdentityId: z.string().describe(agentIdDescription),
                 taskDescription: z.string().describe('The task or question to send to the sub-agent as its initial message.'),
@@ -121,7 +126,9 @@ export class SubAgentPlugin extends AgentPluginBase {
             }
 
             // Build task message (optionally with parent context)
-            let taskMessage = options.taskDescription;
+            let taskMessage = config.additionalInstructions?.trim()
+                ? `[INSTRUCTIONS]\n${config.additionalInstructions.trim()}\n[END INSTRUCTIONS]\n\n${options.taskDescription}`
+                : options.taskDescription;
             if (config.passContextToSubAgent && this.chatRoom.messages.length > 0) {
                 const recent = this.chatRoom.messages.slice(-config.contextMessageCount);
                 const contextBlock = recent.map(m => {
@@ -134,9 +141,20 @@ export class SubAgentPlugin extends AgentPluginBase {
 
             console.log(`[SubAgentPlugin] Agent identity resolved | name="${identity.name}" task="${options.taskDescription.slice(0, 80)}${options.taskDescription.length > 80 ? '…' : ''}"`);
 
-            // Create ephemeral sub-room
-            const subRoom = await this.chatRoomDbService.upsertChatRoom({
-                name: `${config.subRoomNamePrefix}-${Date.now()}`,
+            // Determine the sub-room name. When reuse is enabled use a deterministic key so
+            // subsequent calls to the same agent from the same parent room resolve to the same room.
+            const reuse = !config.deleteRoomOnCompletion;
+            const subRoomName = reuse
+                ? `${config.subRoomNamePrefix}-${depthKey}-${options.agentIdentityId}`
+                : `${config.subRoomNamePrefix}-${Date.now()}`;
+
+            // Look up an existing room if reuse is enabled.
+            let existingSubRoom = reuse
+                ? await this.chatRoomDbService.getChatRoomByProjectAndName(this.chatRoom.data.projectId, subRoomName)
+                : undefined;
+
+            const subRoom = existingSubRoom ?? await this.chatRoomDbService.upsertChatRoom({
+                name: subRoomName,
                 projectId: this.chatRoom.data.projectId,
                 userId: this.chatRoom.data.userId,
                 isBusy: false,
@@ -152,40 +170,48 @@ export class SubAgentPlugin extends AgentPluginBase {
                 isEphemeral: true,
             } as any);
 
-            console.log(`[SubAgentPlugin] Sub-room created | roomId=${subRoom._id} name="${subRoom.name}"`);
+            const isNewRoom = !existingSubRoom;
+            console.log(`[SubAgentPlugin] Sub-room ${isNewRoom ? 'created' : 'reused'} | roomId=${subRoom._id} name="${subRoom.name}"`);
 
             let agentInstance: { _id: ObjectId; } | undefined;
             let defaultJobConfigId: ObjectId | undefined;
             try {
-                // Add agent instance
-                agentInstance = await this.chatCoreService.createAgentInstanceForChatRoom(
-                    subRoom._id,
-                    identityId,
-                    identity.chatName ?? identity.name,
-                );
+                if (isNewRoom) {
+                    // Add agent instance
+                    agentInstance = await this.chatCoreService.createAgentInstanceForChatRoom(
+                        subRoom._id,
+                        identityId,
+                        identity.chatName ?? identity.name,
+                    );
 
-                console.log(`[SubAgentPlugin] Agent instance added | instanceId=${agentInstance._id}`);
+                    console.log(`[SubAgentPlugin] Agent instance added | instanceId=${agentInstance._id}`);
 
-                // Add job instances
-                if (options.jobConfigurationIds?.length) {
-                    for (const jobId of options.jobConfigurationIds) {
-                        const jobInst = await this.chatCoreService.createJobInstanceForChatRoom(
-                            subRoom._id,
-                            new ObjectId(jobId),
-                        );
-                        await this.chatCoreService.assignAgentToJobInstance(
+                    // Add job instances
+                    if (options.jobConfigurationIds?.length) {
+                        for (const jobId of options.jobConfigurationIds) {
+                            const jobInst = await this.chatCoreService.createJobInstanceForChatRoom(
+                                subRoom._id,
+                                new ObjectId(jobId),
+                            );
+                            await this.chatCoreService.assignAgentToJobInstance(
+                                subRoom._id,
+                                agentInstance._id,
+                                jobInst.id,
+                            );
+                        }
+                    } else {
+                        // No jobs specified — create a minimal default job so the agent has a turn to execute.
+                        defaultJobConfigId = await this.chatCoreService.createDefaultJobInstanceForChatRoom(
                             subRoom._id,
                             agentInstance._id,
-                            jobInst.id,
+                            subRoom.projectId,
                         );
                     }
                 } else {
-                    // No jobs specified — create a minimal default job so the agent has a turn to execute.
-                    defaultJobConfigId = await this.chatCoreService.createDefaultJobInstanceForChatRoom(
-                        subRoom._id,
-                        agentInstance._id,
-                        subRoom.projectId,
-                    );
+                    // Resolve the existing agent instance ID from the room for cleanup tracking.
+                    agentInstance = subRoom.agents?.[0]
+                        ? { _id: subRoom.agents[0].instanceId }
+                        : undefined;
                 }
 
                 // Load user

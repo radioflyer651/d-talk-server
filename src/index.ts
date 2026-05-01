@@ -1,38 +1,33 @@
-import { initializeServices, socketServer } from "./app-globals";
-import { getAppConfig } from "./config";
-import { initializeExpressApp } from "./setup-express";
+import 'reflect-metadata'; // Must be the very first import — loads before any @injectable class
+import { buildContainer } from './container';
+import { TOKENS } from './tokens';
+import { getAppConfig } from './config';
+import { SocketServer } from './server/socket.server';
+import { initializeExpressApp } from './setup-express';
+import { systemInitialization } from './system-setup';
 import http from 'http';
-import https from 'https';
-import { setupSocketServices } from "./setup-socket-services";
-import { systemInitialization } from "./system-setup";
 
 async function run() {
+    const container = await buildContainer();
     const config = await getAppConfig();
 
-    // Initialize the services used by the app.
-    await initializeServices();
+    // Eagerly resolve socket-dependent services so their initialize() calls run at startup.
+    // ChattingService and VoiceChatService both register socket event handlers on construction.
+    await container.getAsync(TOKENS.ChattingService);
+    await container.getAsync(TOKENS.VoiceChatService);
 
-    // Initialize express, and create the app to listen on a port.
-    const app = await initializeExpressApp();
+    const app = await initializeExpressApp(container);
+    const server = http.createServer(app);
 
-    // Since we're using socket.io, we need to create a server
-    //  instead of using the app object directly.
-    const server: http.Server | https.Server = http.createServer(app);
-
-    // Register our chat server.  Since it uses socket.io, it works a little differently.
+    const socketServer = await container.getAsync<SocketServer>(TOKENS.SocketServer);
     socketServer.registerWithServer(config, server);
 
-    await setupSocketServices(socketServer, config);
+    await systemInitialization(container);
 
-    /** Initialize the system. */
-    await systemInitialization();
-
-    // Set the port, and start listening.
     const port = config.serverConfig.port;
     server.listen(port, () => {
         console.log(`Server running on port ${port}`);
     });
 }
 
-// Run the application.
 run();

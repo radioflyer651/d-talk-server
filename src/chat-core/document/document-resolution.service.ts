@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId } from "mongodb";
 import { ChatDocumentDbService } from "../../database/chat-core/chat-document-db.service";
 import { IChatDocumentCreationParams, IChatDocumentData } from "../../model/shared-models/chat-core/documents/chat-document.model";
@@ -7,6 +8,7 @@ import { IChatDocumentResolutionService } from "./document-resolution.interface"
 import { ChatDocumentLinker, ChatDocumentReference } from "../../model/shared-models/chat-core/documents/chat-document-reference.model";
 import { combinePermissions } from "../../model/shared-models/chat-core/documents/chat-document-permissions.model";
 
+@injectable()
 export class ChatDocumentResolutionService implements IChatDocumentResolutionService {
     constructor(
         readonly documentResolvers: IDocumentResolver[],

@@ -1,9 +1,11 @@
+import { injectable } from 'inversify';
 import { AgentPluginBase, PluginAttachmentTarget } from "./agent-plugin-base.service";
 import { IPluginResolver } from "./plugin-resolver.interface";
 import { PluginInstanceReference } from "../../model/shared-models/chat-core/plugin-instance-reference.model";
 import { PluginSpecification } from "../../model/shared-models/chat-core/plugin-specification.model";
 import { IPluginTypeResolver } from "./i-plugin-type-resolver";
 
+@injectable()
 export class AppPluginResolver implements IPluginResolver {
     constructor(
         protected readonly typeResolverServices: IPluginTypeResolver<any>[],

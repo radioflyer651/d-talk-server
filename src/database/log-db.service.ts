@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { DbService } from "./db-service";
 import { ObjectId } from "mongodb";
 import { DbCollectionNames } from "../model/db-collection-names.constants";
@@ -17,6 +18,7 @@ export interface LogMessage {
 }
 
 /** Provides logging to the MongoDb. */
+@injectable()
 export class LogDbService extends DbService {
 
     /** Logs a message to the logging table. */

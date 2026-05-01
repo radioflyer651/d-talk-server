@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId } from "mongodb";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
 import { AgentServiceFactory } from "../agent-factory.service";
@@ -16,6 +17,7 @@ import { IChatRoomHydratorService } from "../chat-room/chat-room-hydrator.interf
 
 
 /** Responsible for accepting chat calls, typically from the API, and dispatching the request, and returning messages. */
+@injectable()
 export class ChattingService {
     constructor(
         readonly agentFactoryService: AgentServiceFactory,

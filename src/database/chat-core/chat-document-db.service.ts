@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { MongoHelper } from "../../mongo-helper";
 import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
@@ -5,6 +6,7 @@ import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { IChatDocumentData, IChatDocumentListItem } from "../../model/shared-models/chat-core/documents/chat-document.model";
 import { NewDbItem } from "../../model/shared-models/db-operation-types.model";
 
+@injectable()
 export class ChatDocumentDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
         super(dbHelper);

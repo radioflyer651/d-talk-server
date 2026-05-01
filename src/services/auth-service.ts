@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { isValidString } from "../utils/strings.utils";
 import { TokenPayload } from "../model/shared-models/token-payload.model";
 import { LogDbService } from "../database/log-db.service";
@@ -6,6 +7,7 @@ import { AuthDbService } from "../database/auth-db.service";
 import { ObjectId } from "mongodb";
 
 
+@injectable()
 export class AuthService {
     constructor(
         private readonly dbService: AuthDbService,

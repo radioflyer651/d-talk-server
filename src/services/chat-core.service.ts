@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { AgentDbService } from "../database/chat-core/agent-db.service";
 import { ChatJobDbService } from "../database/chat-core/chat-job-db.service";
 import { ChatRoomDbService } from "../database/chat-core/chat-room-db.service";
@@ -10,6 +11,7 @@ import { ChatDocumentDbService } from "../database/chat-core/chat-document-db.se
 
 
 /** Handles non-pure data operations for Chat operations. */
+@injectable()
 export class ChatCoreService {
     constructor(
         readonly agentDbService: AgentDbService,

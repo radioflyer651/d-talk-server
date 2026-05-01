@@ -1,9 +1,10 @@
+import { injectable } from 'inversify';
 import { MongoHelper } from "../mongo-helper";
 import { generateAggregatePipeline } from "./table-filters.functions";
 import { getPaginatedPipelineEnding } from "./db-utils";
 import { TableLoadRequest } from "../model/shared-models/table-load-request.model";
 
-
+@injectable()
 export abstract class DbService {
     constructor(protected readonly dbHelper: MongoHelper) {
 

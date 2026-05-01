@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId } from "mongodb";
 import { VoiceFileReferenceDbService } from "../../database/chat-core/voice-file-reference-db.service";
 import { VoiceFileReference } from '../../model/shared-models/chat-core/voice/voice-file-reference.model';
@@ -30,6 +31,7 @@ import { ChatAgentIdentityConfiguration } from "../../model/shared-models/chat-c
 // }
 
 
+@injectable()
 export class VoiceChatService {
     constructor(
         protected appConfig: IAppConfig,

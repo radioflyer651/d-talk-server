@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { MongoHelper } from "../../mongo-helper";
 import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
@@ -6,6 +7,7 @@ import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { Project } from "../../model/shared-models/chat-core/project.model";
 import { ProjectListing } from "../../model/shared-models/chat-core/project-listing.model";
 
+@injectable()
 export class ProjectDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
         super(dbHelper);

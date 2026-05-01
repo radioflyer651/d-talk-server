@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ChatDocumentDbService } from "../../../database/chat-core/chat-document-db.service";
 import { IChatDocumentCreationParams } from "../../../model/shared-models/chat-core/documents/chat-document.model";
 import { TEXT_DOCUMENT_TYPE } from "../../../model/shared-models/chat-core/documents/document-type.constants";
@@ -8,6 +9,7 @@ import { IDocumentResolver } from "../document-resolver.interface";
 import { TextDocument } from "../documents/text-document/text-document.service";
 
 
+@injectable()
 export class TextDocumentResolver implements IDocumentResolver<TextDocument, TextDocumentData> {
     constructor(
         // This needs to be moved, and not part of the resolver.

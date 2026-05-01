@@ -1,7 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
 import { getUserIdFromRequest } from '../utils/get-user-from-request.utils';
-import { chatCoreService, projectDbService } from '../app-globals';
+import { ProjectDbService } from '../database/chat-core/project-db.service';
+import { ChatCoreService } from '../services/chat-core.service';
 import { ObjectId } from 'mongodb';
 import { Project } from '../model/shared-models/chat-core/project.model';
 import { NewDbItem } from '../model/shared-models/db-operation-types.model';
@@ -18,162 +19,147 @@ const updateProjectSchema = z.object({
     chatDocumentReferences: z.array(z.unknown()).optional(),
 }).passthrough();
 
-export const projectRouter = express.Router();
+export function createProjectRouter(projectDbService: ProjectDbService, chatCoreService: ChatCoreService) {
+    const projectRouter = express.Router();
 
-projectRouter.get('/project-listings', async (req, res) => {
-    try {
-        const userId = getUserIdFromRequest(req);
+    projectRouter.get('/project-listings', async (req, res) => {
+        try {
+            const userId = getUserIdFromRequest(req);
 
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
+            if (!userId) {
+                res.status(401).json({ error: 'Unauthorized' });
+                return;
+            }
+
+            const projectListings = await projectDbService.getProjectListings(userId);
+
+            res.json(projectListings);
+
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch project listings' });
         }
+    });
 
-        // Replace this with your actual DB call to fetch project listings for the user
-        const projectListings = await projectDbService.getProjectListings(userId);
+    projectRouter.post('/project', validateBody(createProjectSchema), async (req, res) => {
+        try {
+            const userId = getUserIdFromRequest(req);
 
-        res.json(projectListings);
+            if (!userId) {
+                res.status(401).json({ error: 'Unauthorized' });
+                return;
+            }
 
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch project listings' });
-    }
-});
+            const { name } = req.body;
 
-projectRouter.post('/project', validateBody(createProjectSchema), async (req, res) => {
-    try {
-        const userId = getUserIdFromRequest(req);
+            const newProject: NewDbItem<Project> = {
+                creatorId: userId,
+                name,
+                description: '',
+                chatDocumentReferences: [],
+                projectKnowledge: []
+            };
+            const created = await projectDbService.upsertProject(newProject);
 
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
+            res.status(201).json(created);
+
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to create project' });
         }
+    });
 
-        const { name } = req.body;
+    projectRouter.put('/project/:id', validateBody(updateProjectSchema), async (req, res) => {
+        try {
+            const userId = getUserIdFromRequest(req);
 
-        const newProject: NewDbItem<Project> = {
-            creatorId: userId,
-            name,
-            description: '',
-            chatDocumentReferences: [],
-            projectKnowledge: []
-        };
-        const created = await projectDbService.upsertProject(newProject);
+            if (!userId) {
+                res.status(401).json({ error: 'Unauthorized' });
+                return;
+            }
 
-        res.status(201).json(created);
+            const projectId = new ObjectId(req.params.id);
+            const project = req.body as Project;
+            const result = await projectDbService.updateProject(projectId, project);
 
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to create project' });
-    }
-});
+            if (result > 0) {
+                res.json({ success: true });
+            } else {
+                res.status(404).json({ error: 'Project not found or not updated' });
+            }
 
-// Update a project's name by its ID (must belong to the authenticated user)
-projectRouter.put('/project/:id', validateBody(updateProjectSchema), async (req, res) => {
-    try {
-        const userId = getUserIdFromRequest(req);
-
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to update project' });
         }
+    });
 
-        // Convert the project ID from string to ObjectId
-        const projectId = new ObjectId(req.params.id);
+    projectRouter.put('/project/:id/project-knowledge', async (req, res) => {
+        try {
+            const userId = getUserIdFromRequest(req);
+            if (!userId) {
+                res.status(401).json({ error: 'Unauthorized' });
+                return;
+            }
+            const projectId = new ObjectId(req.params.id);
+            const { projectKnowledge } = req.body;
+            if (!Array.isArray(projectKnowledge)) {
+                res.status(400).json({ error: 'Missing or invalid field: projectKnowledge' });
+                return;
+            }
+            const project = await projectDbService.getProjectById(projectId);
+            if (!project || String(project.creatorId) !== String(userId)) {
+                res.status(404).json({ error: 'Project not found' });
+                return;
+            }
+            const result = await projectDbService.updateProject(projectId, { projectKnowledge });
+            if (result > 0) {
+                res.json({ success: true });
+            } else {
+                res.status(404).json({ error: 'Project not found or not updated' });
+            }
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to update project knowledge' });
+        }
+    });
 
-        const project = req.body as Project;
+    projectRouter.delete('/project/:id', async (req, res) => {
+        try {
+            const userId = getUserIdFromRequest(req);
 
-        // Update the project in the database
-        const result = await projectDbService.updateProject(projectId, project);
+            if (!userId) {
+                res.status(401).json({ error: 'Unauthorized' });
+                return;
+            }
 
-        if (result > 0) {
+            const projectId = new ObjectId(req.params.id);
+            await chatCoreService.deleteProject(projectId);
             res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Project not found or not updated' });
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to delete project' });
         }
+    });
 
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update project' });
-    }
-});
+    projectRouter.get('/project/:id', async (req, res) => {
+        try {
+            const userId = getUserIdFromRequest(req);
 
-// Update the projectKnowledge property of a project
-projectRouter.put('/project/:id/project-knowledge', async (req, res) => {
-    try {
-        const userId = getUserIdFromRequest(req);
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
+            if (!userId) {
+                res.status(401).json({ error: 'Unauthorized' });
+                return;
+            }
+
+            const projectId = new ObjectId(req.params.id);
+            const project = await projectDbService.getProjectById(projectId);
+
+            if (!project || String(project.creatorId) !== String(userId)) {
+                res.status(404).json({ error: 'Project not found' });
+                return;
+            }
+
+            res.json(project);
+
+        } catch (error) {
+            res.status(500).json({ error: 'Failed to fetch project' });
         }
-        const projectId = new ObjectId(req.params.id);
-        const { projectKnowledge } = req.body;
-        if (!Array.isArray(projectKnowledge)) {
-            res.status(400).json({ error: 'Missing or invalid field: projectKnowledge' });
-            return;
-        }
-        // Fetch the project from the database
-        const project = await projectDbService.getProjectById(projectId);
-        if (!project || String(project.creatorId) !== String(userId)) {
-            res.status(404).json({ error: 'Project not found' });
-            return;
-        }
-        // Update only the projectKnowledge property
-        const result = await projectDbService.updateProject(projectId, { projectKnowledge });
-        if (result > 0) {
-            res.json({ success: true });
-        } else {
-            res.status(404).json({ error: 'Project not found or not updated' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to update project knowledge' });
-    }
-});
+    });
 
-// Delete a project by its ID (must belong to the authenticated user)
-projectRouter.delete('/project/:id', async (req, res) => {
-    try {
-        const userId = getUserIdFromRequest(req);
-
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
-
-        // Convert the project ID from string to ObjectId
-        const projectId = new ObjectId(req.params.id);
-
-        // Delete the project in the database
-        await chatCoreService.deleteProject(projectId);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to delete project' });
-    }
-});
-
-// Get a single project by its ID (must belong to the authenticated user)
-projectRouter.get('/project/:id', async (req, res) => {
-    try {
-        const userId = getUserIdFromRequest(req);
-
-        if (!userId) {
-            res.status(401).json({ error: 'Unauthorized' });
-            return;
-        }
-
-        // Convert the project ID from string to ObjectId
-        const projectId = new ObjectId(req.params.id);
-
-        // Fetch the project from the database
-        const project = await projectDbService.getProjectById(projectId);
-
-        // Optionally, check that the project belongs to the user
-        if (!project || String(project.creatorId) !== String(userId)) {
-            res.status(404).json({ error: 'Project not found' });
-            return;
-        }
-
-        res.json(project);
-
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to fetch project' });
-    }
-});
-
+    return projectRouter;
+}

@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { MongoHelper } from "../../mongo-helper";
 import { DbService } from "../db-service";
 import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data.model";
@@ -7,6 +8,7 @@ import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { ChatRoom } from "../../chat-core/chat-room/chat-room.service";
 import { MESSAGE_VOICE_CHAT_ID_KEY, MESSAGE_VOICE_CHAT_URL_KEY } from "../../model/shared-models/chat-core/utils/messages.utils";
 
+@injectable()
 export class ChatRoomDbService extends DbService {
     constructor(
         dbHelper: MongoHelper

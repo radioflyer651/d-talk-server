@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
 import { SocketServer } from "../socket.server";
 import { SocketServiceBase } from "./socket-server-base.socket-service";
@@ -12,6 +13,7 @@ import { ObjectId } from "mongodb";
 import { ChatMessageUpdatedMessage, MESSAGE_UPDATED_MESSAGE } from "../../model/shared-models/chat-core/socket-messaging/chat-message-updated-message.socket-model";
 
 
+@injectable()
 export class ChatRoomSocketServer extends SocketServiceBase {
     constructor(
         socketServer: SocketServer,

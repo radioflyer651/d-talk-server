@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId } from "mongodb";
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
 import { ChatJobDbService } from "../../database/chat-core/chat-job-db.service";
@@ -9,6 +10,7 @@ import { ChatJob } from "./chat-job.service";
 import { IChatRoomSaverService } from "./chat-room-saver-service.interface";
 import { ChatRoom } from "./chat-room.service";
 
+@injectable()
 export class ChatRoomSaverService implements IChatRoomSaverService {
     constructor(
         readonly chatRoomDbService: ChatRoomDbService,

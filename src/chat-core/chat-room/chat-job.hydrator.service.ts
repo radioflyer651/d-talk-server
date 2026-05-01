@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ChatJobDbService } from "../../database/chat-core/chat-job-db.service";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
 import { ChatJobInstance } from "../../model/shared-models/chat-core/chat-job-instance.model";
@@ -7,6 +8,7 @@ import { IJobHydratorService } from "./chat-job-hydrator.interface";
 import { ChatJob } from "./chat-job.service";
 
 
+@injectable()
 export class JobHydrator implements IJobHydratorService {
     constructor(
         readonly chatRoomDbService: ChatRoomDbService,

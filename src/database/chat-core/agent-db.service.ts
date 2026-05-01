@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { MongoHelper } from "../../mongo-helper";
 import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
@@ -8,6 +9,7 @@ import { PositionableMessage } from "../../model/shared-models/chat-core/positio
 import { StoredMessage } from "@langchain/core/messages";
 import { setMessageDisabledValue } from '../../model/shared-models/chat-core/utils/messages.utils';
 
+@injectable()
 export class AgentDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
         super(dbHelper);

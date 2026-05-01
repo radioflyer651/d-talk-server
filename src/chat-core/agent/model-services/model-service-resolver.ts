@@ -1,8 +1,10 @@
+import { injectable } from 'inversify';
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { ModelServiceBase } from "./model-service-base.service";
 import { CustomChatFormatting, ModelServiceParams } from "../../../model/shared-models/chat-core/model-service-params.model";
 
 /** Responsible for taking agent configurations and returning chat models for the configuration. */
+@injectable()
 export class ModelServiceResolver {
     constructor(
         protected readonly providerServices: ModelServiceBase[]

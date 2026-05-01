@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { cloneJob } from './cloning-methods/clone-job';
 import { ObjectId } from 'mongodb';
 import { AgentDbService } from '../../database/chat-core/agent-db.service';
@@ -7,6 +8,7 @@ import { cloneAgentIdentity } from './cloning-methods/clone-agent-identity';
 /**
  * Provides support for cloning chat objects (agents, jobs, etc.) and placing them back in the database.
  */
+@injectable()
 export class ChatCloningService {
     // Holds the database service used to interact with agent identity configurations.
     private readonly agentDbService: AgentDbService;

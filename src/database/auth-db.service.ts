@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId } from "mongodb";
 import { DbCollectionNames } from "../model/db-collection-names.constants";
 import { User } from "../model/shared-models/user.model";
@@ -7,6 +8,7 @@ import { UserSecrets } from "../model/shared-models/user-secrets.model";
 import { NewDbItem } from "../model/shared-models/db-operation-types.model";
 
 
+@injectable()
 export class AuthDbService extends DbService {
     constructor(
         dbHelper: MongoHelper,

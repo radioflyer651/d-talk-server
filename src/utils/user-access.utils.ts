@@ -1,14 +1,14 @@
 import { ObjectId } from "mongodb";
-import { agentDbService, chatDocumentDbService, projectDbService } from "../app-globals";
-import { chatRoomDbService } from "../app-globals";
 import { IChatDocumentData } from "../model/shared-models/chat-core/documents/chat-document.model";
+import { ProjectDbService } from "../database/chat-core/project-db.service";
+import { ChatRoomDbService } from "../database/chat-core/chat-room-db.service";
+import { AgentDbService } from "../database/chat-core/agent-db.service";
+import { ChatDocumentDbService } from "../database/chat-core/chat-document-db.service";
 
 /**
  * Returns true if the user is the creator of the project.
- * @param userId The user's ObjectId
- * @param projectId The project's ObjectId
  */
-export async function isUserProjectCreator(userId: ObjectId, projectId: ObjectId): Promise<boolean> {
+export async function isUserProjectCreator(userId: ObjectId, projectId: ObjectId, projectDbService: ProjectDbService): Promise<boolean> {
     const project = await projectDbService.getProjectById(projectId);
     if (!project) {
         return false;
@@ -23,29 +23,24 @@ export async function isUserProjectCreator(userId: ObjectId, projectId: ObjectId
  *  - They are the creator of the owning project
  *  - Their userId matches the room's userId
  *  - They are a userParticipant of the room
- * @param userId The user's ObjectId
- * @param roomId The chat room's ObjectId
  */
-export async function userHasAccessToChatRoom(userId: ObjectId, roomId: ObjectId): Promise<boolean> {
+export async function userHasAccessToChatRoom(userId: ObjectId, roomId: ObjectId, chatRoomDbService: ChatRoomDbService, projectDbService: ProjectDbService): Promise<boolean> {
     const room = await chatRoomDbService.getChatRoomById(roomId);
     if (!room) return false;
 
-    // User is the owner of the chat room
     if (room.userId.equals(userId)) {
         return true;
     }
 
-    // User is a participant in the chat room
     if (room.userParticipants?.some(id => id.equals(userId))) {
         return true;
     }
 
-    // User is the creator of the owning project
-    return await isUserProjectCreator(userId, room.projectId);
+    return await isUserProjectCreator(userId, room.projectId, projectDbService);
 }
 
 /** Returns a boolean value indicating whether or not a specified user has access to edit a specified document. */
-export async function userHasAccessToDocument(userId: ObjectId, documentIdOrData: ObjectId | IChatDocumentData): Promise<boolean> {
+export async function userHasAccessToDocument(userId: ObjectId, documentIdOrData: ObjectId | IChatDocumentData, chatDocumentDbService: ChatDocumentDbService, projectDbService: ProjectDbService): Promise<boolean> {
     let documentData: IChatDocumentData;
     if (documentIdOrData instanceof ObjectId) {
         let dataCheck = await chatDocumentDbService.getDocumentById(documentIdOrData);
@@ -58,15 +53,13 @@ export async function userHasAccessToDocument(userId: ObjectId, documentIdOrData
         documentData = documentIdOrData;
     }
 
-    return await isUserProjectCreator(userId, documentData.projectId);
+    return await isUserProjectCreator(userId, documentData.projectId, projectDbService);
 }
 
 /**
  * Returns true if the user is the owner of the chat room (room.userId === userId).
- * @param userId The user's ObjectId
- * @param roomId The chat room's ObjectId
  */
-export async function isUserOwnerOfChatRoom(userId: ObjectId, roomId: ObjectId): Promise<boolean> {
+export async function isUserOwnerOfChatRoom(userId: ObjectId, roomId: ObjectId, chatRoomDbService: ChatRoomDbService): Promise<boolean> {
     const room = await chatRoomDbService.getChatRoomById(roomId);
     if (!room) {
         return false;
@@ -76,23 +69,18 @@ export async function isUserOwnerOfChatRoom(userId: ObjectId, roomId: ObjectId):
 
 /** Returns a boolean value indicating whether or not a specified userId is the owner of the project which
  *   owns a specified agent configuration. */
-export async function userHasAccessToAgentsProject(agentId: ObjectId, userId: ObjectId): Promise<boolean> {
-    // Get the agent.
+export async function userHasAccessToAgentsProject(agentId: ObjectId, userId: ObjectId, agentDbService: AgentDbService, projectDbService: ProjectDbService): Promise<boolean> {
     const agent = await agentDbService.getAgentIdentityById(agentId);
 
-    // Validate.
     if (!agent) {
         throw new Error(`Agent with ID ${agentId} does not exist.`);
     }
 
-    // Get the project.
     const project = await projectDbService.getProjectById(agent.projectId);
 
-    // Validate.
     if (!project) {
         throw new Error(`Project for agent with ID ${agent._id} (project ID ${agent.projectId}) does not exist.`);
     }
 
-    // Return the check.
     return project.creatorId.equals(userId);
 }

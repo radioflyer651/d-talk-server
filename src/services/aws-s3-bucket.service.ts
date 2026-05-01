@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, PutObjectCommandInput, S3Client } from '@aws-sdk/client-s3';
 import { IAppConfig, VoiceConfiguration } from '../model/app-config.model';
 import { AwsBucketObjectReference } from '../model/shared-models/chat-core/aws-bucket-object-reference.model';
@@ -6,6 +7,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 
 /** Provides operations for interacting with AWS' S3 bucket services. */
+@injectable()
 export class AwsS3BucketService {
     constructor(appConfig: IAppConfig) {
         if (!appConfig) {

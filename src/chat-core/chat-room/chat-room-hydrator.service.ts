@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { AgentDbService } from "../../database/chat-core/agent-db.service";
 import { AgentInstanceDbService } from "../../database/chat-core/agent-instance-db.service";
 import { ChatRoomDbService } from "../../database/chat-core/chat-room-db.service";
@@ -16,6 +17,7 @@ import { IChatRoomSaverService } from "./chat-room-saver-service.interface";
 import { ChatRoom } from "./chat-room.service";
 
 
+@injectable()
 export class ChatRoomHydratorService implements IChatRoomHydratorService {
     constructor(
         readonly agentFactory: AgentServiceFactory,

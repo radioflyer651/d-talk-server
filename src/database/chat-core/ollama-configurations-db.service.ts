@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId } from "mongodb";
 import { MongoHelper } from "../../mongo-helper";
 import { DbService } from "../db-service";
@@ -6,6 +7,7 @@ import { DbCollectionNames } from "../../model/db-collection-names.constants";
 import { UpsertDbItem } from "../../model/shared-models/db-operation-types.model";
 
 /** DB Service for the OllamaModelConfiguration type. */
+@injectable()
 export class OllamaModelConfigurationDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
         super(dbHelper);

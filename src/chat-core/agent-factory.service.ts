@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId } from "mongodb";
 import { IPluginResolver } from "./agent-plugin/plugin-resolver.interface";
 import { Agent } from "./agent/agent.service";
@@ -9,6 +10,7 @@ import { AgentInstanceDbService } from "../database/chat-core/agent-instance-db.
 
 
 /** Responsible for taking an agent configuration, and returning an agent from it. */
+@injectable()
 export class AgentServiceFactory {
     constructor(
         readonly modelResolver: ModelServiceResolver,

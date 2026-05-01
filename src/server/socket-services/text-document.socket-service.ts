@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { ObjectId } from "mongodb";
 import { ENTER_TEXT_DOCUMENT_ROOM, EnterTextDocumentRoomMessage, EXIT_TEXT_DOCUMENT_ROOM, ExitTextDocumentRoomMessage, getTextDocumentRoomName, TEXT_DOCUMENT_CONTENT_CHANGE, TextDocumentContentChangeMessage } from "../../model/shared-models/chat-core/socket-messaging/text-document-messaging.socket-model";
 import { SocketServer } from "../socket.server";
@@ -11,6 +12,7 @@ import { TEXT_DOCUMENT_TYPE } from "../../model/shared-models/chat-core/document
 import { TextDocument } from "../../chat-core/document/documents/text-document/text-document.service";
 
 
+@injectable()
 export class TextDocumentSocketService extends SocketServiceBase {
     constructor(
         socketServer: SocketServer,
@@ -51,7 +53,7 @@ export class TextDocumentSocketService extends SocketServiceBase {
                             throw new Error(`Document with ID ${args.documentId.toString()} does not exist.`);
                         }
 
-                        const access = await userHasAccessToDocument(userId, document);
+                        const access = await userHasAccessToDocument(userId, document, this.documentDbService, this.projectDbService);
                         if (!access) {
                             throw new Error(`User does not have access to the document.`);
                         }

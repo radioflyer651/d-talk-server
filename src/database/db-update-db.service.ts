@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { MongoHelper } from "../mongo-helper";
 import { DbService } from "./db-service";
 import { DatabaseUpdateInfo } from "../model/database-update-info.model";
@@ -6,6 +7,7 @@ import { DbCollectionNames } from "../model/db-collection-names.constants";
 /**
  * Service used to insert and query executed database update records.
  */
+@injectable()
 export class DbUpdateServiceDb extends DbService {
     constructor(dbHelper: MongoHelper) {
         super(dbHelper);

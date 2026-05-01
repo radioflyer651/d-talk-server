@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import { MongoHelper } from "../../mongo-helper";
 import { DbService } from "../db-service";
 import { ObjectId } from "mongodb";
@@ -8,6 +9,7 @@ import { DbCollectionNames } from "../../model/db-collection-names.constants";
 /**
  * Service for handling CRUD operations for VoiceFileReference documents.
  */
+@injectable()
 export class VoiceFileReferenceDbService extends DbService {
     constructor(dbHelper: MongoHelper) {
         super(dbHelper);

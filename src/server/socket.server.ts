@@ -1,3 +1,4 @@
+import { injectable } from 'inversify';
 import http from 'http';
 import { Socket, Server as SocketIOServer } from 'socket.io';
 import { ObjectId } from 'mongodb';
@@ -45,6 +46,7 @@ export enum SocketErrorTypes {
 
 /** Performs chat interactions with the UI, using socket.io. This setup
  *   is only intended to support a single back-end server. */
+@injectable()
 export class SocketServer {
     constructor(
         private readonly loggingService: LogDbService,

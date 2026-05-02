@@ -7,7 +7,7 @@ import { IPluginResolver } from "../agent-plugin/plugin-resolver.interface";
 import { IJobHydratorService } from "../chat-room/chat-job-hydrator.interface";
 import { filter, Subject, takeUntil } from "rxjs";
 import { BaseMessage } from "@langchain/core/messages";
-import { ChatRoomMessageChunkEvent, ChatRoomMessageEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
+import { ChatRoomMessageChunkEvent, ChatRoomMessageEvent, ChatRoomMessageUpdatedEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
 import { AuthDbService } from "../../database/auth-db.service";
 import { User } from "../../model/shared-models/user.model";
 import { ChatRoomSocketServer } from "../../server/socket-services/chat-room.socket-service";
@@ -85,6 +85,14 @@ export class ChattingService {
                 delete (socketMessage as any)['eventType']; // This isn't actually part of the MessageChunkMessage.
 
                 this.chatRoomSocketServer.sendNewChatMessageChunk(socketMessage);
+            });
+
+            // Relay flagged message updates (e.g. tool-call messages) to connected clients.
+            chatEvents$.pipe(
+                filter(e => e.eventType === 'message-updated')
+            ).subscribe(event => {
+                const { chatRoomId, message } = event as ChatRoomMessageUpdatedEvent;
+                this.chatRoomSocketServer.sendUpdateMessageToRoom(chatRoomId, message);
             });
         }
 

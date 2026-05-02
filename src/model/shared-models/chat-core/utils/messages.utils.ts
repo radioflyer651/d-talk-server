@@ -11,6 +11,7 @@ export const MESSAGE_VOICE_CHAT_URL_KEY = 'message_voice_chat_url';
 export const MESSAGE_TASK_ID_KEY = 'message_task_id';
 export const MESSAGE_ID_KEY = 'id';
 export const MESSAGE_VISIBLE_ONLY_TO_AGENT_KEY = 'visible_only_to_agent';
+export const MESSAGE_IS_TOOL_CALL_KEY = 'isToolCall';
 
 function isStoredMessage(target: any): target is StoredMessage {
     return typeof target === 'object' && 'data' in target;
@@ -284,4 +285,16 @@ export function setVisibleOnlyToAgent(message: BaseMessage | StoredMessage, agen
 
     // Set the value.
     data[MESSAGE_VISIBLE_ONLY_TO_AGENT_KEY] = agentId;
+}
+
+/** Sets the isToolCall flag on a message, marking it as a tool-call invocation that should not be displayed. */
+export function setIsToolCall(message: BaseMessage | StoredMessage): void {
+    const data = getKwargs(message);
+    data[MESSAGE_IS_TOOL_CALL_KEY] = true;
+}
+
+/** Returns true if the message was flagged as a tool-call invocation. */
+export function getIsToolCall(message: BaseMessage | StoredMessage): boolean {
+    const data = getKwargs(message);
+    return !!data[MESSAGE_IS_TOOL_CALL_KEY];
 }

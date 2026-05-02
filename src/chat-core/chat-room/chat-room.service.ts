@@ -3,12 +3,12 @@ import { Subject } from "rxjs";
 import { ChatRoomBusyStateEvent } from "../../model/shared-models/chat-core/chat-room-busy-state.model";
 import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data.model";
 import { IChatRoomEvent } from "../../model/shared-models/chat-core/chat-room-event.model";
-import { ChatRoomMessageChunkEvent, ChatRoomMessageEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
+import { ChatRoomMessageChunkEvent, ChatRoomMessageEvent, ChatRoomMessageUpdatedEvent } from "../../model/shared-models/chat-core/chat-room-events.model";
 import { User } from "../../model/shared-models/user.model";
 import { AgentPluginBase, PluginAttachmentTarget } from "../agent-plugin/agent-plugin-base.service";
 import { ChatCallInfo, IChatLifetimeContributor } from "../chat-lifetime-contributor.interface";
 import { createIdForMessage } from "../utilities/set-message-id.util";
-import { getMessageId, setMessageDateTimeIfMissing, setMessageId, setMessageSource, setMessageTaskId, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
+import { getMessageId, setIsToolCall, setMessageDateTimeIfMissing, setMessageId, setMessageSource, setMessageTaskId, setSpeakerOnMessage } from "../../model/shared-models/chat-core/utils/messages.utils";
 import { ChatJob } from "./chat-job.service";
 import { createChatRoomGraph } from "./chat-room-graph/chat-room.graph";
 import { ChatCallState, ChatState } from "./chat-room-graph/chat-room.state";
@@ -283,7 +283,8 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
             });
 
             // Determine if new messages produced by the related job or agent should be hidden.
-            const messageIsHidden = !!(job.data.hideMessages || agent.identity.hideMessages);
+            // Ephemeral rooms are created by plugins (e.g. sub-agent) and must never stream to clients.
+            const messageIsHidden = !!(job.data.hideMessages || agent.identity.hideMessages || this.data.isEphemeral);
 
             // Get the documents.
             const documentContributorsP = this.documents?.map(d => d.getLifetimeContributors(this, job, agent)) ?? [];
@@ -329,8 +330,12 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
                     }
 
                     const node = ev.metadata.langgraph_node as string | undefined;
-                    // if (node && !node.startsWith('t_')) {
-                    if (node && node === 'chat-call') {
+                    const checkpointNs = ev.metadata.langgraph_checkpoint_ns as string | undefined;
+                    // Exclude events from nested graphs (e.g. sub-agent tool calls). Nested graph events
+                    // have a checkpoint_ns containing '|'; top-level nodes have a simple single-segment ns.
+                    const isTopLevelGraph = !checkpointNs || !checkpointNs.includes('|');
+                    
+                    if (node && node === 'chat-call' && isTopLevelGraph) {
                         // Stream the value out to listeners.
                         if (ev.event === 'on_chat_model_stream') {
                             const chunk = ev.data.chunk as AIMessageChunk;
@@ -391,6 +396,18 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
                 const lastMessage = (lastEvent?.data.output) as typeof ChatState.State | undefined;
                 if (lastMessage) {
                     this.messages = lastMessage.messageHistory;
+                    // Flag any AIMessages that contain tool calls so the front end can suppress them.
+                    for (const msg of this.messages) {
+                        const aiMsg = msg as AIMessage;
+                        if (aiMsg.tool_calls && aiMsg.tool_calls.length > 0) {
+                            setIsToolCall(aiMsg);
+                            this._events.next(<ChatRoomMessageUpdatedEvent>{
+                                eventType: 'message-updated',
+                                chatRoomId: this.data._id,
+                                message: msg,
+                            });
+                        }
+                    }
                 } else {
                     this.logError({ message: `Expected messages to be returned from call graph, but got none.` });
                     throw new Error(`Expected messages to be returned from call graph, but got none.`);

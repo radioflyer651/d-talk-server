@@ -16,5 +16,10 @@ export interface ChatRoomMessageEvent extends IChatRoomEvent {
 
 export interface ChatRoomMessageChunkEvent extends IChatRoomEvent, MessageChunkMessage {
     eventType: 'new-chat-message-chunk';
+}
 
+export interface ChatRoomMessageUpdatedEvent extends IChatRoomEvent {
+    eventType: 'message-updated';
+    chatRoomId: ObjectId;
+    message: BaseMessage;
 }

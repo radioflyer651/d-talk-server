@@ -44,8 +44,6 @@ export class PromptToolCallingPlugin extends AgentPluginBase {
                 !!t && typeof (t as StructuredToolInterface).invoke === 'function' && typeof (t as StructuredToolInterface).name === 'string'
         );
 
-        console.log(`[PromptToolCallingPlugin] Tools captured | agent="${this.agent?.myName}" tools=${this._cachedTools.map(t => t.name).join(', ') || '(none)'}`);
-
         // Return tools unchanged — state.tools must stay populated for callTools to execute them.
         return tools;
     }

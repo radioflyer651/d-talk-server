@@ -15,10 +15,25 @@ export function createChattingRouter(chattingService: ChattingService) {
                 return;
             }
             const chatRoomId = new ObjectId(req.params.roomId);
-            const { message } = req.body;
+            const { message, jobInstanceId: jobInstanceIdStr } = req.body;
             if (typeof message !== 'string') {
                 res.status(400).json({ error: 'Missing required field: message' });
                 return;
+            }
+
+            // Validate and resolve the optional job instance ID.
+            // bodyStringsToObjectIdsMiddleware has already converted any valid ObjectId string
+            // to a real ObjectId instance by the time this handler runs.
+            let targetJobInstanceId: ObjectId | undefined;
+            if (jobInstanceIdStr !== undefined) {
+                if (jobInstanceIdStr instanceof ObjectId) {
+                    targetJobInstanceId = jobInstanceIdStr;
+                } else if (typeof jobInstanceIdStr === 'string' && ObjectId.isValid(jobInstanceIdStr)) {
+                    targetJobInstanceId = new ObjectId(jobInstanceIdStr);
+                } else {
+                    res.status(400).json({ error: 'Invalid jobInstanceId: must be a valid ObjectId hex string' });
+                    return;
+                }
             }
 
             const room = await chattingService.chatRoomDbService.getChatRoomById(chatRoomId);
@@ -38,7 +53,13 @@ export function createChattingRouter(chattingService: ChattingService) {
                 }
             });
 
-            const baseMessages = await chattingService.receiveChatMessage(chatRoomId, message, userId, controller.signal);
+            const baseMessages = await chattingService.receiveChatMessage(
+                chatRoomId,
+                message,
+                userId,
+                controller.signal,
+                targetJobInstanceId,
+            );
             const storedMessages = mapChatMessagesToStoredMessages(baseMessages);
 
             res.json(storedMessages);

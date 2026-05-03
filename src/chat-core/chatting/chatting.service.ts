@@ -33,7 +33,16 @@ export class ChattingService {
 
     }
 
-    async receiveChatMessage(chatRoomId: ObjectId, message: string, userOrUserId: ObjectId | User, signal?: AbortSignal) {
+    /**
+     * Receives a user chat message, hydrates the room, and dispatches agent turns.
+     * @param chatRoomId The ID of the target chat room.
+     * @param message The user's message text. May be empty for a prompt-less agent turn.
+     * @param userOrUserId The user or their ID.
+     * @param signal An optional abort signal to cancel the request.
+     * @param targetJobInstanceId When provided, only the job whose instanceData.id matches
+     *   this value executes its turn, and its disabled flag is ignored.
+     */
+    async receiveChatMessage(chatRoomId: ObjectId, message: string, userOrUserId: ObjectId | User, signal?: AbortSignal, targetJobInstanceId?: ObjectId) {
         // Get the data from the database.
         const chatRoomData = await this.chatRoomDbService.getChatRoomById(chatRoomId);
 
@@ -98,7 +107,7 @@ export class ChattingService {
 
         // Make the chat call, and wait for it to complete.
         //  The data will be placed in the newMessages.
-        await chatRoom.receiveUserMessage(message, user);
+        await chatRoom.receiveUserMessage(message, user, targetJobInstanceId);
 
         // Cleanup our subscription.
         eventsCleanup$.next();

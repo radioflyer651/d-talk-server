@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(node -e \"const {tool} = require\\('@langchain/core/tools'\\); const {z} = require\\('zod'\\); const t = tool\\(async \\(\\) => 'x', {name:'test', description:'test', schema: z.object\\({a: z.string\\(\\)}\\)}\\); console.log\\('name:', t.name, 'invoke:', typeof t.invoke, 'bindTools:', typeof t.bindTools\\);\")",
+      "Bash(xargs cat *)",
+      "Bash(node -e ' *)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Edit",
+      "Read"
+    ]
+  }
+}

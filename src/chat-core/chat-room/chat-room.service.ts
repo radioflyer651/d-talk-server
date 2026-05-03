@@ -1,4 +1,5 @@
 import { mapStoredMessagesToChatMessages, BaseMessage, HumanMessage, mapChatMessagesToStoredMessages, AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import { ObjectId } from "mongodb";
 import { Subject } from "rxjs";
 import { ChatRoomBusyStateEvent } from "../../model/shared-models/chat-core/chat-room-busy-state.model";
 import { ChatRoomData } from "../../model/shared-models/chat-core/chat-room-data.model";
@@ -183,8 +184,15 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
         await this.saveConversation();
     }
 
-    /** Called when a message is received from a user in this chat room. */
-    async receiveUserMessage(message: string, user: User): Promise<void> {
+    /**
+     * Called when a message is received from a user in this chat room.
+     * @param message The user's message text. May be empty for a prompt-less agent turn.
+     * @param user The user who sent the message.
+     * @param targetJobInstanceId When provided, only the job whose instanceData.id matches
+     *   this value will execute its turn, and the disabled flag on that job is ignored.
+     *   All other jobs are skipped.
+     */
+    async receiveUserMessage(message: string, user: User, targetJobInstanceId?: ObjectId): Promise<void> {
         try {
             // Update our busy state.
             this.setBusyState(true);
@@ -212,8 +220,8 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
                 await this.saveConversation();
             }
 
-            // Execute the chat messages.
-            await this.executeTurnsForChatMessage();
+            // Execute the chat turns for this message.
+            await this.executeTurnsForChatMessage(targetJobInstanceId);
 
         } catch (err) {
             console.error(err);
@@ -239,11 +247,26 @@ export class ChatRoom implements IChatLifetimeContributor, IDisposable, PluginAt
         });
     }
 
-    /** After a user message is received, this is the process for executing each chat job. */
-    protected async executeTurnsForChatMessage(): Promise<void> {
-        // Execute the jobs for this chat room.
-        for (let j of this.chatJobs.filter(j => !j.instanceData.disabled)) {
-            await this.executeTurnForJob(j);
+    /**
+     * After a user message is received, this is the process for executing each chat job.
+     * @param targetJobInstanceId When provided, only the job matching this instance ID
+     *   executes its turn, and its disabled flag is ignored. When absent, all non-disabled
+     *   jobs execute in order.
+     */
+    protected async executeTurnsForChatMessage(targetJobInstanceId?: ObjectId): Promise<void> {
+        if (targetJobInstanceId !== undefined) {
+            // Find the specific job requested, bypassing the disabled filter.
+            const targetJob = this.chatJobs.find(j => j.instanceData.id.equals(targetJobInstanceId));
+            if (!targetJob) {
+                console.warn(`Take-turn request: no job found with instanceData.id ${targetJobInstanceId.toHexString()}. Skipping execution.`);
+            } else {
+                await this.executeTurnForJob(targetJob);
+            }
+        } else {
+            // Normal round-robin: execute all non-disabled jobs in order.
+            for (const j of this.chatJobs.filter(j => !j.instanceData.disabled)) {
+                await this.executeTurnForJob(j);
+            }
         }
 
         // Save any changes that might have occurred for this room, including chat history.
